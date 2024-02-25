@@ -7,3 +7,7 @@
 - [x] starship
 - [x] lazygit
 - [x] zellij
+
+## TODO
+
+- https://zellij.dev/documentation/configuration
