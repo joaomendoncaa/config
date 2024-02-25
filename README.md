@@ -6,4 +6,4 @@
 - [x] eww
 - [x] starship
 - [x] lazygit
-- [ ] zellij
+- [x] zellij
