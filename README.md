@@ -10,4 +10,5 @@
 
 ## TODO
 
+- fix nvim weird linking
 - https://zellij.dev/documentation/configuration
