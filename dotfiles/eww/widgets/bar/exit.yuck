@@ -1,0 +1,7 @@
+(
+  defwidget exit []
+  (
+    box
+    "[PH]EXIT"
+  )
+)

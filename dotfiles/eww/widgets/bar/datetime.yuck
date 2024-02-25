@@ -1,0 +1,15 @@
+(defpoll date_poll :interval "1m" "date +'%a %b %d' | awk '{print toupper($0)}'")
+(defpoll time_poll :interval "1s" "date +%H:%M:%S")
+
+(
+  defwidget datetime []
+  (
+    box
+    :class "datetime"
+    :spacing 5
+    :orientation "h"
+    :halign "end"
+    :space-evenly false
+    "${date_poll} ${time_poll}"
+  )
+)

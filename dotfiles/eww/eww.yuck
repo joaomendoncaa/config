@@ -1,0 +1,21 @@
+(include "./widgets/bar/index.yuck")
+
+(defwindow bar
+  :monitor 0
+  :hexpand false
+  :vexpand false
+  :stacking "fg"
+  :focusable false
+  :exclusive true
+  :windowtype "dock"
+  :wm-ignore true
+  :geometry
+  (
+    geometry
+    :anchor "top center"
+    :y "0%"
+    :width "100%"
+    :height "50px"
+  )
+  :reserve (struts :distance "50px" :side "top")
+  (index :screen 0))

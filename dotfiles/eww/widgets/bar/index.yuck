@@ -1,0 +1,47 @@
+(include "./widgets/bar/datetime.yuck")
+(include "./widgets/bar/cpu.yuck")
+(include "./widgets/bar/ram.yuck")
+(include "./widgets/bar/audio-output.yuck")
+(include "./widgets/bar/exit.yuck")
+(include "./widgets/bar/workspaces.yuck")
+(include "./widgets/bar/screencast.yuck")
+
+(
+  defwidget index [screen]
+  (
+    box :orientation "horizontal" :valign "center" :class "bar" :space-evenly false :spacing 5
+    (
+      box :class "bar-section" :space-evenly true :spacing 10
+      "[PH]NOTIS"
+    )
+    (
+      box :class "bar-section bar-section_center" :hexpand true :space-evenly true :spacing 10
+      "[PH]CWPS"
+    )
+    (
+      box :class "bar-section" :space-evenly true :spacing 10
+      (screencast)
+    )
+    (
+      box :class "bar-section" :space-evenly true :spacing 10
+      (workspaces)
+    )
+    (
+      box :class "bar-section" :space-evenly true :spacing 10
+      (audio-output)
+    )
+    (
+      box :class "bar-section" :space-evenly true :spacing 10
+      (cpu)
+      (ram)
+    )
+    (
+      box :class "bar-section" :space-evenly true :spacing 10
+      (datetime)
+    )
+    (
+      box :class "bar-section bar-section_exit" :space-evenly true :spacing 10
+      (exit)
+    )
+  )
+)

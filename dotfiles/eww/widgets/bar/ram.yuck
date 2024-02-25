@@ -1,0 +1,14 @@
+(defpoll icon_ram_path :interval "250ms" "./scripts/bar/ram.sh")
+
+(
+  defwidget ram []
+  (
+    box
+    :class "ram-icon-box"
+    :vexpand "false"
+    :hexpand "false"
+    :height "17"
+    :width "17"
+    :style "background-image: url('${icon_ram_path}');"
+  )
+)

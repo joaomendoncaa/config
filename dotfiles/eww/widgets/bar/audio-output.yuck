@@ -1,0 +1,12 @@
+(deflisten audio_current_output "./scripts/bar/audio-current-output.sh")
+
+(
+  defwidget audio-output []
+  (
+    button
+    :class "audio-icon-button"
+    :onclick "/home/joaom/.config/eww/scripts/bar/audio-toggle-output.sh && eww update audio_current_output=${audio_current_output == "headphones" ? "speakers" : "headphones"}"
+    :width "19"
+    :style "background-image: url('${audio_current_output == "headphones"  ? "./icons/headphones.svg" : "./icons/speakers.svg"}');"
+  )
+)

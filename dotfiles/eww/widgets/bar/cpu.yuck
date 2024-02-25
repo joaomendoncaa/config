@@ -1,0 +1,14 @@
+(defpoll icon_cpu_path :interval "250ms" "./scripts/bar/cpu.sh")
+
+(
+  defwidget cpu []
+  (
+    box
+    :class "cpu-icon-box"
+    :vexpand "false"
+    :hexpand "false"
+    :height "19"
+    :width "19"
+    :style "background-image: url('${icon_cpu_path}');"
+  )
+)

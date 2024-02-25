@@ -1,0 +1,36 @@
+$background: rgba(0, 0, 0, 1);
+$foreground-primary: white;
+
+* {
+    all: unset;
+    font-family: "JetBrainsMono", sans-serif;
+}
+
+window {
+    background: transparent;
+}
+
+.bar {
+    color: $foreground-primary;
+    font-weight: bold;
+    padding: 0 10px;
+}
+
+.bar-section {
+    background: $background;
+    padding: 6px 10px;
+    border-radius: 5px;
+}
+
+.bar-section_exit {
+    background: white;
+    color: black;
+}
+
+.cpu-icon-box,
+.ram-icon-box,
+.audio-icon-button {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}

@@ -1,0 +1,7 @@
+(
+  defwidget screencast []
+  (
+    box
+    "[PH]SCREENCAST"
+  )
+)

@@ -1,0 +1,7 @@
+(
+  defwidget workspaces []
+  (
+    box
+    "[PH]WORKSPACES"
+  )
+)
