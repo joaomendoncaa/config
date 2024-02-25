@@ -1,8 +1,8 @@
 # João Mendonça Config
 
 - [x] alacritty
-- [ ] nvim
-- [ ] zsh
+- [x] nvim
+- [x] zsh
 - [x] eww
 - [x] starship
 - [x] lazygit
