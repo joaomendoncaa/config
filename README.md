@@ -1,14 +1,6 @@
 # João Mendonça Config
 
-- [x] alacritty
-- [x] nvim
-- [x] zsh
-- [x] eww
-- [x] starship
-- [x] lazygit
-- [x] zellij
+Configuration repo where:
 
-## TODO
-
-- fix nvim weird linking
-- https://zellij.dev/documentation/configuration
+- `config.jmmm.sh` serves this repository
+- `config.jmmm.sh/install` serves an [init script](./init.sh) so you can install the entire config by running `curl config.jmmm.sh/install | bash` anywhere
