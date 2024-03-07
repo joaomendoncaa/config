@@ -60,3 +60,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 create_symlink "/home/joao/.config/nvim" "$DIR/dotfiles/nvim"
 create_symlink "/home/joao/.config/starship.toml" "$DIR/dotfiles/starship/starship.toml"
+create_symlink "/home/joao/.config/zellij" "$DIR/dotfiles/zellij"
