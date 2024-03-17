@@ -269,7 +269,7 @@ themes {
 }
 
 theme "dracula"
-default_layout "default"
+default_layout "compact"
 
 // Choose the mode that zellij uses when starting up.
 // Default: normal
