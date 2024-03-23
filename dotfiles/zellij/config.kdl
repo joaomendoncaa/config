@@ -257,22 +257,22 @@ pane_frames false
 // Once these themes are defined, one of them should to be selected in the "theme" section of this file
 //
 themes {
-    dracula {
-        fg 248 248 242
-        bg 40 42 54
-        red 255 85 85
-        green 80 250 123
-        yellow 241 250 140
-        blue 98 114 164
-        magenta 255 121 198
-        orange 255 184 108
-        cyan 139 233 253
+    poimandres {
+        fg 166 172 205
+        bg 27 30 40
+        red 208 103 157
+        green 93 228 199
+        yellow 255 250 194
+        blue 137 221 255
+        magenta 252 197 233
+        orange 173 215 255 
+        cyan 173 215 255
         black 0 0 0
         white 255 255 255
     }
 }
 
-theme "dracula"
+theme "poimandres"
 default_layout "compact"
 
 // Choose the mode that zellij uses when starting up.
