@@ -20,6 +20,21 @@ if [[ -t 1 ]]; then
     Bold_White='\033[1m'    # Bold White
 fi
 
+force_delete=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --force)
+            force_delete=true
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+    shift
+done
+
 error() {
     echo -e "${Red}error${Color_Off}:" "$@" >&2
     exit 1
@@ -47,12 +62,16 @@ create_symlink() {
   local config_path="$1"
   local source_path="$2"
 
-  if [ -e "$config_path" ]; then
+ if [[ "$force_delete" == true || ! -e "$config_path" ]]; then
+    rm -rf "$config_path"
+    ln -s "$source_path" "$config_path"
+    success "Symlink created successfully: $source_path -> $config_path"
+  else
     error_silent "There's already a config in $config_path"
     info "You can delete it with rm -rf $config_path"
-
+    
     read -p "Do you want to delete it now and proceed with the symlinking? [Y/N] " response
-    response=${response^^} 
+    response=${response^^}  # convert response to uppercase
     if [[ $response =~ ^(YES|Y)$ ]]; then
         rm -rf "$config_path"
         ln -s "$source_path" "$config_path"
@@ -60,9 +79,6 @@ create_symlink() {
     else
         info "Symlinking aborted."
     fi
-  else
-    ln -s "$source_path" "$config_path"
-    success "Symlink created successfully: $source_path -> $config_path"
   fi
 }
 
