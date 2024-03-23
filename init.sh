@@ -42,7 +42,7 @@ success() {
 }
 
 # Simplify creating a symlink with this repository /dotfiles/*
-# TODO: interactive mode to configure paths on the fly
+# TODO: interactive mode to configure paths on the fly (right now it's only an interactive "deletion")
 create_symlink() {
   local config_path="$1"
   local source_path="$2"
@@ -50,6 +50,16 @@ create_symlink() {
   if [ -e "$config_path" ]; then
     error_silent "There's already a config in $config_path"
     info "You can delete it with rm -rf $config_path"
+
+    read -p "Do you want to delete it now and proceed with the symlinking? [Y/N] " response
+    response=${response^^} 
+    if [[ $response =~ ^(YES|Y)$ ]]; then
+        rm -rf "$config_path"
+        ln -s "$source_path" "$config_path"
+        success "Symlink created successfully: $source_path -> $config_path"
+    else
+        info "Symlinking aborted."
+    fi
   else
     ln -s "$source_path" "$config_path"
     success "Symlink created successfully: $source_path -> $config_path"
@@ -61,3 +71,4 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 create_symlink "/home/joao/.config/nvim" "$DIR/dotfiles/nvim"
 create_symlink "/home/joao/.config/starship.toml" "$DIR/dotfiles/starship/starship.toml"
 create_symlink "/home/joao/.config/zellij" "$DIR/dotfiles/zellij"
+create_symlink "/home/joao/.config/lazygit" "$DIR/dotfiles/lazygit"
