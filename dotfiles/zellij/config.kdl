@@ -6,6 +6,10 @@ keybinds {
     }
     locked {
         bind "Ctrl g" { SwitchToMode "Normal"; }
+        bind "Ctrl h" { GoToPreviousTab; }
+        bind "Ctrl l" { GoToNextTab; }
+        bind "Alt h" { FocusPreviousPane; }
+        bind "Alt l" { FocusNextPane; }
     }
     resize {
         bind "Ctrl n" { SwitchToMode "Normal"; }
