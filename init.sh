@@ -55,7 +55,7 @@ info_bold() {
 }
 
 success() {
-	echo -e "${Green}$@ ${Color_Off}"
+	echo -e "${Green}$@ ${Color_Off} \n"
 }
 
 # Simplify creating a symlink with this repository /dotfiles/*
