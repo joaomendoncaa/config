@@ -5,10 +5,9 @@ require 'nvim-keymaps'
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
-if not vim.loop.fs_stat(lazypath) then
-  local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
-  vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
-end ---@diagnostic disable-next-line: undefined-field
+local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
+vim.fn.system { 'git', 'clone', '--filter=blob:none', '--branch=stable', lazyrepo, lazypath }
+---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
 -- [[ Configure and install plugins ]]
@@ -54,6 +53,56 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
     },
+  },
+
+  {
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons',
+      'MunifTanjim/nui.nvim',
+      -- "3rd/image.nvim",
+    },
+    config = function()
+      require('neo-tree').setup {
+        -- close_if_last_window = true,
+        window = {
+          position = 'bottom',
+        },
+        filesystem = {
+          filtered_items = {
+            hide_dotfiles = false,
+            hide_by_name = {
+              'node_modules',
+            },
+          },
+        },
+        event_handlers = {
+
+          {
+            event = 'file_opened',
+            handler = function()
+              require('neo-tree.command').execute { action = 'close' }
+            end,
+          },
+
+          {
+            event = 'neo_tree_buffer_enter',
+            handler = function()
+              vim.cmd 'highlight! Cursor blend=100'
+            end,
+          },
+
+          {
+            event = 'neo_tree_buffer_leave',
+            handler = function()
+              vim.cmd 'highlight! Cursor guibg=#5f87af blend=0'
+            end,
+          },
+        },
+      }
+    end,
   },
 
   -- NOTE: Plugins can also be configured to run lua code when they are loaded.
