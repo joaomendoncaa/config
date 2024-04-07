@@ -1,0 +1,19 @@
+{
+  "name": "ore",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "miners:balance": "bun run scripts/miners-balance.ts",
+    "miners:generate": "bun run scripts/miners-generate.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "terminal-link": "^3.0.0"
+  }
+}
