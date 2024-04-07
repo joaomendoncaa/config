@@ -12,9 +12,6 @@ $git_branch\
 $git_status\
 $hg_branch\
 $pijul_channel\
-$cmake\
-$elm\
-$erlang\
 $fennel\
 $guix_shell\
 $haxe\
@@ -29,9 +26,6 @@ $python\
 $raku\
 $rlang\
 $red\
-$ruby\
-$rust\
-$scala\
 $terraform\
 $vagrant\
 $buf\
