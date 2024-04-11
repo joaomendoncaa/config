@@ -1,6 +1,6 @@
-require 'nvim-globals'
-require 'nvim-options'
-require 'nvim-keymaps'
+require 'globals'
+require 'options'
+require 'keymaps'
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -20,28 +20,12 @@ vim.opt.rtp:prepend(lazypath)
 --  To update plugins, you can run
 --    :Lazy update
 --
--- NOTE: Here is where you install your plugins.
 require('lazy').setup({
-  -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
-
-  -- NOTE: Plugins can also be added by using a table,
-  -- with the first argument being the link and the following
-  -- keys can be used to configure plugin behavior/loading/etc.
-  --
-  -- Use `opts = {}` to force a plugin to be loaded.
-  --
-  --  This is equivalent to:
-  --    require('Comment').setup({})
 
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
 
-  -- Here is a more advanced example where we pass configuration
-  -- options to `gitsigns.nvim`. This is equivalent to the following lua:
-  --    require('gitsigns').setup({ ... })
-  --
-  -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
@@ -56,69 +40,18 @@ require('lazy').setup({
   },
 
   {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons',
-      'MunifTanjim/nui.nvim',
-      -- "3rd/image.nvim",
-    },
+    'stevearc/oil.nvim',
+    opts = {},
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function()
-      require('neo-tree').setup {
-        -- close_if_last_window = true,
-        window = {
-          position = 'bottom',
-        },
-        filesystem = {
-          filtered_items = {
-            hide_dotfiles = false,
-            hide_by_name = {
-              'node_modules',
-            },
-          },
-        },
-        event_handlers = {
-
-          {
-            event = 'file_opened',
-            handler = function()
-              require('neo-tree.command').execute { action = 'close' }
-            end,
-          },
-
-          {
-            event = 'neo_tree_buffer_enter',
-            handler = function()
-              vim.cmd 'highlight! Cursor blend=100'
-            end,
-          },
-
-          {
-            event = 'neo_tree_buffer_leave',
-            handler = function()
-              vim.cmd 'highlight! Cursor guibg=#5f87af blend=0'
-            end,
-          },
+      require('oil').setup {
+        default_file_explorer = true,
+        columns = {
+          'icon',
         },
       }
     end,
   },
-
-  -- NOTE: Plugins can also be configured to run lua code when they are loaded.
-  --
-  -- This is often very useful to both group configuration, as well as handle
-  -- lazy loading plugins that don't need to be loaded immediately at startup.
-  --
-  -- For example, in the following configuration, we use:
-  --  event = 'VimEnter'
-  --
-  -- which loads which-key before all the UI elements are loaded. Events can be
-  -- normal autocommands events (`:help autocmd-events`).
-  --
-  -- Then, because we use the `config` key, the configuration only runs
-  -- after the plugin has been loaded:
-  --  config = function() ... end
 
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
@@ -137,7 +70,7 @@ require('lazy').setup({
     end,
   },
 
-  { -- Fuzzy Finder (files, lsp, etc)
+  {
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
     branch = '0.1.x',

@@ -14,14 +14,14 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- TIP: Disable arrow keys in normal mode
-vim.keymap.set('n', '<left>', '<cmd>echo "USE H TO MOVE!!"<CR>')
-vim.keymap.set('n', '<right>', '<cmd>echo "USE L TO MOVE!!"<CR>')
-vim.keymap.set('n', '<up>', '<cmd>echo "USE K TO MOVE!!"<CR>')
-vim.keymap.set('n', '<down>', '<cmd>echo "USE J TO MOVE!!"<CR>')
+-- Disable arrow keys in normal mode
+vim.keymap.set('', '<left>', '<cmd>echo "USE H TO MOVE!!"<CR>')
+vim.keymap.set('', '<right>', '<cmd>echo "USE L TO MOVE!!"<CR>')
+vim.keymap.set('', '<up>', '<cmd>echo "USE K TO MOVE!!"<CR>')
+vim.keymap.set('', '<down>', '<cmd>echo "USE J TO MOVE!!"<CR>')
 
--- Neotree
-vim.keymap.set('n', '<leader>b', '<cmd>Neotree toggle<CR>')
+-- Oil.nvim
+vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 
 -- Open telescope find_files if no arguments are passed to nvim
 vim.api.nvim_create_autocmd('VimEnter', {
