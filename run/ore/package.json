@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "miners:balance": "bun run scripts/miners-balance.ts",
-    "miners:generate": "bun run scripts/miners-generate.ts"
+    "miners:generate": "bun run scripts/miners-generate.ts",
+    "miners:reload": "pm2 delete ore-miner & bun miners:generate & pm2 start processes/miners.config.cjs"
   },
   "devDependencies": {
     "@types/bun": "latest"

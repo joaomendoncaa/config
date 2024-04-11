@@ -14,5 +14,8 @@ export function hashWithEllipsis(hash: string): string {
 }
 
 export async function getPubkey(path: string): Promise<string> {
-	return (await $`solana-keygen pubkey ${path}`.text()).trim();
+	return new Promise(async (resolve) => {
+		const pk = (await $`solana-keygen pubkey ${path}`.text()).trim();
+		resolve(pk)
+	})
 }
