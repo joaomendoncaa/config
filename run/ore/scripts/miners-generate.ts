@@ -36,7 +36,7 @@ for (let i = 0; i < wallets.length; i++) {
 			"--keypair",
 			minerPath,
 			"--priority-fee",
-			"1001",
+			"1",
 			"mine",
 			"--threads",
 			"12"
