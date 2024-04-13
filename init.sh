@@ -90,6 +90,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 create_symlink "/home/joao/.config/nvim" "$DIR/dotfiles/nvim"
 create_symlink "/home/joao/.config/starship.toml" "$DIR/dotfiles/starship/starship.toml"
+create_symlink "/home/joao/.config/tmux" "$DIR/dotfiles/tmux"
 create_symlink "/home/joao/.config/zellij" "$DIR/dotfiles/zellij"
 create_symlink "/home/joao/.config/lazygit" "$DIR/dotfiles/lazygit"
 create_symlink "/home/joao/.config/atuin" "$DIR/dotfiles/atuin"
