@@ -5,4 +5,3 @@ My neovim config, based off of [kickstart.nvim](https://github.com/nvim-lua/kick
 ### Things I want to add
 
 - harpoon
-- [harpoon index on neotree](https://github.com/nvim-neo-tree/neo-tree.nvim/wiki/Recipes#harpoon-index)
