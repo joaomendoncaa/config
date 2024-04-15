@@ -1,11 +1,11 @@
 {
   "name": "ore",
-  "module": "index.ts",
   "type": "module",
   "scripts": {
     "miners:balance": "bun run scripts/miners-balance.ts",
     "miners:generate": "bun run scripts/miners-generate.ts",
-    "miners:reload": "pm2 delete ore-miner & bun miners:generate & pm2 start processes/miners.config.cjs"
+    "miners:reload": "pm2 delete ore-miner & bun miners:generate & pm2 start processes/miners.config.cjs",
+    "build": "bun build --compile --minify --sourcemap ./main.ts --outfile $HOME/bin/process-ore"
   },
   "devDependencies": {
     "@types/bun": "latest"
@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "chalk": "^5.3.0",
+    "pm2": "^5.3.1",
     "terminal-link": "^3.0.0"
   }
 }
