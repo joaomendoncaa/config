@@ -15,20 +15,19 @@ if (wallets.length === 0) {
 	throw new Error("No wallets found in ./wallets directory");
 }
 
-let appsMiners: any[] = [];
-let appsClaimers: any[] = [];
+let apps: any[] = [];
 
 for (let i = 0; i < wallets.length; i++) {
 	const wallet = wallets[i];
 	const minerPath = `./wallets/${wallet}`;
 	const pubkey = await getPubkey(minerPath);
 
-	appsMiners.push({
+	apps.push({
 		"name": `$ORE Miner ${hashWithEllipsis(pubkey)}`,
 		"namespace": "ore-miners",
 		"script": "/home/joao/lab/ore-cli/target/release/ore",
 		"instances": 1,
-		"cron_restart": '*/60 * * * *',
+		"cron": '*/60 * * * *',
 		"log_date_format": "YYYY-MM-DD HH:mm:ss",
 		"args": [
 			"--rpc",
@@ -43,11 +42,12 @@ for (let i = 0; i < wallets.length; i++) {
 		]
 	});
 
-	appsClaimers.push({
+	apps.push({
 		"name": `$ORE Miner ${hashWithEllipsis(pubkey)}`,
 		"namespace": "ore-claimers",
 		"script": "/home/joao/lab/ore-cli/target/release/ore",
 		"instances": 1,
+		"exec_mode": "fork",
 		"log_date_format": "YYYY-MM-DD HH:mm:ss",
 		"args": [
 			"--rpc",
@@ -64,23 +64,15 @@ for (let i = 0; i < wallets.length; i++) {
 
 console.log({
 	wallets,
-	appsMiners,
-	appsClaimers
+	apps,
 })
 
 const minersFileRaw = `
 		module.exports = {
-			apps: ${JSON.stringify(appsMiners)}
-		}
-`;
-
-const claimersFileRaw = `
-		module.exports = {
-			apps: ${JSON.stringify(appsClaimers)}
+			apps: ${JSON.stringify(apps)}
 		}
 `;
 
 Bun.write('./processes/miners.config.cjs', minersFileRaw);
-Bun.write('./processes/claimers.config.cjs', claimersFileRaw);
 
 
