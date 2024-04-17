@@ -1,6 +1,7 @@
 lastupdatecheck: 0
 recentrepos:
 - /home/joao/lab/config
+- /home/joao/lab/spaces-to-thread
 - /home/joao/lab/ore-cli
 startuppopupversion: 5
 lastversion: 0.41.0
