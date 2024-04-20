@@ -18,24 +18,24 @@ return {
       -- Select an item from the list
       vim.keymap.set('n', '<a-1>', function()
         harpoon:list():select(1)
-      end)
-      vim.keymap.set('n', '<a-2', function()
+      end, { desc = 'Select Harpoon Buffer in Position 1' })
+      vim.keymap.set('n', '<a-2>', function()
         harpoon:list():select(2)
-      end)
+      end, { desc = 'Select Harpoon Buffer in Position 2' })
       vim.keymap.set('n', '<a-3>', function()
         harpoon:list():select(3)
-      end)
+      end, { desc = 'Select Harpoon Buffer in Position 3' })
       vim.keymap.set('n', '<a-4>', function()
         harpoon:list():select(4)
-      end)
+      end, { desc = 'Select Harpoon Buffer in Position 4' })
 
       -- Toggle previous & next buffers stored within Harpoon list
       vim.keymap.set('n', '<a-h>', function()
         harpoon:list():prev()
-      end)
+      end, { desc = 'Select previous Harpoon item on the list' })
       vim.keymap.set('n', '<a-l>', function()
         harpoon:list():next()
-      end)
+      end, { desc = 'Select next Harpoon item on the list' })
     end,
   },
 }
