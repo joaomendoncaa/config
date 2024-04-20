@@ -8,6 +8,5 @@ Configuration repo where:
 
 # TODO 
 
-- harpoon
 - tmux sessionizer
 - fix tmux sessions
