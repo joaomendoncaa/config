@@ -13,11 +13,13 @@ return {
     init = function()
       vim.cmd.colorscheme 'poimandres'
 
-      -- You can configure highlights by doing something like
-      vim.cmd.hi 'Comment gui=none'
-
       -- Set the background color to transparent
       vim.cmd [[highlight Normal guibg=none ctermbg=none]]
+
+      vim.cmd.hi 'Comment gui=none'
+      vim.cmd.hi 'LspReferenceWrite guibg=none'
+      vim.cmd.hi 'LspReferenceText guibg=none'
+      vim.cmd.hi 'LspReferenceRead guibg=none'
     end,
   },
 }
