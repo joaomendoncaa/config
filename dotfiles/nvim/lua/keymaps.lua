@@ -42,3 +42,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
+
+-- fix all the trouble with persisting the yanked text after pasting and not yanking when deleting
+vim.keymap.set({ 'n', 'v' }, 'd', [["_d]], { desc = '[D]elete to null buffer' })
+vim.keymap.set('x', 'p', [["_dP]], { desc = '[P]aste and preserve buffer' })
