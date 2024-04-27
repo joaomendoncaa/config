@@ -5,7 +5,8 @@ require 'lazyvim'
 
 require('lazy').setup {
   'tpope/vim-sleuth',
-  'numToStr/Comment.nvim',
+  'mg979/vim-visual-multi',
+  { 'numToStr/Comment.nvim', opts = {} },
   { import = 'custom.plugins' },
 }
 
