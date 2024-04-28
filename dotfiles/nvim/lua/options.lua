@@ -1,53 +1,61 @@
-local o = vim.opt
+local opt = vim.opt
+local g = vim.g
 
--- Make line numbers default
-o.number = true
-o.relativenumber = true
+-- set leader key to space
+g.mapleader = ' '
+g.maplocalleader = ' '
 
--- Remove tilda from column on blank lines
-o.fillchars = { eob = ' ' }
+-- enable nerd font
+g.have_nerd_font = true
 
--- Enable mouse mode, can be useful for resizing splits for example!
-o.mouse = 'a'
+-- make line numbers default
+opt.number = true
+opt.relativenumber = true
 
--- Don't show the mode, since it's already in status line
-o.showmode = false
+-- remove tilda from column on blank lines
+opt.fillchars = { eob = ' ' }
 
--- Sync clipboard between OS and Neovim.
-o.clipboard = 'unnamedplus'
+-- enable mouse mode, can be useful for resizing splits for example!
+opt.mouse = 'a'
 
--- Enable break indent
-o.breakindent = true
+-- don't show the mode, since it's already in status line
+opt.showmode = false
 
--- Save undo history
-o.undofile = true
+-- sync clipboard between OS and Neovim.
+opt.clipboard = 'unnamedplus'
 
--- Case-insensitive searching UNLESS \C or capital in search
-o.ignorecase = true
-o.smartcase = true
+-- enable break indent
+opt.breakindent = true
 
--- Keep signcolumn on by default
-o.signcolumn = 'yes'
+-- save undo history
+opt.undofile = true
 
--- Decrease update time
-o.updatetime = 250
+-- case-insensitive searching UNLESS \C or capital in search
+opt.ignorecase = true
+opt.smartcase = true
 
--- Decrease mapped sequence wait time
--- Displays which-key popup sooner
-o.timeoutlen = 300
+-- keep signcolumn on by default
+opt.signcolumn = 'yes'
 
--- Configure how new splits should be opened
-o.splitright = true
-o.splitbelow = true
+-- decrease update time
+opt.updatetime = 250
+
+-- decrease mapped sequence wait time
+-- displays which-key popup sooner
+opt.timeoutlen = 300
+
+-- configure how new splits should be opened
+opt.splitright = true
+opt.splitbelow = true
 
 -- Preview substitutions live, as you type!
-o.inccommand = 'split'
+opt.inccommand = 'split'
 
--- Show which line your cursor is on
-o.cursorline = true
+-- show which line your cursor is on
+opt.cursorline = true
 
--- Minimal number of screen lines to keep above and below the cursor.
-o.scrolloff = 10
+-- minimal number of screen lines to keep above and below the cursor.
+opt.scrolloff = 10
 
--- Set highlight on search, but clear on pressing <Esc> in normal mode
-o.hlsearch = true
+-- set highlight on search, but clear on pressing <Esc> in normal mode
+opt.hlsearch = true
