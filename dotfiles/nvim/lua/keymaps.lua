@@ -25,14 +25,8 @@ key.set('', '<down>', '<cmd>echo "USE J TO MOVE!!"<CR>')
 -- Oil.nvim
 key.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
 
--- Open telescope find_files if no arguments are passed to nvim
-vim.api.nvim_create_autocmd('VimEnter', {
-  callback = function()
-    if vim.fn.argv(0) == '' then
-      require('telescope.builtin').find_files()
-    end
-  end,
-})
+-- paste but persist whatever is in buffer
+key.set('x', 'p', [["_dP]], { desc = '[P]aste and preserve buffer' })
 
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
@@ -44,7 +38,3 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end,
 })
-
--- fix all the trouble with persisting the yanked text after pasting and not yanking when deleting
-key.set({ 'n', 'v' }, 'd', [["_d]], { desc = '[D]elete to null buffer' })
-key.set('x', 'p', [["_dP]], { desc = '[P]aste and preserve buffer' })
