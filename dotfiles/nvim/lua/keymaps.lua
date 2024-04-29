@@ -23,7 +23,7 @@ key.set('', '<up>', '<cmd>echo "USE K TO MOVE!!"<CR>')
 key.set('', '<down>', '<cmd>echo "USE J TO MOVE!!"<CR>')
 
 -- Oil.nvim
-key.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
+key.set('n', '<C-e>', '<CMD>Oil<CR>', { desc = '[E]xplore parent directory.' })
 
 -- paste but persist whatever is in buffer
 key.set('x', 'p', [["_dP]], { desc = '[P]aste and preserve buffer' })
