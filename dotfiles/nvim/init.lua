@@ -1,3 +1,4 @@
+--
 --                                           .
 --                                            `.
 --
@@ -91,14 +92,15 @@
 --   "It's a great idea to spend countless hours writing .lua scripts for a 40 year old text-editor instead of doing real work."
 --
 --   - Noone
+--
 
--- set globals and options for nvim
+-- set nvim globals, options and auto commands
 require 'options'
 
--- define all things keymaps
+-- define custom keymaps
 require 'keymaps'
 
--- install the lazyvim plugin manager
+-- install "lazyvim" plugin manager
 -- see: https://www.lazyvim.org/configuration/lazy.nvim
 require 'lazyvim'
 

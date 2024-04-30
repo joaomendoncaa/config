@@ -1,5 +1,6 @@
 local opt = vim.opt
 local g = vim.g
+local nvim_create_autocmd = vim.api.nvim_create_autocmd
 
 -- set leader key to space
 g.mapleader = ' '
@@ -59,3 +60,12 @@ opt.scrolloff = 10
 
 -- set highlight on search, but clear on pressing <Esc> in normal mode
 opt.hlsearch = true
+
+-- highlight when yanking characters
+nvim_create_autocmd('TextYankPost', {
+  desc = 'Highlight when yanking (copying) text',
+  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
+  callback = function()
+    vim.highlight.on_yank()
+  end,
+})
