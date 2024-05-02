@@ -9,6 +9,9 @@ g.maplocalleader = ' '
 -- enable nerd font
 g.have_nerd_font = true
 
+-- remove satusline
+opt.laststatus = 0
+
 -- make line numbers default
 opt.number = true
 opt.relativenumber = true
