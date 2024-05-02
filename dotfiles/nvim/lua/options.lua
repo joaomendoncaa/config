@@ -9,6 +9,10 @@ g.maplocalleader = ' '
 -- enable nerd font
 g.have_nerd_font = true
 
+-- silence nvim-navic errors/warnings
+-- TODO: fix tsserver/typescript-tools conflict instead of silencing errors
+g.navic_silence = true
+
 -- remove satusline
 opt.laststatus = 0
 
