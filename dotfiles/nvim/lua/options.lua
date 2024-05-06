@@ -1,6 +1,6 @@
 local opt = vim.opt
 local g = vim.g
-local nvim_create_autocmd = vim.api.nvim_create_autocmd
+local autocmd = vim.api.nvim_create_autocmd
 
 -- set leader key to space
 g.mapleader = ' '
@@ -12,6 +12,10 @@ g.have_nerd_font = true
 -- silence nvim-navic errors/warnings
 -- TODO: fix tsserver/typescript-tools conflict instead of silencing errors
 g.navic_silence = true
+
+-- skip backwards compatibility routines and speed up loading
+-- SEE: https://github.com/JoosepAlviste/nvim-ts-context-commentstring?tab=readme-ov-file#getting-started
+g.skip_ts_context_commentstring_module = true
 
 -- remove satusline
 opt.laststatus = 0
@@ -69,9 +73,9 @@ opt.scrolloff = 10
 opt.hlsearch = true
 
 -- highlight when yanking characters
-nvim_create_autocmd('TextYankPost', {
+autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
-  group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
+  group = vim.api.nvim_create_augroup('highlight-yank', { clear = true }),
   callback = function()
     vim.highlight.on_yank()
   end,
