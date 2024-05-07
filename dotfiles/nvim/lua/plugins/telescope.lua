@@ -55,6 +55,8 @@ return {
 
       keymap('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat).' })
 
+      keymap('n', '<leader>sb', builtin.buffers, { desc = '[S]earch open [B]uffers.' })
+
       keymap('n', '<leader>/', function()
         -- You can pass additional configuration to telescope to change theme, layout, etc.
         builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {

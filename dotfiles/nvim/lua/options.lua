@@ -13,6 +13,10 @@ g.have_nerd_font = true
 -- TODO: fix tsserver/typescript-tools conflict instead of silencing errors
 g.navic_silence = true
 
+-- skip backwards compatibility routines and speed up loading
+-- SEE: https://github.com/JoosepAlviste/nvim-ts-context-commentstring?tab=readme-ov-file#getting-started
+g.skip_ts_context_commentstring_module = true
+
 -- remove satusline
 opt.laststatus = 0
 

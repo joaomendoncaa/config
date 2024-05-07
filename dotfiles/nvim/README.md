@@ -1,3 +1,3 @@
-# Neovim config 
+# Neovim
 
-My neovim config, based off of [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim), the last update was May 2, 2024 (inclusive).
+My neovim config, based off of [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (b9bd02d55b77).
