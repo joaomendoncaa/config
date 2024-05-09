@@ -13,7 +13,7 @@ keymap({ 'n', 'i', 'v' }, '<right>', '<cmd>echohl ErrorMsg | echo "USE L TO MOVE
 keymap({ 'n', 'i', 'v' }, '<up>', '<cmd>echohl ErrorMsg | echo "USE K TO MOVE!!" | echohl None<CR>')
 keymap({ 'n', 'i', 'v' }, '<down>', '<cmd>echohl ErrorMsg | echo "USE J TO MOVE!!" | echohl None<CR>')
 
-keymap('n', '<C-e>', '<CMD>Oil<CR>', { desc = '[E]xplore parent directory.' })
+keymap('n', '<C-e>', '<CMD>Yazi<CR>', { desc = '[E]xplore parent directory.' })
 
 keymap({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', { desc = '[S]ave current buffer.' })
 keymap({ 'n', 'i', 'v' }, '<C-S>', '<CMD>wa<CR>', { desc = '[S]ave all buffers.' })
