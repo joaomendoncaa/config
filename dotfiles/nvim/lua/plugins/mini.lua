@@ -17,10 +17,6 @@ return {
       -- - sd'   - [S]urround [D]elete [']quotes
       -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup()
-
-      -- jump interatively with labels
-      -- SEE: https://github.com/echasnovski/mini.nvim/blob/main/readmes/mini-jump2d.md
-      require('mini.jump2d').setup()
     end,
   },
 }
