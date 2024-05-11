@@ -1,6 +1,5 @@
 return {
   {
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`
     'olivercederborg/poimandres.nvim',
     priority = 1000,
     config = function()
@@ -13,9 +12,10 @@ return {
     init = function()
       vim.cmd.colorscheme 'poimandres'
 
-      -- Set the background color to transparent
+      -- set the background color to transparent
       vim.cmd [[highlight Normal guibg=none ctermbg=none]]
 
+      -- fix a couple highlight conflicts under the cursor
       vim.cmd.hi 'Comment gui=none'
       vim.cmd.hi 'LspReferenceWrite guibg=none'
       vim.cmd.hi 'LspReferenceText guibg=none'
