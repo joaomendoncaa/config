@@ -21,6 +21,8 @@ return {
         delete_to_trash = true,
         skip_confirm_for_simple_edits = true,
       }
+
+      vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open file explorer with oil.nvim in cwd.' })
     end,
   },
   -- Adds the git status for each file on the buffer

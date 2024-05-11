@@ -4,10 +4,8 @@ keymap('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = '[E]scape from search highl
 
 keymap('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message.' })
 keymap('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message.' })
-keymap('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
-keymap('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
-keymap('n', '<C-e>', '<CMD>Yazi<CR>', { desc = '[E]xplore parent directory.' })
+keymap('n', '<leader>Q', vim.diagnostic.open_float, { desc = '[Q]uickly show diagnostic error messages.' })
+keymap('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list.' })
 
 keymap({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', { desc = '[S]ave current buffer.' })
 keymap({ 'n', 'i', 'v' }, '<C-S>', '<CMD>wa<CR>', { desc = '[S]ave all buffers.' })
