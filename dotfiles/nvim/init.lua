@@ -104,11 +104,7 @@ require 'keymaps'
 -- see: https://www.lazyvim.org/configuration/lazy.nvim
 require 'lazyvim'
 
--- load all plugins with lazyvim
-require('lazy').setup {
-  'tpope/vim-sleuth',
-  'mg979/vim-visual-multi',
-
-  -- finally import all lua plugins at ./lua/plugins/
-  { import = 'plugins' },
-}
+-- load all plugins at `./lua/plugins/` and setup general lazy settings
+require('lazy').setup('plugins', {
+  change_detection = { enabled = false },
+})
