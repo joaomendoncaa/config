@@ -1,7 +1,6 @@
 return {
   {
     'olivercederborg/poimandres.nvim',
-    priority = 1000,
     config = function()
       require('poimandres').setup {
         dim_nc_background = true, -- dim 'non-current' window backgrounds
@@ -20,6 +19,12 @@ return {
       vim.cmd.hi 'LspReferenceWrite guibg=none'
       vim.cmd.hi 'LspReferenceText guibg=none'
       vim.cmd.hi 'LspReferenceRead guibg=none'
+    end,
+  },
+  {
+    'norcalli/nvim-colorizer.lua',
+    config = function()
+      require('colorizer').setup(nil, { css = true })
     end,
   },
 }
