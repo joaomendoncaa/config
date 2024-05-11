@@ -41,7 +41,7 @@ return {
 
       keymap('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps.' })
 
-      keymap('n', '<leader>ss', builtin.find_files, { desc = '[S]earch [F]iles.' })
+      keymap('n', '<leader>ss', builtin.find_files, { desc = '[S]earch [S]elect files.' })
 
       keymap('n', '<leader>sS', builtin.builtin, { desc = '[S]earch [S]elect Telescope.' })
 
