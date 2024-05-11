@@ -94,17 +94,18 @@
 --   - Noone
 --
 
--- set nvim globals, options and auto commands
+-- nvim globals, options and auto commands
 require 'options'
 
--- define custom keymaps
+-- custom keymaps
+-- NOTE: some keymaps are directly in their related plugin tables
 require 'keymaps'
 
--- install "lazyvim" plugin manager
--- see: https://www.lazyvim.org/configuration/lazy.nvim
+-- install lazyvim plugin manager
+-- SEE: https://www.lazyvim.org/configuration/lazy.nvim
 require 'lazyvim'
 
--- load all plugins at `./lua/plugins/` and setup general lazy settings
+-- load all plugins at `./lua/plugins/` and setup general lazyvim settings
 require('lazy').setup('plugins', {
   change_detection = { enabled = false },
 })
