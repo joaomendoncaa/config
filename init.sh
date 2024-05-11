@@ -59,7 +59,6 @@ success() {
 }
 
 # Simplify creating a symlink with this repository /dotfiles/*
-# TODO: interactive mode to configure paths on the fly (right now it's only an interactive "deletion")
 create_symlink() {
 	local config_path="$1"
 	local source_path="$2"
@@ -71,18 +70,35 @@ create_symlink() {
 		success "Symlink created successfully: $source_path -> $config_path"
 	else
 		error_silent "There's already a config in $config_path"
-		info "You can delete it with rm -rf $config_path"
+		info "You can:"
+		info "1. Delete it with rm -rf $config_path [D/d]"
+		info "2. Backup it and proceed with symlinking [B/b] (default)"
+		info "3. Abort symlinking [N/n]"
 
-		read -p "Do you want to delete it now and proceed with the symlinking? [Y/N] " response
-		response=${response^^} # convert response to uppercase
-		if [[ $response =~ ^(YES|Y)$ ]]; then
+		read -p "Enter your choice [B/b/D/d/N/n]: " response
+		response=${response:-b}                                   # set default value to b if no input
+		response=$(echo "$response" | tr '[:upper:]' '[:lower:]') # convert to lowercase
+
+		case $response in
+		d)
+			info "Deleting existing config at $config_path..."
 			rm -rf "$config_path"
 			ln -s "$source_path" "$config_path"
-
 			success "Symlink created successfully: $source_path -> $config_path"
-		else
+			;;
+		b)
+			info "Creating backup of existing config at $config_path.bak..."
+			mv "$config_path" "$config_path.bak"
+			ln -s "$source_path" "$config_path"
+			success "Symlink created successfully: $source_path -> $config_path. Previous config backed up as $config_path.bak"
+			;;
+		n)
 			info "Symlinking aborted."
-		fi
+			;;
+		*)
+			info "Invalid choice. Symlinking aborted."
+			;;
+		esac
 	fi
 }
 
@@ -90,6 +106,7 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 create_symlink "/home/joao/.config/nvim" "$DIR/dotfiles/nvim"
 create_symlink "/home/joao/.config/starship.toml" "$DIR/dotfiles/starship/starship.toml"
+create_symlink "/home/joao/.config/yazi/yazi.toml" "$DIR/dotfiles/yazi/yazi.toml"
 create_symlink "/home/joao/.config/tmux" "$DIR/dotfiles/tmux"
 create_symlink "/home/joao/.config/lazygit" "$DIR/dotfiles/lazygit"
 create_symlink "/home/joao/.config/atuin" "$DIR/dotfiles/atuin"
