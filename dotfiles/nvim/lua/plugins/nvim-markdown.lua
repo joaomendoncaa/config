@@ -1,3 +1,1 @@
-return {
-  'ixru/nvim-markdown',
-}
+return { 'ixru/nvim-markdown' }

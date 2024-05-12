@@ -3,6 +3,7 @@ return {
   event = 'InsertEnter',
   config = function()
     require('nvim-autopairs').setup {}
+
     -- automatically add `(` after selecting a function or method
     local cmp_autopairs = require 'nvim-autopairs.completion.cmp'
     local cmp = require 'cmp'
