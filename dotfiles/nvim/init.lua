@@ -107,7 +107,7 @@ require 'lazyvim'
 
 -- load all plugins at `./lua/plugins/` and setup general lazyvim settings
 require('lazy').setup('plugins', {
-  change_detection = { enabled = false },
+  change_detection = { notify = false },
   news = {
     lazyvim = true,
     neovim = true,
