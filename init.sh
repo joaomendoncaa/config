@@ -58,11 +58,13 @@ success() {
 	echo -e "${Green}$@ ${Color_Off} \n"
 }
 
-# Simplify creating a symlink with this repository /dotfiles/*
+# Simplify creating a symlink to this repository /dotfiles/*
 create_symlink() {
 	local config_path="$1"
 	local source_path="$2"
 
+	# check wether `--force-delete` or the config path doesn't exist
+	# which in either case, we'll optimistically create the file
 	if [[ "$force_delete" == true || ! -e "$config_path" ]]; then
 		rm -rf "$config_path"
 		ln -s "$source_path" "$config_path"
@@ -104,9 +106,9 @@ create_symlink() {
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-create_symlink "~/.config/nvim" "$DIR/dotfiles/nvim"
-create_symlink "~/.config/starship.toml" "$DIR/dotfiles/starship/starship.toml"
-create_symlink "~/.config/yazi/yazi.toml" "$DIR/dotfiles/yazi/yazi.toml"
-create_symlink "~/.config/tmux" "$DIR/dotfiles/tmux"
-create_symlink "~/.config/lazygit" "$DIR/dotfiles/lazygit"
-create_symlink "~/.config/atuin" "$DIR/dotfiles/atuin"
+create_symlink "$HOME/.config/nvim" "$DIR/dotfiles/nvim"
+create_symlink "$HOME/.config/starship.toml" "$DIR/dotfiles/starship/starship.toml"
+create_symlink "$HOME/.config/yazi" "$DIR/dotfiles/yazi"
+create_symlink "$HOME/.config/tmux" "$DIR/dotfiles/tmux"
+create_symlink "$HOME/.config/lazygit" "$DIR/dotfiles/lazygit"
+create_symlink "$HOME/.config/atuin" "$DIR/dotfiles/atuin"
