@@ -11,6 +11,10 @@ return {
   end,
 
   config = function()
-    require('overseer').setup()
+    require('overseer').setup {
+      task_list = {
+        default_detail = 2,
+      },
+    }
   end,
 }
