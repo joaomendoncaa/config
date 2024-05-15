@@ -3,6 +3,8 @@ return {
   -- SEE: https://github.com/Wansmer/treesj
   'Wansmer/treesj',
 
+  event = 'BufEnter',
+
   dependencies = { 'nvim-treesitter/nvim-treesitter' },
 
   config = function()
