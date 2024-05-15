@@ -4,6 +4,8 @@ return {
     -- SEE: https://github.com/stevearc/oil.nvim
     'stevearc/oil.nvim',
 
+    event = 'BufEnter',
+
     dependencies = {
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
@@ -37,7 +39,8 @@ return {
     -- SEE: https://github.com/refractalize/oil-git-status.nvim
     'refractalize/oil-git-status.nvim',
 
-    lazy = false,
+    event = 'BufEnter',
+
     dependencies = {
       'stevearc/oil.nvim',
     },
