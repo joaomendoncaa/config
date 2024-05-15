@@ -1,2 +1,5 @@
 [manager]
+ratio = [1, 4, 3]
 show_hidden = true
+linemode = "size"
+show_symlink = true
