@@ -11,7 +11,7 @@ return {
 
     vim.api.nvim_set_hl(0, 'I2A0', { fg = '#70ef61' })
     vim.api.nvim_set_hl(0, 'I2A1', { fg = '#51212d' })
-    vim.api.nvim_set_hl(0, 'I2A2', { fg = '#ff639b' })
+    vim.api.nvim_set_hl(0, 'I2A2', { fg = '#e41f26' })
     vim.api.nvim_set_hl(0, 'I2A3', { fg = '#a2314e' })
     vim.api.nvim_set_hl(0, 'I2A4', { fg = '#ff5386' })
     vim.api.nvim_set_hl(0, 'I2A5', { fg = '#a24569' })
