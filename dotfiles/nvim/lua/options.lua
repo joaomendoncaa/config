@@ -17,6 +17,8 @@ g.navic_silence = true
 -- SEE: https://github.com/JoosepAlviste/nvim-ts-context-commentstring?tab=readme-ov-file#getting-started
 g.skip_ts_context_commentstring_module = true
 
+opt.termguicolors = true
+
 -- remove satusline
 opt.laststatus = 0
 
