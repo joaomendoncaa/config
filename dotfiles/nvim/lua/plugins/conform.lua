@@ -1,18 +1,12 @@
 return {
-  {
-    'stevearc/conform.nvim',
-    lazy = false,
-    keys = {
-      {
-        '<leader>f',
-        function()
-          require('conform').format { async = true, lsp_fallback = true }
-        end,
-        mode = '',
-        desc = '[F]ormat buffer',
-      },
-    },
-    opts = {
+  -- Lightweight yet powerful formatter plugin for Neovim.
+  -- SEE: https://github.com/stevearc/conform.nvim
+  'stevearc/conform.nvim',
+
+  lazy = false,
+
+  config = function()
+    require('conform').setup {
       notify_on_error = false,
       format_on_save = function(bufnr)
         -- Disable "format_on_save lsp_fallback" for languages that don't
@@ -32,6 +26,10 @@ return {
         typescript = { 'prettier' },
         tsx = { 'prettier' },
       },
-    },
-  },
+    }
+
+    vim.keymap.set('n', '<leader>f', function()
+      require('conform').format { async = true, lsp_fallback = true }
+    end, { desc = '[F]ormat buffer' })
+  end,
 }

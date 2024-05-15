@@ -1,4 +1,6 @@
 return {
+  -- Neovim plugin for splitting/joining blocks of code
+  -- SEE: https://github.com/Wansmer/treesj
   'Wansmer/treesj',
   dependencies = { 'nvim-treesitter/nvim-treesitter' },
   config = function()

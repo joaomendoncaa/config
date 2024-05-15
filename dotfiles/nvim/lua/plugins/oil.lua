@@ -1,7 +1,13 @@
 return {
   {
+    -- Neovim file explorer: edit your filesystem like a buffer.
+    -- SEE: https://github.com/stevearc/oil.nvim
     'stevearc/oil.nvim',
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
+
+    dependencies = {
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+    },
+
     config = function()
       require('oil').setup {
         keymaps = {
@@ -25,14 +31,17 @@ return {
       vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open file explorer with oil.nvim in cwd.' })
     end,
   },
-  -- Adds the git status for each file on the buffer
-  -- see: https://github.com/refractalize/oil-git-status.nvim
+
   {
+    -- Adds the git status for each file on the buffer.
+    -- SEE: https://github.com/refractalize/oil-git-status.nvim
     'refractalize/oil-git-status.nvim',
-    lazy = true,
+
+    lazy = false,
     dependencies = {
       'stevearc/oil.nvim',
     },
+
     config = function()
       require('oil-git-status').setup {
         show_ignored = true,

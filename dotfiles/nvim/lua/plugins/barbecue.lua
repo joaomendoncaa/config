@@ -1,11 +1,15 @@
 return {
+  -- A VS Code like winbar for Neovim.
+  -- SEE: https://github.com/utilyre/barbecue.nvim
   'utilyre/barbecue.nvim',
+
   name = 'barbecue',
   version = '*',
   dependencies = {
     'SmiteshP/nvim-navic',
-    'nvim-tree/nvim-web-devicons',
+    { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
   },
+
   config = function()
     require('barbecue').setup {
       -- prevent barbecue from updating itself automatically

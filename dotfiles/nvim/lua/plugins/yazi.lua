@@ -1,9 +1,13 @@
 return {
+  -- A Neovim Plugin for the yazi terminal file browser.
+  -- SEE: https://github.com/mikavilpas/yazi.nvim
   'mikavilpas/yazi.nvim',
+
+  event = 'VeryLazy',
   dependencies = {
     'nvim-lua/plenary.nvim',
   },
-  event = 'VeryLazy',
+
   config = function()
     require('yazi').setup {
       open_for_directories = false,

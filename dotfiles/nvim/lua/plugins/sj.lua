@@ -1,14 +1,16 @@
 return {
+  -- Search based navigation combined with quick jump features.
+  -- SEE: https://github.com/woosaaahh/sj.nvim
   'woosaaahh/sj.nvim',
+
   config = function()
     local sj = require 'sj'
-    local keymap = vim.keymap.set
 
     sj.setup()
 
-    keymap('n', 'S', function()
+    vim.keymap.set('n', 'S', function()
       sj.run {
-        auto_jump = true,
+        auto_jump = false,
         stop_on_fail = false,
         separator = ':',
       }

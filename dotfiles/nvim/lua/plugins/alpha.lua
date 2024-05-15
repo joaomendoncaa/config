@@ -1,10 +1,14 @@
 return {
+  -- A lua powered greeter like vim-startify / dashboard-nvim.
+  -- SEE: https://github.com/goolord/alpha-nvim
   'goolord/alpha-nvim',
+
   dependencies = {
-    'nvim-tree/nvim-web-devicons',
     'nvim-lua/plenary.nvim',
     'nvim-telescope/telescope.nvim',
+    { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
   },
+
   config = function()
     local alpha = require 'alpha'
     local dashboard = require 'alpha.themes.dashboard'

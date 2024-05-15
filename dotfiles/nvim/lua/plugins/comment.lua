@@ -1,11 +1,15 @@
 return {
+  -- Smart and powerful comment plugin for neovim. Supports treesitter, dot repeat, left-right/up-down motions, hooks, and more.
+  -- SEE: https://github.com/numToStr/Comment.nvim
   'numToStr/Comment.nvim',
+
   event = 'BufReadPre',
   lazy = false,
   dependencies = {
     'nvim-treesitter/nvim-treesitter',
     'JoosepAlviste/nvim-ts-context-commentstring',
   },
+
   config = function()
     local prehook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook()
 
