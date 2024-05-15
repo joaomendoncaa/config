@@ -9,7 +9,7 @@ return {
       vim.fn['mkdp#util#install']()
     end,
     config = function()
-      vim.keymap.set('n', '<leader>p', '<CMD>MarkdownPrevieToggle<CR>', { desc = 'Markdown [P]review.' })
+      vim.keymap.set('n', '<leader>p', '<CMD>MarkdownPreviewToggle<CR>', { desc = 'Markdown [P]review.' })
     end,
   },
 }
