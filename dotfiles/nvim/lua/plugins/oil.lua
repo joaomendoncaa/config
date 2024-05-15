@@ -29,6 +29,7 @@ return {
   -- see: https://github.com/refractalize/oil-git-status.nvim
   {
     'refractalize/oil-git-status.nvim',
+    lazy = true,
     dependencies = {
       'stevearc/oil.nvim',
     },
