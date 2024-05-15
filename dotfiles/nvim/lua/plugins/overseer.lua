@@ -6,7 +6,7 @@ return {
   init = function()
     local keymap = vim.keymap.set
 
-    keymap('n', '<leader>tt', '<CMD>OverseerToggle<CR>', { desc = 'Overseer [T]asks [T]oggle.' })
+    keymap('n', '<leader>tt', '<CMD>OverseerToggle right<CR>', { desc = 'Overseer [T]asks [T]oggle.' })
     keymap('n', '<leader>tr', '<CMD>OverseerRun<CR>', { desc = 'Overseer [T]asks [R]un.' })
   end,
 
