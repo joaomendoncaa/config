@@ -1,8 +1,13 @@
 return {
-  { 'ixru/nvim-markdown' },
+  {
+    'ixru/nvim-markdown',
+    lazy = true,
+    config = function() end,
+  },
 
   {
     'iamcco/markdown-preview.nvim',
+    lazy = true,
     cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
     ft = { 'markdown' },
     build = function()
