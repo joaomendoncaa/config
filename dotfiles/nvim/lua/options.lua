@@ -1,4 +1,4 @@
-local opt = vim.opt
+local o = vim.opt
 local g = vim.g
 local autocmd = vim.api.nvim_create_autocmd
 
@@ -14,26 +14,28 @@ g.navic_silence = true
 -- SEE: https://github.com/JoosepAlviste/nvim-ts-context-commentstring?tab=readme-ov-file#getting-started
 g.skip_ts_context_commentstring_module = true
 
-opt.termguicolors = true -- 24 bit color
-opt.laststatus = 0 -- remove satusline
-opt.signcolumn = 'yes' -- keep signcolumn on by default
-opt.cursorline = true -- show which line your cursor is on
-opt.number = true -- sign numbers column
-opt.relativenumber = true
-opt.fillchars = { eob = ' ' } -- remove tilda from column on blank lines
-opt.mouse = 'a' -- enable mouse
-opt.showmode = false -- don't show the mode
-opt.clipboard = 'unnamedplus' -- sync clipboard between OS and Neovim.
-opt.breakindent = true -- enable break indent
-opt.undofile = true -- save undo history
-opt.ignorecase = true -- case-insensitive searching UNLESS \C or capital in search
-opt.smartcase = true
-opt.updatetime = 250 -- decrease update time
-opt.splitright = true -- configure how new splits should be opened
-opt.splitbelow = true
-opt.inccommand = 'split' -- preview substitutions live
-opt.scrolloff = 10 -- minimal number of screen lines to keep above and below the cursor.
-opt.hlsearch = true -- set highlight on search, but clear on pressing <Esc> in normal mode
+o.termguicolors = true -- 24 bit color
+o.laststatus = 0 -- remove satusline
+o.signcolumn = 'yes' -- keep signcolumn on by default
+o.cursorline = true -- show which line your cursor is on
+o.number = true -- sign numbers column
+o.relativenumber = true
+o.fillchars = { eob = ' ' } -- remove tilda from column on blank lines
+o.mouse = 'a' -- enable mouse
+o.showmode = false -- don't show the mode
+o.clipboard = 'unnamedplus' -- sync clipboard between OS and Neovim.
+o.breakindent = true -- enable break indent
+o.undofile = true -- save undo history
+o.ignorecase = true -- case-insensitive searching UNLESS \C or capital in search
+o.smartcase = true
+o.updatetime = 250 -- decrease update time
+o.splitright = true -- configure how new splits should be opened
+o.splitbelow = true
+o.inccommand = 'split' -- preview substitutions live
+o.scrolloff = 10 -- minimal number of screen lines to keep above and below the cursor.
+o.hlsearch = true -- set highlight on search, but clear on pressing <Esc> in normal mode
+o.completeopt = { 'menu,menuone,noselect' }
+o.shortmess:append 'c' -- :help shortmess
 
 -- highlight when yanking characters
 autocmd('TextYankPost', {

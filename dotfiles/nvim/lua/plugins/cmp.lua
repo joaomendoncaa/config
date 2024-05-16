@@ -15,6 +15,10 @@ return {
     --  SEE: https://github.com/saadparwaiz1/cmp_luasnip
     'saadparwaiz1/cmp_luasnip',
 
+    -- Pictograms for each LSP completion item type
+    -- SEE: https://github.com/onsails/lspkind.nvim
+    'onsails/lspkind.nvim',
+
     {
       -- Snippet Engine for Neovim written in Lua.
       -- SEE: https://github.com/L3MON4D3/LuaSnip
@@ -33,55 +37,80 @@ return {
       },
 
       build = (function()
-        -- Build Step is needed for regex support in snippets
-        -- This step is not supported in many windows environments
-        -- Remove the below condition to re-enable on windows
         if vim.fn.has 'win32' == 1 or vim.fn.executable 'make' == 0 then
           return
         end
+
         return 'make install_jsregexp'
       end)(),
+
+      config = function()
+        local luasnip = require 'luasnip'
+
+        luasnip.config.set_config {
+          history = false,
+          updateevents = 'TextChanged,TextChangedI',
+        }
+
+        -- load all snippets defined at `snippets/`
+        for _, ft_path in ipairs(vim.api.nvim_get_runtime_file('snippets/*.lua', true)) do
+          loadfile(ft_path)()
+        end
+
+        vim.keymap.set({ 'i', 's' }, '<c-k>', function()
+          if luasnip.expand_or_jumpable() then
+            luasnip.expand_or_jump()
+          end
+        end, { silent = true, desc = 'Expand/Jump to next snippet node.' })
+
+        vim.keymap.set({ 'i', 's' }, '<c-j>', function()
+          if luasnip.jumpable(-1) then
+            luasnip.jump(-1)
+          end
+        end, { silent = true, desc = 'Expand/Jump to previous snippet node.' })
+      end,
     },
   },
 
   config = function()
     local cmp = require 'cmp'
     local luasnip = require 'luasnip'
+    local lspkind = require 'lspkind'
 
     luasnip.config.setup {}
+    lspkind.init()
 
     cmp.setup {
+      sources = {
+        { name = 'nvim_lsp' },
+        { name = 'luasnip' },
+        { name = 'path' },
+      },
+
+      -- wire luasnip to lsp so the lsp knows how to handle snippet expansion
       snippet = {
         expand = function(args)
           luasnip.lsp_expand(args.body)
         end,
       },
-      completion = { completeopt = 'menu,menuone,noinsert' },
+
       mapping = cmp.mapping.preset.insert {
-        -- Select the [n]ext item
-        ['<C-n>'] = cmp.mapping.select_next_item(),
-        -- Select the [p]revious item
-        ['<C-p>'] = cmp.mapping.select_prev_item(),
+        ['<C-n>'] = cmp.mapping.select_next_item { behavior = cmp.SelectBehavior.Insert },
+        ['<C-p>'] = cmp.mapping.select_prev_item { behavior = cmp.SelectBehavior.Insert },
+
+        ['<C-y>'] = cmp.mapping(
+          cmp.mapping.confirm {
+            select = true,
+            behavior = cmp.ConfirmBehavior.Insert,
+          },
+          { 'i', 'c' }
+        ),
 
         ['<C-b>'] = cmp.mapping.scroll_docs(-4),
         ['<C-f>'] = cmp.mapping.scroll_docs(4),
 
-        -- Accept ([y]es) the completion.
-        --  This will auto-import if the LSP supports it.
-        --  Will expand snippets if the LSP sent a snippet.
-        ['<C-y>'] = cmp.mapping.confirm { select = true },
-
-        -- Forcefully trigger the completion dropdown list nvim-cmp.
         ['<C-Space>'] = cmp.mapping.complete {},
 
-        -- Think of <c-l> as moving to the right of your snippet expansion.
-        --  So if you have a snippet that's like:
-        --  function $name($args)
-        --    $body
-        --  end
-        --
-        -- <c-l> will move you to the right of each of the expansion locations.
-        -- <c-h> is similar, except moving you backwards.
         ['<C-l>'] = cmp.mapping(function()
           if luasnip.expand_or_locally_jumpable() then
             luasnip.expand_or_jump()
@@ -92,11 +121,6 @@ return {
             luasnip.jump(-1)
           end
         end, { 'i', 's' }),
-      },
-      sources = {
-        { name = 'nvim_lsp' },
-        { name = 'luasnip' },
-        { name = 'path' },
       },
     }
   end,
