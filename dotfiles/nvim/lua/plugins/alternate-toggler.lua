@@ -3,7 +3,7 @@ return {
   -- SEE: https://github.com/rmagatti/alternate-toggler
   'rmagatti/alternate-toggler',
 
-  event = { 'BufReadPost' },
+  event = { 'BufEnter' },
 
   config = function()
     require('alternate-toggler').setup {
