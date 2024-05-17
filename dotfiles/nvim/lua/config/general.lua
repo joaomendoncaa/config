@@ -32,6 +32,7 @@ o.scrolloff = 10 -- minimal number of screen lines to keep above and below the c
 o.hlsearch = true -- set highlight on search, but clear on pressing <Esc> in normal mode
 o.completeopt = { 'menu,menuone,noselect' }
 o.shortmess:append 'c' -- :help shortmess
+o.wrap = false -- no wrap
 
 autocmd('TextYankPost', {
   desc = 'Briefly highlight text range when yanking.',
