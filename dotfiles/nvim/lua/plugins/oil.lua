@@ -1,54 +1,54 @@
 return {
-  {
-    -- Neovim file explorer: edit your filesystem like a buffer.
-    -- SEE: https://github.com/stevearc/oil.nvim
-    'stevearc/oil.nvim',
+    {
+        -- Neovim file explorer: edit your filesystem like a buffer.
+        -- SEE: https://github.com/stevearc/oil.nvim
+        'stevearc/oil.nvim',
 
-    event = 'BufEnter',
+        event = 'VeryLazy',
 
-    dependencies = {
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+        dependencies = {
+            { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+        },
+
+        config = function()
+            require('oil').setup {
+                keymaps = {
+                    ['<a-h>'] = 'actions.parent',
+                    ['<a-l>'] = 'actions.select',
+                },
+                default_file_explorer = true,
+                view_options = {
+                    show_hidden = true,
+                },
+                columns = {
+                    'icon',
+                },
+                win_options = {
+                    signcolumn = 'yes:2',
+                },
+                delete_to_trash = true,
+                skip_confirm_for_simple_edits = true,
+            }
+
+            vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open file explorer with oil.nvim in cwd.' })
+        end,
     },
 
-    config = function()
-      require('oil').setup {
-        keymaps = {
-          ['<a-h>'] = 'actions.parent',
-          ['<a-l>'] = 'actions.select',
-        },
-        default_file_explorer = true,
-        view_options = {
-          show_hidden = true,
-        },
-        columns = {
-          'icon',
-        },
-        win_options = {
-          signcolumn = 'yes:2',
-        },
-        delete_to_trash = true,
-        skip_confirm_for_simple_edits = true,
-      }
+    {
+        -- Adds the git status for each file on the buffer.
+        -- SEE: https://github.com/refractalize/oil-git-status.nvim
+        'refractalize/oil-git-status.nvim',
 
-      vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open file explorer with oil.nvim in cwd.' })
-    end,
-  },
+        event = 'VeryLazy',
 
-  {
-    -- Adds the git status for each file on the buffer.
-    -- SEE: https://github.com/refractalize/oil-git-status.nvim
-    'refractalize/oil-git-status.nvim',
+        dependencies = {
+            'stevearc/oil.nvim',
+        },
 
-    event = 'BufEnter',
-
-    dependencies = {
-      'stevearc/oil.nvim',
+        config = function()
+            require('oil-git-status').setup {
+                show_ignored = true,
+            }
+        end,
     },
-
-    config = function()
-      require('oil-git-status').setup {
-        show_ignored = true,
-      }
-    end,
-  },
 }

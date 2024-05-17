@@ -98,4 +98,19 @@ require 'config.general'
 require 'config.keymaps'
 require 'config.lazy'
 
-require('lazy').setup('plugins', { change_detection = { notify = false } })
+require('lazy').setup('plugins', {
+    change_detection = { notify = false },
+    performance = {
+        cache = { enabled = true },
+        rtp = {
+            disabled_plugins = {
+                'netrwPlugin',
+                'gzip',
+                'tarPlugin',
+                'tohtml',
+                'tutor',
+                'zipPlugin',
+            },
+        },
+    },
+})

@@ -1,28 +1,28 @@
 return {
-  {
-    -- Markdown Vim Mode.
-    -- SEE: https://github.com/ixru/nvim-markdown
-    'ixru/nvim-markdown',
+    {
+        -- Markdown Vim Mode.
+        -- SEE: https://github.com/ixru/nvim-markdown
+        'ixru/nvim-markdown',
 
-    ft = { 'markdown' },
+        ft = { 'markdown' },
 
-    config = function() end,
-  },
+        config = function() end,
+    },
 
-  {
-    -- Markdown preview plugin for (neo)vim.
-    -- SEE: https://github.com/iamcco/markdown-preview.nvim
-    'iamcco/markdown-preview.nvim',
+    {
+        -- Markdown preview plugin for (neo)vim.
+        -- SEE: https://github.com/iamcco/markdown-preview.nvim
+        'iamcco/markdown-preview.nvim',
 
-    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
-    ft = { 'markdown' },
+        cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
+        ft = { 'markdown' },
 
-    build = function()
-      vim.fn['mkdp#util#install']()
-    end,
+        build = function()
+            vim.fn['mkdp#util#install']()
+        end,
 
-    config = function()
-      vim.keymap.set('n', '<leader>p', '<CMD>MarkdownPreviewToggle<CR>', { desc = 'Markdown [P]review.' })
-    end,
-  },
+        config = function()
+            vim.keymap.set('n', '<leader>p', '<CMD>MarkdownPreviewToggle<CR>', { desc = 'Markdown [P]review.' })
+        end,
+    },
 }

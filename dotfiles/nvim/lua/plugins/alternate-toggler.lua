@@ -1,17 +1,18 @@
 return {
-  -- A very small plugin for toggling alternate "boolean" values.
-  -- SEE: https://github.com/rmagatti/alternate-toggler
-  'rmagatti/alternate-toggler',
+    -- A very small plugin for toggling alternate "boolean" values.
+    -- SEE: https://github.com/rmagatti/alternate-toggler
+    'rmagatti/alternate-toggler',
 
-  event = { 'BufEnter' },
+    lazy = true,
+    keys = { '<leader><space>' },
 
-  config = function()
-    require('alternate-toggler').setup {
-      alternates = {
-        ['=='] = '!=',
-      },
-    }
+    config = function()
+        require('alternate-toggler').setup {
+            alternates = {
+                ['=='] = '!=',
+            },
+        }
 
-    vim.keymap.set('n', '<leader><space>', "<cmd>lua require('alternate-toggler').toggleAlternate()<CR>", { desc = '[ ] Toggle Alternate' })
-  end,
+        vim.keymap.set('n', '<leader><space>', "<cmd>lua require('alternate-toggler').toggleAlternate()<CR>", { desc = '[ ] Toggle Alternate' })
+    end,
 }

@@ -36,9 +36,9 @@ o.whichwrap = 'lh' -- :h whichwrap
 o.wrap = false -- no wrap
 
 autocmd('TextYankPost', {
-  desc = 'Briefly highlight text range when yanking.',
-  group = vim.api.nvim_create_augroup('highlight-yank', { clear = true }),
-  callback = function()
-    vim.highlight.on_yank()
-  end,
+    desc = 'Briefly highlight text range when yanking.',
+    group = vim.api.nvim_create_augroup('highlight-yank', { clear = true }),
+    callback = function()
+        vim.highlight.on_yank()
+    end,
 })
