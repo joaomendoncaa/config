@@ -4,6 +4,15 @@ return {
     'ThePrimeagen/harpoon',
 
     branch = 'harpoon2',
+    lazy = true,
+    keys = {
+        '<leader>h',
+        '<a-1>',
+        '<a-2>',
+        '<a-3>',
+        '<a-4>',
+    },
+
     dependencies = {
         'nvim-lua/plenary.nvim',
     },
@@ -32,12 +41,5 @@ return {
         vim.keymap.set('n', '<a-4>', function()
             harpoon:list():select(4)
         end, { desc = 'Select H[A]rpoon Buffer in Position 4.' })
-
-        vim.keymap.set('n', '<a-h>', function()
-            harpoon:list():prev()
-        end, { desc = 'Select previous [H]arpoon item on the list.' })
-        vim.keymap.set('n', '<a-l>', function()
-            harpoon:list():next()
-        end, { desc = 'Select next [H]arpoon item on the list.' })
     end,
 }
