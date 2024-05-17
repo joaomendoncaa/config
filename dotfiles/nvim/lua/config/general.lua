@@ -31,7 +31,8 @@ o.inccommand = 'split' -- preview substitutions live
 o.scrolloff = 10 -- minimal number of screen lines to keep above and below the cursor.
 o.hlsearch = true -- set highlight on search, but clear on pressing <Esc> in normal mode
 o.completeopt = { 'menu,menuone,noselect' }
-o.shortmess:append 'c' -- :help shortmess
+o.shortmess:append 'c' -- :h shortmess
+o.whichwrap = 'lh' -- :h whichwrap
 o.wrap = false -- no wrap
 
 autocmd('TextYankPost', {
