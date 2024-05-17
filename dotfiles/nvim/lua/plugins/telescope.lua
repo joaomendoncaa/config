@@ -3,7 +3,7 @@ return {
   -- SEE: https://github.com/nvim-telescope/telescope.nvim
   'nvim-telescope/telescope.nvim',
 
-  event = 'VimEnter',
+  event = 'BufEnter',
   branch = '0.1.x',
   dependencies = {
     'nvim-telescope/telescope-ui-select.nvim',
