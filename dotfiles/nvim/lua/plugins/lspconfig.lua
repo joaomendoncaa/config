@@ -118,9 +118,6 @@ return {
       tsserver = {},
       tailwindcss = {},
       lua_ls = {
-        -- cmd = {...},
-        -- filetypes = { ...},
-        -- capabilities = {},
         settings = {
           Lua = {
             completion = {

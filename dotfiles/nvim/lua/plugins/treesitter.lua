@@ -3,6 +3,7 @@ return {
   -- SEE: https://github.com/nvim-treesitter/nvim-treesitter
   'nvim-treesitter/nvim-treesitter',
 
+  event = { 'VeryLazy', 'BufEnter' },
   build = ':TSUpdate',
   opts = {
     auto_install = true,

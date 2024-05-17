@@ -3,6 +3,8 @@ return {
   -- SEE: https://github.com/olivercederborg/poimandres.nvim
   'olivercederborg/poimandres.nvim',
 
+  priority = 1000,
+
   config = function()
     require('poimandres').setup {
       dim_nc_background = true,
