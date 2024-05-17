@@ -19,6 +19,7 @@ return {
                 default_file_explorer = true,
                 view_options = {
                     show_hidden = true,
+                    show_ignored = true,
                 },
                 columns = {
                     'icon',
@@ -46,9 +47,7 @@ return {
         },
 
         config = function()
-            require('oil-git-status').setup {
-                show_ignored = true,
-            }
+            require('oil-git-status').setup {}
         end,
     },
 }
