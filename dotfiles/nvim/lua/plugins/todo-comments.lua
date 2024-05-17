@@ -3,7 +3,8 @@ return {
     -- SEE: https://github.com/folke/todo-comments.nvim
     'folke/todo-comments.nvim',
 
-    event = 'VimEnter',
+    event = 'VeryLazy',
+
     dependencies = {
         'nvim-lua/plenary.nvim',
         'nvim-telescope/telescope.nvim',

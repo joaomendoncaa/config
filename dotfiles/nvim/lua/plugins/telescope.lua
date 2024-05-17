@@ -9,6 +9,9 @@ return {
         '<leader>s',
         '<leader>/',
     },
+    cmd = {
+        'Telescope',
+    },
 
     dependencies = {
         'nvim-telescope/telescope-ui-select.nvim',

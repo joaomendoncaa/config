@@ -2,6 +2,10 @@ return {
     -- Incremental LSP renaming based on Neovim's command-preview feature.
     -- SEE: https://github.com/smjonas/inc-rename.nvim
     'smjonas/inc-rename.nvim',
+
+    lazy = true,
+    cmd = 'IncRename',
+
     config = function()
         require('inc_rename').setup {}
 

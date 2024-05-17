@@ -3,7 +3,7 @@ return {
     -- SEE: https://github.com/stevearc/conform.nvim
     'stevearc/conform.nvim',
 
-    lazy = false,
+    event = 'VeryLazy',
 
     config = function()
         require('conform').setup {

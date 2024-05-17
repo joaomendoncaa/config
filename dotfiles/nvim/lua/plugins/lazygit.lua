@@ -3,6 +3,7 @@ return {
     -- SEE: https://github.com/kdheepak/lazygit.nvim
     'kdheepak/lazygit.nvim',
 
+    lazy = true,
     cmd = {
         'LazyGit',
         'LazyGitConfig',

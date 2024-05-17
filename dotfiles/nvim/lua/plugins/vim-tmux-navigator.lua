@@ -3,6 +3,7 @@ return {
     -- SEE: https://github.com/christoomey/vim-tmux-navigator
     'christoomey/vim-tmux-navigator',
 
+    lazy = "true",
     cmd = {
         'TmuxNavigateLeft',
         'TmuxNavigateDown',
