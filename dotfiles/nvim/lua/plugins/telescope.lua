@@ -51,8 +51,6 @@ return {
 
     keymap('n', '<leader>sS', builtin.builtin, { desc = '[S]earch [S]elect Telescope.' })
 
-    keymap('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord.' })
-
     keymap('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep.' })
 
     keymap('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics.' })
