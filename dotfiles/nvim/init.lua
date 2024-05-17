@@ -98,10 +98,4 @@ require 'config.general'
 require 'config.keymaps'
 require 'config.lazy'
 
-require('lazy').setup('plugins', {
-  change_detection = { notify = false },
-  news = {
-    lazyvim = true,
-    neovim = true,
-  },
-})
+require('lazy').setup('plugins', { change_detection = { notify = false } })
