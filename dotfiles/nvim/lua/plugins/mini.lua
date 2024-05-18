@@ -3,13 +3,7 @@ return {
     -- SEE: https://github.com/echasnovski/mini.nvim
     'echasnovski/mini.nvim',
 
-    lazy = 'true',
-    keys = {
-        'y',
-        'c',
-        's',
-        'S',
-    },
+    event = 'VeryLazy',
 
     config = function()
         require('mini.ai').setup { n_lines = 500 }
