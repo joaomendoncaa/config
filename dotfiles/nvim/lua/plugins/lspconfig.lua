@@ -61,7 +61,6 @@ return {
                 keymap('n', '<leader>ds', require('telescope.builtin').lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
                 keymap('n', '<leader>sw', require('telescope.builtin').lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
                 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'List [C]ode [A]ctions.' })
-                keymap('n', 'K', vim.lsp.buf.hover, { desc = 'Hover Do[K]umentation.' })
 
                 local client = vim.lsp.get_client_by_id(event.data.client_id)
                 if client and client.server_capabilities.documentHighlightProvider then
@@ -95,7 +94,7 @@ return {
                 -- if lsp supports it, toggle inlay hints
                 if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
                     keymap('n', '<leader>th', function()
-                        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+                        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
                     end, { desc = '[T]oggle Inlay [H]ints' })
                 end
             end,
