@@ -3,7 +3,6 @@ return {
     -- SEE: https://github.com/rmagatti/alternate-toggler
     'rmagatti/alternate-toggler',
 
-    lazy = true,
     keys = { '<leader><space>' },
 
     config = function()

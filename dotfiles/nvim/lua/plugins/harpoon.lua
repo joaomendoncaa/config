@@ -4,7 +4,6 @@ return {
     'ThePrimeagen/harpoon',
 
     branch = 'harpoon2',
-    lazy = true,
     keys = {
         '<leader>h',
         '<a-1>',

@@ -3,7 +3,6 @@ return {
     -- SEE: https://github.com/numToStr/Comment.nvim
     'numToStr/Comment.nvim',
 
-    lazy = true,
     keys = { 'gc', 'gb', 'gcc', 'gcb', 'gco', 'gcO', 'gcA' },
 
     dependencies = {

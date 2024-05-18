@@ -3,7 +3,6 @@ return {
     -- SEE: https://github.com/Wansmer/treesj
     'Wansmer/treesj',
 
-    lazy = true,
     keys = {
         {
             '<leader>m',

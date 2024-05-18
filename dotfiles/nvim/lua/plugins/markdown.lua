@@ -4,7 +4,6 @@ return {
         -- SEE: https://github.com/ixru/nvim-markdown
         'ixru/nvim-markdown',
 
-        lazy = true,
         ft = { 'markdown' },
 
         config = function() end,
@@ -15,7 +14,6 @@ return {
         -- SEE: https://github.com/iamcco/markdown-preview.nvim
         'iamcco/markdown-preview.nvim',
 
-        lazy = true,
         cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
         ft = { 'markdown' },
 
