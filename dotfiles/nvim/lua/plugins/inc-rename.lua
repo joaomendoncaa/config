@@ -3,8 +3,7 @@ return {
     -- SEE: https://github.com/smjonas/inc-rename.nvim
     'smjonas/inc-rename.nvim',
 
-    lazy = true,
-    cmd = 'IncRename',
+    event = 'VeryLazy',
 
     config = function()
         require('inc_rename').setup {}
