@@ -95,7 +95,7 @@ return {
                 if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
                     keymap('n', '<leader>th', function()
                         vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
-                    end, { desc = '[T]oggle Inlay [H]ints' })
+                    end, { desc = '[T]oggle Inlay [H]ints.' })
                 end
             end,
         })

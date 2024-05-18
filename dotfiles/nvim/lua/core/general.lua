@@ -34,6 +34,7 @@ o.completeopt = { 'menu,menuone,noselect' }
 o.shortmess:append 'c' -- :h shortmess
 o.whichwrap = 'lh' -- :h whichwrap
 o.wrap = false -- no wrap
+o.conceallevel = 2
 
 autocmd('TextYankPost', {
     desc = 'Briefly highlight text range when yanking.',

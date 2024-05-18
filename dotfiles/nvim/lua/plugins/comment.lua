@@ -3,8 +3,6 @@ return {
     -- SEE: https://github.com/numToStr/Comment.nvim
     'numToStr/Comment.nvim',
 
-    keys = { 'gc', 'gb', 'gcc', 'gcb', 'gco', 'gcO', 'gcA' },
-
     dependencies = {
         'nvim-treesitter/nvim-treesitter',
         'JoosepAlviste/nvim-ts-context-commentstring',
