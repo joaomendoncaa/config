@@ -8,7 +8,7 @@ return {
         'y',
         'c',
         's',
-        '<CR>',
+        'S',
     },
 
     config = function()
@@ -16,6 +16,11 @@ return {
 
         require('mini.surround').setup()
 
-        require('mini.jump2d').setup()
+        require('mini.jump2d').setup {
+            mappings = {
+                start_jumping = 'S',
+            },
+            silent = true,
+        }
     end,
 }
