@@ -14,18 +14,6 @@ function themes.adjustConflicts(match)
         end,
     }
 
-    vim.cmd 'hi Normal guibg=none ctermbg=none'
-
-    vim.api.nvim_set_hl(0, 'LazyReasonSource', { fg = '#5de4c7' })
-    vim.api.nvim_set_hl(0, 'LazyReasonFt', { fg = '#5de4c7' })
-
-    vim.api.nvim_set_hl(0, 'OverseerPENDING', { fg = '#fffac2' })
-    vim.api.nvim_set_hl(0, 'OverseerRUNNING', { fg = '#5de4c7' })
-    vim.api.nvim_set_hl(0, 'OverseerCANCELED', { fg = '#f087bd' })
-    vim.api.nvim_set_hl(0, 'OverseerSUCCESS', { fg = '#5de4c7' })
-    vim.api.nvim_set_hl(0, 'OverseerFAILURE', { fg = '#f087bd' })
-    vim.api.nvim_set_hl(0, 'OverseerDISPOSED', { fg = '#d0679d' })
-
     if adjustment_schemes[match] then
         adjustment_schemes[match]()
     end
