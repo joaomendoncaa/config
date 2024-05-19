@@ -38,7 +38,7 @@ o.conceallevel = 2
 
 autocmd('TextYankPost', {
     desc = 'Briefly highlight text range when yanking.',
-    group = vim.api.nvim_create_augroup('highlight-yank', { clear = true }),
+    group = vim.api.nvim_create_augroup('text-yank-post-highlighting', { clear = true }),
     callback = function()
         vim.highlight.on_yank()
     end,

@@ -17,7 +17,5 @@ return {
                 NOTE = { alt = { 'INFO', 'SEE' } },
             },
         }
-
-        vim.keymap.set('n', '<leader>st', '<CMD>TodoTelescope<CR>', { desc = '[S]earch all [T]odos in workspace.' })
     end,
 }

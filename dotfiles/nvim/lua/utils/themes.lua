@@ -1,0 +1,34 @@
+local themes = {}
+
+function themes.adjustConflicts(match)
+    local adjustment_schemes = {
+        poimandres = function()
+            vim.cmd.hi 'Comment gui=none'
+            vim.cmd.hi 'LspReferenceWrite guibg=none'
+            vim.cmd.hi 'LspReferenceText guibg=none'
+            vim.cmd.hi 'LspReferenceRead guibg=none'
+        end,
+
+        blue = function()
+            vim.cmd.hi 'Comment gui=none'
+        end,
+    }
+
+    vim.cmd 'hi Normal guibg=none ctermbg=none'
+
+    vim.api.nvim_set_hl(0, 'LazyReasonSource', { fg = '#5de4c7' })
+    vim.api.nvim_set_hl(0, 'LazyReasonFt', { fg = '#5de4c7' })
+
+    vim.api.nvim_set_hl(0, 'OverseerPENDING', { fg = '#fffac2' })
+    vim.api.nvim_set_hl(0, 'OverseerRUNNING', { fg = '#5de4c7' })
+    vim.api.nvim_set_hl(0, 'OverseerCANCELED', { fg = '#f087bd' })
+    vim.api.nvim_set_hl(0, 'OverseerSUCCESS', { fg = '#5de4c7' })
+    vim.api.nvim_set_hl(0, 'OverseerFAILURE', { fg = '#f087bd' })
+    vim.api.nvim_set_hl(0, 'OverseerDISPOSED', { fg = '#d0679d' })
+
+    if adjustment_schemes[match] then
+        adjustment_schemes[match]()
+    end
+end
+
+return themes

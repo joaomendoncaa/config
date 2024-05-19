@@ -60,6 +60,7 @@ return {
         keymap('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume.' })
         keymap('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat).' })
         keymap('n', '<leader>sb', builtin.buffers, { desc = '[S]earch open [B]uffers.' })
+        keymap('n', '<leader>st', builtin.colorscheme, { desc = '[S]earch colorsh[T]heme.' })
 
         keymap('n', '<leader>/', function()
             -- You can pass additional configuration to telescope to change theme, layout, etc.
