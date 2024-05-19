@@ -17,7 +17,7 @@ return {
         }
 
         cmd.colorscheme 'poimandres'
-        themes.adjustConflicts(cmd.colorscheme)
+        themes.adjustConflicts 'poimandres'
 
         vim.api.nvim_create_autocmd('ColorScheme', {
             desc = 'Make necessary adjustments to the selected colorscheme.',
