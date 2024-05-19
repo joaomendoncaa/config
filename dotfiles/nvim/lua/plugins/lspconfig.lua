@@ -28,7 +28,14 @@ return {
             -- SEE: https://github.com/folke/neodev.nvim
             'folke/neodev.nvim',
 
-            config = true,
+            config = function()
+                require('neodev').setup {
+                    library = {
+                        enabled = true,
+                        plugins = false,
+                    },
+                }
+            end,
         },
 
         {
