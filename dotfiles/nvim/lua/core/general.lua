@@ -2,6 +2,7 @@
 
 local o = vim.opt
 local g = vim.g
+local env = vim.env
 local autocmd = vim.api.nvim_create_autocmd
 
 g.mapleader = ' ' -- set leader key to space
@@ -9,6 +10,8 @@ g.maplocalleader = ' '
 g.have_nerd_font = true -- signal for plugins that nerd font is enabled
 g.navic_silence = true -- silence nvim-navic errors/warnings
 g.skip_ts_context_commentstring_module = true -- skip backwards compatibility routines and speed up loading
+
+g.LOAD_MASON = env.LOAD_MASON or false
 
 o.termguicolors = true -- 24 bit color
 o.laststatus = 0 -- remove satusline

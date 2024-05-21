@@ -3,55 +3,61 @@ return {
     -- SEE: https://github.com/neovim/nvim-lspconfig
     'neovim/nvim-lspconfig',
 
-    dependencies = {
-        -- Portable package manager for Neovim that runs everywhere Neovim runs. Easily install and manage LSP servers, DAP servers, linters, and formatters.
-        -- SEE: https://github.com/williamboman/mason.nvim
-        'williamboman/mason.nvim',
-        'williamboman/mason-lspconfig.nvim',
-        'WhoIsSethDaniel/mason-tool-installer.nvim',
+    dependencies = (function()
+        local deps = {}
 
-        {
-            -- TypeScript integration NeoVim deserves.
-            -- SEE: https://github.com/pmizio/typescript-tools.nvim
-            'pmizio/typescript-tools.nvim',
+        if vim.g.LOAD_MASON then
+            table.insert(deps, 'williamboman/mason.nvim')
+            table.insert(deps, 'williamboman/mason-lspconfig.nvim')
+            table.insert(deps, 'WhoIsSethDaniel/mason-tool-installer.nvim')
+        end
 
-            dependencies = {
-                'nvim-lua/plenary.nvim',
-                'neovim/nvim-lspconfig',
+        table.insert(deps, {
+            {
+                -- TypeScript integration NeoVim deserves.
+                -- SEE: https://github.com/pmizio/typescript-tools.nvim
+                'pmizio/typescript-tools.nvim',
+
+                dependencies = {
+                    'nvim-lua/plenary.nvim',
+                    'neovim/nvim-lspconfig',
+                },
+
+                config = true,
             },
 
-            config = true,
-        },
+            {
+                -- Neovim setup for init.lua and plugin development with full signature help, docs and completion for the nvim lua API.
+                -- SEE: https://github.com/folke/neodev.nvim
+                'folke/neodev.nvim',
 
-        {
-            -- Neovim setup for init.lua and plugin development with full signature help, docs and completion for the nvim lua API.
-            -- SEE: https://github.com/folke/neodev.nvim
-            'folke/neodev.nvim',
+                config = function()
+                    require('neodev').setup {
+                        library = {
+                            enabled = true,
+                            plugins = false,
+                        },
+                    }
+                end,
+            },
 
-            config = function()
-                require('neodev').setup {
-                    library = {
-                        enabled = true,
-                        plugins = false,
-                    },
-                }
-            end,
-        },
+            {
+                -- Extensible UI for Neovim notifications and LSP progress messages.
+                -- SEE: https://github.com/j-hui/fidget.nvim
+                'j-hui/fidget.nvim',
 
-        {
-            -- Extensible UI for Neovim notifications and LSP progress messages.
-            -- SEE: https://github.com/j-hui/fidget.nvim
-            'j-hui/fidget.nvim',
+                config = function()
+                    require('fidget').setup {
+                        notification = {
+                            window = { winblend = 0 },
+                        },
+                    }
+                end,
+            },
+        })
 
-            config = function()
-                require('fidget').setup {
-                    notification = {
-                        window = { winblend = 0 },
-                    },
-                }
-            end,
-        },
-    },
+        return deps
+    end)(),
 
     config = function()
         vim.api.nvim_create_autocmd('LspAttach', {
@@ -127,25 +133,27 @@ return {
             },
         }
 
-        require('mason').setup()
+        if vim.g.LOAD_MASON then
+            require('mason').setup()
 
-        local ensure_installed = vim.tbl_keys(servers or {})
-        vim.list_extend(ensure_installed, {
-            'stylua',
-        })
-        require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+            local ensure_installed = vim.tbl_keys(servers or {})
+            vim.list_extend(ensure_installed, {
+                'stylua',
+            })
+            require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-        require('mason-lspconfig').setup {
-            handlers = {
-                function(server_name)
-                    local server = servers[server_name] or {}
-                    -- INFO: This handles overriding only values explicitly passed
-                    -- by the server configuration above. Useful when disabling
-                    -- certain features of an LSP (for example, turning off formatting for tsserver)
-                    server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-                    require('lspconfig')[server_name].setup(server)
-                end,
-            },
-        }
+            require('mason-lspconfig').setup {
+                handlers = {
+                    function(server_name)
+                        local server = servers[server_name] or {}
+                        -- INFO: This handles overriding only values explicitly passed
+                        -- by the server configuration above. Useful when disabling
+                        -- certain features of an LSP (for example, turning off formatting for tsserver)
+                        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+                        require('lspconfig')[server_name].setup(server)
+                    end,
+                },
+            }
+        end
     end,
 }
