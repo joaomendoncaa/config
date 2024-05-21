@@ -1,42 +1,46 @@
 -- Nvim globals, options and auto commands.
 
-__PERF = vim.env.PERF or 0
-
 local o = vim.opt
 local g = vim.g
 local autocmd = vim.api.nvim_create_autocmd
 
-g.mapleader = ' ' -- set leader key to space
-g.maplocalleader = ' '
-g.have_nerd_font = true -- signal for plugins that nerd font is enabled
-g.navic_silence = true -- silence nvim-navic errors/warnings
-g.skip_ts_context_commentstring_module = true -- skip backwards compatibility routines and speed up loading
+-- `PERF=1` to echo lazy stats on launch
+g._PERF = vim.env.PERF or 0
+-- flag plugins that there's a nerd font installed
+g._NERD_FONT = true
+-- silence nvim-navic errors/warnings
+g.navic_silence = true
+-- skip backwards compatibility routines and speed up loading
+g.skip_ts_context_commentstring_module = true
 
-o.termguicolors = true -- 24 bit color
-o.laststatus = 0 -- remove satusline
-o.signcolumn = 'yes' -- keep signcolumn on by default
-o.cursorline = true -- show which line your cursor is on
-o.number = true -- sign numbers column
+g.mapleader = ' '
+g.maplocalleader = ' '
+
+o.termguicolors = true
+o.laststatus = 0
+o.signcolumn = 'yes'
+o.cursorline = true
+o.number = true
 o.relativenumber = true
-o.fillchars = { eob = ' ' } -- remove tilda from column on blank lines
-o.mouse = 'a' -- enable mouse
-o.showmode = false -- don't show the mode
-o.clipboard = 'unnamedplus' -- sync clipboard between OS and Neovim.
-o.breakindent = true -- enable break indent
-o.undofile = true -- save undo history
-o.ignorecase = true -- case-insensitive searching UNLESS \C or capital in search
+o.fillchars = { eob = ' ' }
+o.mouse = 'a'
+o.showmode = false
+o.clipboard = 'unnamedplus'
+o.breakindent = true
+o.undofile = true
+o.ignorecase = true
 o.smartcase = true
-o.updatetime = 250 -- decrease update time
-o.splitright = true -- configure how new splits should be opened
+o.updatetime = 250
+o.splitright = true
 o.splitbelow = true
-o.inccommand = 'split' -- preview substitutions live
-o.scrolloff = 10 -- minimal number of screen lines to keep above and below the cursor.
-o.hlsearch = true -- set highlight on search, but clear on pressing <Esc> in normal mode
+o.inccommand = 'split'
+o.scrolloff = 10
+o.hlsearch = true
 o.completeopt = { 'menu,menuone,noselect' }
-o.shortmess:append 'c' -- :h shortmess
-o.shortmess:append 'I' -- disable default intro
-o.whichwrap = 'lh' -- :h whichwrap
-o.wrap = false -- no wrap
+o.shortmess:append 'c'
+o.shortmess:append 'I'
+o.whichwrap = 'lh'
+o.wrap = false
 o.conceallevel = 0
 
 autocmd('TextYankPost', {
@@ -48,10 +52,10 @@ autocmd('TextYankPost', {
 })
 
 autocmd('User', {
-    desc = 'Print into command line on start.',
+    desc = 'Echo lazy stats into command line on start.',
     pattern = 'LazyVimStarted',
     callback = function()
-        if tonumber(__PERF) ~= 1 then
+        if tonumber(g._PERF) ~= 1 then
             print '󱐋'
             return
         end

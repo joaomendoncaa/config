@@ -9,7 +9,7 @@ return {
 
     dependencies = {
         'SmiteshP/nvim-navic',
-        { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+        { 'nvim-tree/nvim-web-devicons', enabled = vim.g._NERD_FONT },
     },
 
     config = function()
