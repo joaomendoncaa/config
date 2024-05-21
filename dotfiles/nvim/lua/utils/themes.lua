@@ -2,6 +2,10 @@ local themes = {}
 
 function themes.adjustConflicts(match)
     local adjustment_schemes = {
+        default = function()
+            vim.cmd.hi 'Title guifg=#8cf8f7'
+        end,
+
         poimandres = function()
             vim.cmd.hi 'Comment gui=none'
             vim.cmd.hi 'LspReferenceWrite guibg=none'
