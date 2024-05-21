@@ -1,8 +1,9 @@
 -- Nvim globals, options and auto commands.
 
+__LOAD_MASON = vim.env.LOAD_MASON or false
+
 local o = vim.opt
 local g = vim.g
-local env = vim.env
 local autocmd = vim.api.nvim_create_autocmd
 
 g.mapleader = ' ' -- set leader key to space
@@ -10,8 +11,6 @@ g.maplocalleader = ' '
 g.have_nerd_font = true -- signal for plugins that nerd font is enabled
 g.navic_silence = true -- silence nvim-navic errors/warnings
 g.skip_ts_context_commentstring_module = true -- skip backwards compatibility routines and speed up loading
-
-g.LOAD_MASON = env.LOAD_MASON or false
 
 o.termguicolors = true -- 24 bit color
 o.laststatus = 0 -- remove satusline
@@ -35,6 +34,7 @@ o.scrolloff = 10 -- minimal number of screen lines to keep above and below the c
 o.hlsearch = true -- set highlight on search, but clear on pressing <Esc> in normal mode
 o.completeopt = { 'menu,menuone,noselect' }
 o.shortmess:append 'c' -- :h shortmess
+o.shortmess:append 'I' -- disable default intro
 o.whichwrap = 'lh' -- :h whichwrap
 o.wrap = false -- no wrap
 o.conceallevel = 2
@@ -44,5 +44,16 @@ autocmd('TextYankPost', {
     group = vim.api.nvim_create_augroup('text-yank-post-highlighting', { clear = true }),
     callback = function()
         vim.highlight.on_yank()
+    end,
+})
+
+autocmd('User', {
+    desc = 'Print initial stats into command line on start.',
+    pattern = 'LazyVimStarted',
+    callback = function()
+        local stats = require('lazy').stats()
+        local count = (math.floor(stats.startuptime * 100) / 100)
+
+        print(string.format('󱐋 ' .. stats.loaded .. ' plugins loaded in ' .. count .. ' ms', elapsed_ms))
     end,
 })

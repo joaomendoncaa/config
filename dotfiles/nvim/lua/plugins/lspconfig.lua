@@ -6,7 +6,7 @@ return {
     dependencies = (function()
         local deps = {}
 
-        if vim.g.LOAD_MASON then
+        if __LOAD_MASON then
             table.insert(deps, 'williamboman/mason.nvim')
             table.insert(deps, 'williamboman/mason-lspconfig.nvim')
             table.insert(deps, 'WhoIsSethDaniel/mason-tool-installer.nvim')
@@ -133,7 +133,7 @@ return {
             },
         }
 
-        if vim.g.LOAD_MASON then
+        if __LOAD_MASON then
             require('mason').setup()
 
             local ensure_installed = vim.tbl_keys(servers or {})
