@@ -37,7 +37,7 @@ o.shortmess:append 'c' -- :h shortmess
 o.shortmess:append 'I' -- disable default intro
 o.whichwrap = 'lh' -- :h whichwrap
 o.wrap = false -- no wrap
-o.conceallevel = 2
+o.conceallevel = 0
 
 autocmd('TextYankPost', {
     desc = 'Briefly highlight text range when yanking.',
