@@ -3,61 +3,67 @@ return {
     -- SEE: https://github.com/neovim/nvim-lspconfig
     'neovim/nvim-lspconfig',
 
-    dependencies = (function()
-        local deps = {}
+    dependencies = {
+        {
+            -- Portable package manager for Neovim that runs everywhere Neovim runs. Easily install and manage LSP servers, DAP servers, linters, and formatters.
+            -- SEE: https://github.com/williamboman/mason.nvim
+            'williamboman/mason.nvim',
+        },
 
-        if __LOAD_MASON then
-            table.insert(deps, 'williamboman/mason.nvim')
-            table.insert(deps, 'williamboman/mason-lspconfig.nvim')
-            table.insert(deps, 'WhoIsSethDaniel/mason-tool-installer.nvim')
-        end
+        {
+            -- Extension to mason.nvim that makes it easier to use lspconfig with mason.nvim.
+            -- SEE: https://github.com/williamboman/mason-lspconfig.nvim
+            'williamboman/mason-lspconfig.nvim',
+        },
 
-        table.insert(deps, {
-            {
-                -- TypeScript integration NeoVim deserves.
-                -- SEE: https://github.com/pmizio/typescript-tools.nvim
-                'pmizio/typescript-tools.nvim',
+        {
+            -- Install and upgrade third party tools automatically.
+            -- SEE: https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim
+            'WhoIsSethDaniel/mason-tool-installer.nvim',
+        },
 
-                dependencies = {
-                    'nvim-lua/plenary.nvim',
-                    'neovim/nvim-lspconfig',
-                },
+        {
+            -- TypeScript integration NeoVim deserves.
+            -- SEE: https://github.com/pmizio/typescript-tools.nvim
+            'pmizio/typescript-tools.nvim',
 
-                config = true,
+            dependencies = {
+                'nvim-lua/plenary.nvim',
+                'neovim/nvim-lspconfig',
             },
 
-            {
-                -- Neovim setup for init.lua and plugin development with full signature help, docs and completion for the nvim lua API.
-                -- SEE: https://github.com/folke/neodev.nvim
-                'folke/neodev.nvim',
+            config = true,
+        },
 
-                config = function()
-                    require('neodev').setup {
-                        library = {
-                            enabled = true,
-                            plugins = false,
-                        },
-                    }
-                end,
-            },
+        {
+            -- Neovim setup for init.lua and plugin development with full signature help, docs and completion for the nvim lua API.
+            -- SEE: https://github.com/folke/neodev.nvim
+            'folke/neodev.nvim',
 
-            {
-                -- Extensible UI for Neovim notifications and LSP progress messages.
-                -- SEE: https://github.com/j-hui/fidget.nvim
-                'j-hui/fidget.nvim',
+            config = function()
+                require('neodev').setup {
+                    library = {
+                        enabled = true,
+                        plugins = false,
+                    },
+                }
+            end,
+        },
 
-                config = function()
-                    require('fidget').setup {
-                        notification = {
-                            window = { winblend = 0 },
-                        },
-                    }
-                end,
-            },
-        })
+        {
+            -- Extensible UI for Neovim notifications and LSP progress messages.
+            -- SEE: https://github.com/j-hui/fidget.nvim
+            'j-hui/fidget.nvim',
 
-        return deps
-    end)(),
+            config = function()
+                require('fidget').setup {
+                    notification = {
+                        window = { winblend = 0 },
+                    },
+                }
+            end,
+        },
+    },
 
     config = function()
         vim.api.nvim_create_autocmd('LspAttach', {
@@ -121,6 +127,7 @@ return {
             rust_analyzer = {},
             tsserver = {},
             tailwindcss = {},
+            stylua = {},
             lua_ls = {
                 settings = {
                     Lua = {
@@ -133,27 +140,21 @@ return {
             },
         }
 
-        if __LOAD_MASON then
-            require('mason').setup()
+        require('mason').setup()
 
-            local ensure_installed = vim.tbl_keys(servers or {})
-            vim.list_extend(ensure_installed, {
-                'stylua',
-            })
-            require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+        require('mason-tool-installer').setup { ensure_installed = vim.tbl_keys(servers or {}) }
 
-            require('mason-lspconfig').setup {
-                handlers = {
-                    function(server_name)
-                        local server = servers[server_name] or {}
-                        -- INFO: This handles overriding only values explicitly passed
-                        -- by the server configuration above. Useful when disabling
-                        -- certain features of an LSP (for example, turning off formatting for tsserver)
-                        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-                        require('lspconfig')[server_name].setup(server)
-                    end,
-                },
-            }
-        end
+        require('mason-lspconfig').setup {
+            handlers = {
+                function(server_name)
+                    local server = servers[server_name] or {}
+                    -- INFO: This handles overriding only values explicitly passed
+                    -- by the server configuration above. Useful when disabling
+                    -- certain features of an LSP (for example, turning off formatting for tsserver)
+                    server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+                    require('lspconfig')[server_name].setup(server)
+                end,
+            },
+        }
     end,
 }

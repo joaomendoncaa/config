@@ -1,6 +1,6 @@
 -- Nvim globals, options and auto commands.
 
-__LOAD_MASON = vim.env.LOAD_MASON or false
+__PERF = vim.env.PERF or 0
 
 local o = vim.opt
 local g = vim.g
@@ -48,12 +48,25 @@ autocmd('TextYankPost', {
 })
 
 autocmd('User', {
-    desc = 'Print initial stats into command line on start.',
+    desc = 'Print into command line on start.',
     pattern = 'LazyVimStarted',
     callback = function()
-        local stats = require('lazy').stats()
-        local count = (math.floor(stats.startuptime * 100) / 100)
+        if tonumber(__PERF) ~= 1 then
+            print '󱐋'
+            return
+        end
 
-        print(string.format('󱐋 ' .. stats.loaded .. ' plugins loaded in ' .. count .. ' ms', elapsed_ms))
+        local stats = require('lazy').stats()
+
+        vim.api.nvim_echo({
+            { '󱐋', '@function' },
+            { ' ' },
+            { string.format('%d/%d plugins loaded in %d ms', stats.loaded, stats.count, stats.startuptime), '' },
+            { ' ' },
+            {
+                string.format('[ LazyStart = %d ms | LazyDone = %d ms | UIEnter = %d ms ]', stats.times.LazyStart, stats.times.LazyDone, stats.times.UIEnter),
+                '@comment',
+            },
+        }, false, {})
     end,
 })
