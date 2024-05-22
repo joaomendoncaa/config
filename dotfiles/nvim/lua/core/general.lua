@@ -56,7 +56,7 @@ autocmd('User', {
     pattern = 'LazyVimStarted',
     callback = function()
         if tonumber(g._PERF) ~= 1 then
-            print '󱐋'
+            print(string.format('󱐋 %s', vim.fn.getcwd()))
             return
         end
 
