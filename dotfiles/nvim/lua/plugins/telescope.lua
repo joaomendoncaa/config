@@ -53,7 +53,6 @@ return {
 
         keymap('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp.' })
         keymap('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps.' })
-        keymap('n', '<leader>ss', builtin.find_files, { desc = '[S]earch [S]elect files.' })
         keymap('n', '<leader>sS', builtin.builtin, { desc = '[S]earch [S]elect Telescope.' })
         keymap('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep.' })
         keymap('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics.' })
@@ -62,8 +61,13 @@ return {
         keymap('n', '<leader>sb', builtin.buffers, { desc = '[S]earch open [B]uffers.' })
         keymap('n', '<leader>st', builtin.colorscheme, { desc = '[S]earch colorsh[T]heme.' })
 
+        keymap('n', '<leader>ss', function()
+            builtin.find_files {
+                hidden = true,
+            }
+        end, { desc = '[S]earch [S]elect files.' })
+
         keymap('n', '<leader>/', function()
-            -- You can pass additional configuration to telescope to change theme, layout, etc.
             builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
                 winblend = 0,
                 previewer = false,
@@ -78,7 +82,10 @@ return {
         end, { desc = '[S]earch [/] in Open Files.' })
 
         keymap('n', '<leader>sc', function()
-            builtin.find_files { cwd = os.getenv 'HOME' .. '/lab/config' }
+            builtin.find_files {
+                cwd = os.getenv 'HOME' .. '/lab/config',
+                hidden = true,
+            }
         end, { desc = '[S]earch [C]onfig files.' })
     end,
 }
