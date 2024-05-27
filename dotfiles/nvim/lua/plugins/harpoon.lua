@@ -20,7 +20,15 @@ return {
         local harpoon = require 'harpoon'
         local keymap = vim.keymap.set
 
-        harpoon:setup()
+        harpoon:setup {
+            settings = {
+                save_on_toggle = true,
+                sync_on_ui_close = true,
+                key = function()
+                    return vim.loop.cwd()
+                end,
+            },
+        }
 
         keymap('n', '<leader>ha', function()
             harpoon:list():add()
