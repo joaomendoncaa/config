@@ -1,7 +1,7 @@
 local overseer = require 'overseer'
 
 overseer.register_template {
-    name = 'Serve index.html',
+    name = 'serve index.html',
     description = 'Serve the current index.html locally.',
 
     builder = function(_)
