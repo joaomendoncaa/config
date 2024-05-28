@@ -25,6 +25,7 @@ return {
                 jsx = { 'prettier' },
                 typescript = { 'prettier' },
                 tsx = { 'prettier' },
+                html = { 'prettier' },
             },
         }
 
