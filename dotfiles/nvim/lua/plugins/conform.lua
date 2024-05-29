@@ -19,18 +19,20 @@ return {
                 }
             end,
             formatters_by_ft = {
+                ['*'] = { 'prettier' },
                 lua = { 'stylua' },
                 sh = { 'shfmt' },
-                javascript = { 'prettier' },
-                jsx = { 'prettier' },
-                typescript = { 'prettier' },
-                tsx = { 'prettier' },
-                html = { 'prettier' },
             },
         }
 
-        vim.keymap.set('n', '<leader>f', function()
+        local keymap = vim.keymap.set
+
+        keymap('n', '<leader>f', function()
             require('conform').format { async = true, lsp_fallback = true }
-        end, { desc = '[F]ormat buffer' })
+        end, { desc = '[F]ormat buffer.' })
+
+        keymap('v', '<leader>f', function()
+            require('conform').format { async = true, lsp_fallback = true, range = vim.fn.getpos "'<", vim.fn.getpos "'>" }
+        end, { desc = '[F]ormat selection.' })
     end,
 }
