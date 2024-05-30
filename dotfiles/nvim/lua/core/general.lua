@@ -6,6 +6,10 @@ local autocmd = vim.api.nvim_create_autocmd
 
 -- `PERF=1` to echo lazy stats on launch
 g._PERF = vim.env.PERF or 0
+-- `AI=1` to enable AI auto-complete
+g._AI = vim.env.AI or 0
+-- `NVIM_THEME=<theme key>` to set the theme
+g._NVIM_THEME = vim.env.NVIM_THEME or 'default'
 -- flag plugins that there's a nerd font installed
 g._NERD_FONT = true
 -- silence nvim-navic errors/warnings

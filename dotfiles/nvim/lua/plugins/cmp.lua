@@ -78,13 +78,18 @@ return {
         local lspkind = require 'lspkind'
 
         luasnip.config.setup {}
-        lspkind.init()
+        lspkind.init {
+            symbol_map = {
+                Supermaven = '',
+            },
+        }
 
         cmp.setup {
             sources = {
                 { name = 'nvim_lsp' },
                 { name = 'luasnip' },
                 { name = 'path' },
+                { name = 'supermaven' },
             },
 
             -- wire luasnip to lsp so the lsp knows how to handle snippet expansion

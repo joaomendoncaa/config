@@ -9,7 +9,7 @@ return {
         local poimandres = require 'poimandres'
         local themes = require 'utils.themes'
         local cmd = vim.cmd
-        local initial = vim.env.NVIM_THEME or 'default'
+        local initial = vim.g.NVIM_THEME
 
         poimandres.setup {
             dim_nc_background = true,
