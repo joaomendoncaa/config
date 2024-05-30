@@ -18,10 +18,12 @@ function themes.adjustConflicts(match)
         end,
     }
 
-    vim.cmd 'hi Normal guibg=none ctermbg=none'
+    vim.cmd.hi 'Normal guibg=none ctermbg=none'
 
     vim.api.nvim_set_hl(0, 'LazyReasonSource', { fg = '#5de4c7' })
     vim.api.nvim_set_hl(0, 'LazyReasonFt', { fg = '#5de4c7' })
+
+    vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
 
     vim.api.nvim_set_hl(0, 'OverseerPENDING', { fg = '#fffac2' })
     vim.api.nvim_set_hl(0, 'OverseerRUNNING', { fg = '#5de4c7' })
