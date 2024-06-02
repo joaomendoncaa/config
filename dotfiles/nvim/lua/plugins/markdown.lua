@@ -2,7 +2,7 @@ return {
     {
         -- Markdown Vim Mode.
         -- SEE: https://github.com/ixru/nvim-markdown
-        'joaomendoncaa/nvim-markdown',
+        'ixru/nvim-markdown',
 
         ft = { 'markdown' },
 
