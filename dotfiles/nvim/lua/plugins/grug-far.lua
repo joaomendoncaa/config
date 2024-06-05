@@ -7,7 +7,7 @@ return {
 
     config = function()
         require('grug-far').setup {
-            windowCreationCommand = 'botright split',
+            windowCreationCommand = 'tabnew',
         }
 
         vim.keymap.set('n', '<leader>sr', '<CMD>GrugFar<CR>', { desc = '[S]earch [R]eplace.' })
