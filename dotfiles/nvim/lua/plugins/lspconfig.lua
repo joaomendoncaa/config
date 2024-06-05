@@ -36,17 +36,14 @@ return {
         },
 
         {
-            -- Neovim setup for init.lua and plugin development with full signature help, docs and completion for the nvim lua API.
-            -- SEE: https://github.com/folke/neodev.nvim
-            'folke/neodev.nvim',
+            -- Faster LuaLS setup for Neovim.
+            -- SEE: https://github.com/folke/lazydev.nvim
+            'folke/lazydev.nvim',
+
+            ft = 'lua',
 
             config = function()
-                require('neodev').setup {
-                    library = {
-                        enabled = true,
-                        plugins = false,
-                    },
-                }
+                require('lazydev').setup {}
             end,
         },
 
@@ -80,6 +77,7 @@ return {
                 keymap('n', '<leader>ds', require('telescope.builtin').lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
                 keymap('n', '<leader>sw', require('telescope.builtin').lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
                 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'List [C]ode [A]ctions.' })
+                keymap('n', '<leader>rn', vim.lsp.buf.rename, { desc = '[R]e[n]ame.' })
 
                 local client = vim.lsp.get_client_by_id(event.data.client_id)
                 if client and client.server_capabilities.documentHighlightProvider then
