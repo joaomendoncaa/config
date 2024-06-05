@@ -56,7 +56,6 @@ return {
         keymap('n', '<leader>sS', builtin.builtin, { desc = '[S]earch [S]elect Telescope.' })
         keymap('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep.' })
         keymap('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics.' })
-        keymap('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume.' })
         keymap('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat).' })
         keymap('n', '<leader>sb', builtin.buffers, { desc = '[S]earch open [B]uffers.' })
         keymap('n', '<leader>st', builtin.colorscheme, { desc = '[S]earch colorsh[T]heme.' })
