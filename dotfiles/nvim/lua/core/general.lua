@@ -49,6 +49,14 @@ autocmd('TextYankPost', {
     end,
 })
 
+autocmd('ColorScheme', {
+    desc = 'Make necessary adjustments to the selected colorscheme.',
+    group = vim.api.nvim_create_augroup('color-scheme-background-removal', { clear = true }),
+    callback = function(args)
+        require('utils.themes').adjustConflicts(args.match)
+    end,
+})
+
 autocmd('User', {
     desc = 'Echo lazy stats into command line on start.',
     pattern = 'LazyVimStarted',

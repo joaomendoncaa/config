@@ -13,6 +13,10 @@ function themes.adjustConflicts(match)
             vim.cmd.hi 'LspReferenceRead guibg=none'
         end,
 
+        gruvbox = function()
+            vim.cmd.hi 'SignColumn guibg=none'
+        end,
+
         blue = function()
             vim.cmd.hi 'Comment gui=none'
         end,
