@@ -1,5 +1,6 @@
 return {
-    { -- Poimandres colorscheme for Neovim written in Lua.
+    {
+        -- Poimandres colorscheme for Neovim written in Lua.
         -- SEE: https://github.com/olivercederborg/poimandres.nvim
         'olivercederborg/poimandres.nvim',
 
