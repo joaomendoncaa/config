@@ -61,7 +61,7 @@ autocmd('User', {
     desc = 'Echo lazy stats into command line on start.',
     pattern = 'LazyVimStarted',
     callback = function()
-        if not require('utils.flags').isOne(vim.env.PERF) then
+        if not require('utils.flags').isOne(vim.env.NVIM_PERF) then
             print(string.format('󱐋 %s', vim.fn.getcwd()))
             return
         end
