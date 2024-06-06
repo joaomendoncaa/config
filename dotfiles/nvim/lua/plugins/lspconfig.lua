@@ -77,7 +77,6 @@ return {
                 keymap('n', '<leader>ds', require('telescope.builtin').lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
                 keymap('n', '<leader>sw', require('telescope.builtin').lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
                 keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'List [C]ode [A]ctions.' })
-                keymap('n', '<leader>rn', vim.lsp.buf.rename, { desc = '[R]e[n]ame.' })
 
                 local client = vim.lsp.get_client_by_id(event.data.client_id)
                 if client and client.server_capabilities.documentHighlightProvider then
@@ -123,7 +122,6 @@ return {
         local servers = {
             gopls = {},
             rust_analyzer = {},
-            tsserver = {},
             tailwindcss = {},
             stylua = {},
             lua_ls = {

@@ -4,7 +4,6 @@ return {
     'smjonas/inc-rename.nvim',
 
     event = 'VeryLazy',
-    enabled = false,
 
     config = function()
         require('inc_rename').setup {}
