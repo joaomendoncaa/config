@@ -32,7 +32,15 @@ return {
                 'neovim/nvim-lspconfig',
             },
 
-            config = true,
+            config = function()
+                require('typescript-tools').setup {
+                    settings = {
+                        tsserver_file_preferences = {
+                            includeInlayParameterNameHints = 'all',
+                        },
+                    },
+                }
+            end,
         },
 
         {
@@ -67,16 +75,18 @@ return {
             group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
 
             callback = function(event)
+                local builtin = require 'telescope.builtin'
+
                 local keymap = vim.keymap.set
 
-                keymap('n', 'gd', require('telescope.builtin').lsp_definitions, { desc = '[G]oto [D]efinition.' })
+                keymap('n', 'gd', builtin.lsp_definitions, { desc = '[G]oto [D]efinition.' })
                 keymap('n', 'gD', vim.lsp.buf.declaration, { desc = '[G]oto [D]eclaration' })
-                keymap('n', 'gI', require('telescope.builtin').lsp_implementations, { desc = '[G]oto [I]mplementation.' })
-                keymap('n', 'gr', require('telescope.builtin').lsp_references, { desc = '[G]oto [R]eferences.' })
-                keymap('n', '<leader>D', require('telescope.builtin').lsp_type_definitions, { desc = 'Type [D]efinition.' })
-                keymap('n', '<leader>ds', require('telescope.builtin').lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
-                keymap('n', '<leader>sw', require('telescope.builtin').lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
-                keymap('n', '<leader>ca', vim.lsp.buf.code_action, { desc = 'List [C]ode [A]ctions.' })
+                keymap('n', 'gI', builtin.lsp_implementations, { desc = '[G]oto [I]mplementation.' })
+                keymap('n', 'gr', builtin.lsp_references, { desc = '[G]oto [R]eferences.' })
+                keymap('n', '<leader>D', builtin.lsp_type_definitions, { desc = 'Type [D]efinition.' })
+                keymap('n', '<leader>ds', builtin.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
+                keymap('n', '<leader>sw', builtin.lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
+                keymap({ 'n', 'v' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]ist Code [A]ctions.' })
 
                 local client = vim.lsp.get_client_by_id(event.data.client_id)
                 if client and client.server_capabilities.documentHighlightProvider then
@@ -110,6 +120,7 @@ return {
                 -- if lsp supports it, toggle inlay hints
                 if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
                     keymap('n', '<leader>th', function()
+                        print 'inlay hints'
                         vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
                     end, { desc = '[T]oggle Inlay [H]ints.' })
                 end
