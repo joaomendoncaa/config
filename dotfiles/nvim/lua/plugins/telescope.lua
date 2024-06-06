@@ -137,6 +137,9 @@ return {
                     themes.get_dropdown(),
                 },
             },
+            defaults = {
+                file_ignore_patterns = { '.git', 'node_modules' },
+            },
         }
     end,
 }
