@@ -74,12 +74,7 @@ return {
 
                     attach_mappings = function(prompt_bufnr, _)
                         actions.select_default:replace(function()
-                            local selection = action_state.get_selected_entry()
-
                             actions.close(prompt_bufnr)
-
-                            -- TODO: update the value of a variable inside nvim by prompting for it after selection
-                            print(require('utils.strings').fromTable(selection))
                         end)
                         return true
                     end,
