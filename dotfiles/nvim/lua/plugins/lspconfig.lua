@@ -120,8 +120,8 @@ return {
                 -- if lsp supports it, toggle inlay hints
                 if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
                     keymap('n', '<leader>th', function()
-                        print 'inlay hints'
                         vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
+                        print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
                     end, { desc = '[T]oggle Inlay [H]ints.' })
                 end
             end,
