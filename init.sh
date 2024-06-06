@@ -116,3 +116,6 @@ create_symlink "$HOME/.gitconfig" "$DIR/dotfiles/git/.gitconfig"
 create_symlink "$HOME/.bashrc" "$DIR/dotfiles/bash/.bashrc"
 create_symlink "$HOME/.profile" "$DIR/dotfiles/bash/.profile"
 create_symlink "$HOME/.hushlogin" "$DIR/dotfiles/bash/.hushlogin"
+
+# TODO: basic utils/res instalation + dynamic app instalation with dotfiles/**/install.sh
+# SEE: https://github.com/basecamp/omakub
