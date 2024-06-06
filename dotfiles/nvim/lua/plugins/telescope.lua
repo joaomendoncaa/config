@@ -36,20 +36,80 @@ return {
     },
 
     config = function()
-        require('telescope').setup {
-            extensions = {
-                ['ui-select'] = {
-                    require('telescope.themes').get_dropdown(),
-                },
-            },
-        }
-
-        -- enable telescope extensions, if they are installed
-        pcall(require('telescope').load_extension, 'fzf')
-        pcall(require('telescope').load_extension, 'ui-select')
-
+        local telescope = require 'telescope'
         local builtin = require 'telescope.builtin'
+        local pickers = require 'telescope.pickers'
+        local finders = require 'telescope.finders'
+        local themes = require 'telescope.themes'
+        local conf = require('telescope.config').values
+        local actions = require 'telescope.actions'
+        local action_state = require 'telescope.actions.state'
+
         local keymap = vim.keymap.set
+
+        local search_enviroment = function(opts)
+            opts = themes.get_dropdown {
+                winblend = 0,
+                width = 0.5,
+                previewer = false,
+                prompt_title = 'Environment Variables',
+            }
+
+            local env_table = {}
+
+            for k, v in pairs(vim.fn.environ()) do
+                table.insert(env_table, k .. '=' .. v)
+            end
+
+            pickers
+                .new(opts, {
+                    finder = finders.new_table {
+                        results = env_table,
+                    },
+
+                    sorter = conf.generic_sorter(opts),
+
+                    attach_mappings = function(prompt_bufnr, _)
+                        actions.select_default:replace(function()
+                            local selection = action_state.get_selected_entry()
+
+                            actions.close(prompt_bufnr)
+
+                            -- TODO: update the value of a variable inside nvim by prompting for it after selection
+                            print(require('utils.strings').fromTable(selection))
+                        end)
+                        return true
+                    end,
+                })
+                :find()
+        end
+
+        local search_files = function()
+            builtin.find_files {
+                hidden = true,
+            }
+        end
+
+        local search_files_config = function()
+            builtin.find_files {
+                cwd = os.getenv 'HOME' .. '/lab/config',
+                hidden = true,
+            }
+        end
+
+        local fuzzy_inside_open_buffer = function()
+            builtin.current_buffer_fuzzy_find(themes.get_dropdown {
+                winblend = 0,
+                previewer = false,
+            })
+        end
+
+        local fuzzy_inside_open_files = function()
+            builtin.live_grep {
+                grep_open_files = true,
+                prompt_title = 'Live Grep in Open Files.',
+            }
+        end
 
         keymap('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp.' })
         keymap('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps.' })
@@ -59,32 +119,21 @@ return {
         keymap('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat).' })
         keymap('n', '<leader>sb', builtin.buffers, { desc = '[S]earch open [B]uffers.' })
         keymap('n', '<leader>st', builtin.colorscheme, { desc = '[S]earch colorsh[T]heme.' })
+        keymap('n', '<leader>se', search_enviroment, { desc = '[S]earch [E]nvironment Variables.' })
+        keymap('n', '<leader>ss', search_files, { desc = '[S]earch [S]elect files.' })
+        keymap('n', '<leader>sc', search_files_config, { desc = '[S]earch [C]onfig files.' })
+        keymap('n', '<leader>/', fuzzy_inside_open_buffer, { desc = '[/] Fuzzily search in current buffer.' })
+        keymap('n', '<leader>s/', fuzzy_inside_open_files, { desc = '[S]earch [/] in Open Files.' })
 
-        keymap('n', '<leader>ss', function()
-            builtin.find_files {
-                hidden = true,
-            }
-        end, { desc = '[S]earch [S]elect files.' })
+        pcall(telescope.load_extension, 'fzf')
+        pcall(telescope.load_extension, 'ui-select')
 
-        keymap('n', '<leader>/', function()
-            builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-                winblend = 0,
-                previewer = false,
-            })
-        end, { desc = '[/] Fuzzily search in current buffer.' })
-
-        keymap('n', '<leader>s/', function()
-            builtin.live_grep {
-                grep_open_files = true,
-                prompt_title = 'Live Grep in Open Files.',
-            }
-        end, { desc = '[S]earch [/] in Open Files.' })
-
-        keymap('n', '<leader>sc', function()
-            builtin.find_files {
-                cwd = os.getenv 'HOME' .. '/lab/config',
-                hidden = true,
-            }
-        end, { desc = '[S]earch [C]onfig files.' })
+        telescope.setup {
+            extensions = {
+                ['ui-select'] = {
+                    themes.get_dropdown(),
+                },
+            },
+        }
     end,
 }
