@@ -35,6 +35,9 @@ return {
         },
     },
 
+    -- This config houses custom pickers and actions.
+    -- to read more about them, check the following:
+    -- SEE: https://github.com/nvim-telescope/telescope.nvim/blob/master/developers.md
     config = function()
         local telescope = require 'telescope'
         local builtin = require 'telescope.builtin'
