@@ -126,6 +126,9 @@ export EDITOR='nvim'
 export VISUAL='nvim'
 export BROWSER=wslview
 
+# nvim settings
+export NVIM_AI=1
+
 # init starship
 eval "$(starship init bash)"
 
