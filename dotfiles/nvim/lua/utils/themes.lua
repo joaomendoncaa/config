@@ -36,6 +36,12 @@ function themes.adjustConflicts(match)
     vim.api.nvim_set_hl(0, 'OverseerFAILURE', { fg = '#f087bd' })
     vim.api.nvim_set_hl(0, 'OverseerDISPOSED', { fg = '#d0679d' })
 
+    vim.api.nvim_set_hl(0, 'DiagnosticSignOk', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignHint', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignInfo', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignWarn', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignError', { bg = 'none' })
+
     if adjustment_schemes[match] then
         adjustment_schemes[match]()
     end
