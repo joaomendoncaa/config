@@ -1,3 +1,7 @@
+local themes = require 'utils.themes'
+local theme = vim.env.NVIM_THEME or 'default'
+local cmd = vim.cmd
+
 return {
     {
         -- Poimandres colorscheme for Neovim written in Lua.
@@ -8,9 +12,6 @@ return {
 
         config = function()
             local poimandres = require 'poimandres'
-            local themes = require 'utils.themes'
-            local theme = vim.env.NVIM_THEME or 'default'
-            local cmd = vim.cmd
 
             poimandres.setup {
                 dim_nc_background = true,
@@ -32,11 +33,32 @@ return {
 
         config = function()
             local gruvbox = require 'gruvbox'
-            local themes = require 'utils.themes'
-            local theme = vim.env.NVIM_THEME or 'default'
-            local cmd = vim.cmd
 
             gruvbox.setup {}
+
+            cmd.colorscheme(theme)
+            themes.adjustConflicts(theme)
+        end,
+    },
+
+    {
+        -- A delightful mostly gray scale colorscheme thats soft on the eyes, and supports heaps of neovim plugins.
+        -- SEE: https://github.com/slugbyte/lackluster.nvim
+        'slugbyte/lackluster.nvim',
+
+        priority = 1000,
+
+        config = function()
+            local lackluster = require 'lackluster'
+
+            lackluster.setup {
+                tweek_background = {
+                    normal = 'none',
+                    telescope = 'none',
+                    menu = 'none',
+                    popup = 'none',
+                },
+            }
 
             cmd.colorscheme(theme)
             themes.adjustConflicts(theme)
