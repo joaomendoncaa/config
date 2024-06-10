@@ -47,4 +47,9 @@ function themes.adjustConflicts(match)
     end
 end
 
+function themes.update(theme_key)
+    vim.cmd.colorscheme(theme_key)
+    themes.adjustConflicts(theme_key)
+end
+
 return themes

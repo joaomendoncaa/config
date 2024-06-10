@@ -39,6 +39,7 @@ return {
     -- to read more about them, check the following:
     -- SEE: https://github.com/nvim-telescope/telescope.nvim/blob/master/developers.md
     config = function()
+        local utils_themes = require 'utils.themes'
         local telescope = require 'telescope'
         local builtin = require 'telescope.builtin'
         local pickers = require 'telescope.pickers'
@@ -46,6 +47,7 @@ return {
         local themes = require 'telescope.themes'
         local conf = require('telescope.config').values
         local actions = require 'telescope.actions'
+        local action_set = require 'telescope.actions.set'
         local action_state = require 'telescope.actions.state'
 
         local keymap = vim.keymap.set
@@ -76,13 +78,14 @@ return {
                         actions.select_default:replace(function()
                             actions.close(prompt_bufnr)
                         end)
+
                         return true
                     end,
                 })
                 :find()
         end
 
-        local search_files = function()
+        local search_files_cwd = function()
             builtin.find_files {
                 hidden = true,
             }
@@ -95,18 +98,51 @@ return {
             }
         end
 
-        local fuzzy_inside_open_buffer = function()
+        local fzf_buffer = function()
             builtin.current_buffer_fuzzy_find(themes.get_dropdown {
                 winblend = 0,
                 previewer = false,
             })
         end
 
-        local fuzzy_inside_open_files = function()
+        local fzf_files = function()
             builtin.live_grep {
                 grep_open_files = true,
                 prompt_title = 'Live Grep in Open Files.',
             }
+        end
+
+        local search_themes = function()
+            builtin.colorscheme(themes.get_dropdown {
+                winblend = 0,
+
+                prompt_title = 'Select a theme',
+
+                attach_mappings = function(buffer)
+                    actions.select_default:replace(function()
+                        actions.close(buffer)
+
+                        local t = action_state.get_selected_entry().value
+                        utils_themes.update(t)
+                    end)
+
+                    actions.move_selection_previous:replace(function(prompt_bufnr)
+                        action_set.shift_selection(prompt_bufnr, -1)
+
+                        local t = action_state.get_selected_entry().value
+                        utils_themes.update(t)
+                    end)
+
+                    actions.move_selection_next:replace(function(prompt_bufnr)
+                        action_set.shift_selection(prompt_bufnr, 1)
+
+                        local t = action_state.get_selected_entry().value
+                        utils_themes.update(t)
+                    end)
+
+                    return true
+                end,
+            })
         end
 
         keymap('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp.' })
@@ -116,12 +152,12 @@ return {
         keymap('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics.' })
         keymap('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat).' })
         keymap('n', '<leader>sb', builtin.buffers, { desc = '[S]earch open [B]uffers.' })
-        keymap('n', '<leader>st', builtin.colorscheme, { desc = '[S]earch colorsh[T]heme.' })
+        keymap('n', '<leader>st', search_themes, { desc = '[S]earch [T]heme.' })
         keymap('n', '<leader>se', search_enviroment, { desc = '[S]earch [E]nvironment Variables.' })
-        keymap('n', '<leader>ss', search_files, { desc = '[S]earch [S]elect files.' })
+        keymap('n', '<leader>ss', search_files_cwd, { desc = '[S]earch [S]elected directory files.' })
         keymap('n', '<leader>sc', search_files_config, { desc = '[S]earch [C]onfig files.' })
-        keymap('n', '<leader>/', fuzzy_inside_open_buffer, { desc = '[/] Fuzzily search in current buffer.' })
-        keymap('n', '<leader>s/', fuzzy_inside_open_files, { desc = '[S]earch [/] in Open Files.' })
+        keymap('n', '<leader>/', fzf_buffer, { desc = '[/] Fuzzily search in current buffer.' })
+        keymap('n', '<leader>s/', fzf_files, { desc = '[S]earch [/] in Open Files.' })
 
         pcall(telescope.load_extension, 'fzf')
         pcall(telescope.load_extension, 'ui-select')

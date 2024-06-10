@@ -1,6 +1,5 @@
 local themes = require 'utils.themes'
 local theme = vim.env.NVIM_THEME or 'default'
-local cmd = vim.cmd
 
 return {
     {
@@ -19,8 +18,7 @@ return {
                 disable_float_background = true,
             }
 
-            cmd.colorscheme(theme)
-            themes.adjustConflicts(theme)
+            themes.update(theme)
         end,
     },
 
@@ -36,8 +34,7 @@ return {
 
             gruvbox.setup {}
 
-            cmd.colorscheme(theme)
-            themes.adjustConflicts(theme)
+            themes.update(theme)
         end,
     },
 
@@ -60,8 +57,7 @@ return {
                 },
             }
 
-            cmd.colorscheme(theme)
-            themes.adjustConflicts(theme)
+            themes.update(theme)
         end,
     },
 }
