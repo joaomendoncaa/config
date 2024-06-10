@@ -128,6 +128,7 @@ export BROWSER=wslview
 
 # nvim settings
 export NVIM_AI=1
+export NVIM_THEME=default
 
 # init starship
 eval "$(starship init bash)"
