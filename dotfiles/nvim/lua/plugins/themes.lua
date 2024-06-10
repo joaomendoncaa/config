@@ -10,9 +10,9 @@ return {
         priority = 1000,
 
         config = function()
-            local poimandres = require 'poimandres'
+            local plugin = require 'poimandres'
 
-            poimandres.setup {
+            plugin.setup {
                 dim_nc_background = true,
                 disable_background = true,
                 disable_float_background = true,
@@ -30,9 +30,9 @@ return {
         priotity = 1000,
 
         config = function()
-            local gruvbox = require 'gruvbox'
+            local plugin = require 'gruvbox'
 
-            gruvbox.setup {}
+            plugin.setup {}
 
             themes.update(theme)
         end,
@@ -46,9 +46,9 @@ return {
         priority = 1000,
 
         config = function()
-            local lackluster = require 'lackluster'
+            local plugin = require 'lackluster'
 
-            lackluster.setup {
+            plugin.setup {
                 tweek_background = {
                     normal = 'none',
                     telescope = 'none',

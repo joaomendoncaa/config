@@ -52,6 +52,33 @@ return {
 
         local keymap = vim.keymap.set
 
+        local search_files_cwd = function()
+            builtin.find_files {
+                hidden = true,
+            }
+        end
+
+        local search_files_config = function()
+            builtin.find_files {
+                cwd = os.getenv 'HOME' .. '/lab/config',
+                hidden = true,
+            }
+        end
+
+        local fzf_buffer = function()
+            builtin.current_buffer_fuzzy_find(themes.get_dropdown {
+                winblend = 0,
+                previewer = false,
+            })
+        end
+
+        local fzf_files = function()
+            builtin.live_grep {
+                grep_open_files = true,
+                prompt_title = 'Live Grep in Open Files.',
+            }
+        end
+
         local search_enviroment = function(opts)
             opts = themes.get_dropdown {
                 winblend = 0,
@@ -85,33 +112,6 @@ return {
                 :find()
         end
 
-        local search_files_cwd = function()
-            builtin.find_files {
-                hidden = true,
-            }
-        end
-
-        local search_files_config = function()
-            builtin.find_files {
-                cwd = os.getenv 'HOME' .. '/lab/config',
-                hidden = true,
-            }
-        end
-
-        local fzf_buffer = function()
-            builtin.current_buffer_fuzzy_find(themes.get_dropdown {
-                winblend = 0,
-                previewer = false,
-            })
-        end
-
-        local fzf_files = function()
-            builtin.live_grep {
-                grep_open_files = true,
-                prompt_title = 'Live Grep in Open Files.',
-            }
-        end
-
         local search_themes = function()
             builtin.colorscheme(themes.get_dropdown {
                 winblend = 0,
@@ -126,6 +126,7 @@ return {
                         utils_themes.update(t)
                     end)
 
+                    ---@diagnostic disable-next-line: undefined-field
                     actions.move_selection_previous:replace(function(prompt_bufnr)
                         action_set.shift_selection(prompt_bufnr, -1)
 
@@ -133,6 +134,7 @@ return {
                         utils_themes.update(t)
                     end)
 
+                    ---@diagnostic disable-next-line: undefined-field
                     actions.move_selection_next:replace(function(prompt_bufnr)
                         action_set.shift_selection(prompt_bufnr, 1)
 

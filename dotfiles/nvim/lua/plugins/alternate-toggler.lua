@@ -12,6 +12,6 @@ return {
             },
         }
 
-        vim.keymap.set('n', '<leader><space>', "<cmd>lua require('alternate-toggler').toggleAlternate()<CR>", { desc = '[ ] Toggle Alternate' })
+        vim.keymap.set('n', '<leader><space>', "<cmd>lua require('alternate-toggler').toggleAlternate()<CR>", { desc = '[ ] Toggle Alternate.' })
     end,
 }

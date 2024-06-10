@@ -1,6 +1,6 @@
-local flags = {}
+local M = {}
 
-function flags.isOne(ref)
+function M.isOne(ref)
     if tonumber(ref or 0) ~= 1 then
         return false
     end
@@ -8,4 +8,4 @@ function flags.isOne(ref)
     return true
 end
 
-return flags
+return M

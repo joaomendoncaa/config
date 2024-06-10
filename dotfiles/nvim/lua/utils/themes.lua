@@ -1,6 +1,6 @@
-local themes = {}
+local M = {}
 
-function themes.adjustConflicts(match)
+function M.adjustConflicts(match)
     local adjustment_schemes = {
         default = function()
             vim.cmd.hi 'Title guifg=#8cf8f7'
@@ -47,9 +47,9 @@ function themes.adjustConflicts(match)
     end
 end
 
-function themes.update(theme_key)
+function M.update(theme_key)
     vim.cmd.colorscheme(theme_key)
-    themes.adjustConflicts(theme_key)
+    M.adjustConflicts(theme_key)
 end
 
-return themes
+return M
