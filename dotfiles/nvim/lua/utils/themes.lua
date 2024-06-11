@@ -23,6 +23,7 @@ function M.adjustConflicts(match)
     }
 
     vim.cmd.hi 'Normal guibg=none ctermbg=none'
+    vim.cmd.hi 'MsgSeparator guibg=none ctermbg=none'
 
     vim.api.nvim_set_hl(0, 'LazyReasonSource', { fg = '#5de4c7' })
     vim.api.nvim_set_hl(0, 'LazyReasonFt', { fg = '#5de4c7' })
