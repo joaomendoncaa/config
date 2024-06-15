@@ -1,5 +1,5 @@
 [manager]
-cwd = { fg = "#e4f0fb" }
+cwd = { fg = "#ffffff" }
 
 hovered         = { fg = "#000000", bg = "#ffffff" }
 preview_hovered = { underline = false }
@@ -37,7 +37,7 @@ permissions_x = { fg = "#a6e3a1" }
 permissions_s = { fg = "#7f849c" }
 
 [input]
-border   = { fg = "#89b4fa" }
+border   = { fg = "#ffffff" }
 title    = {}
 value    = {}
 selected = { reversed = true }
