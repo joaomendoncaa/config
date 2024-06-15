@@ -53,7 +53,7 @@ autocmd('ColorScheme', {
     desc = 'Make necessary adjustments to the selected colorscheme.',
     group = vim.api.nvim_create_augroup('color-scheme-background-removal', { clear = true }),
     callback = function(args)
-        require('utils.themes').adjustConflicts(args.match)
+        require('utils.themes').update(args.match)
     end,
 })
 

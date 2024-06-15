@@ -1,27 +1,7 @@
-# TODO: Finish migrating colors to custom poimandres theme
-# - #fffac2
-# - #5de4c7
-# - #5fb3a1
-# - #42675a
-# - #89ddff
-# - #add7ff
-# - #91b4d5
-# - #7390aa
-# - #d0679d
-# - #f087bd
-# - #a6accd
-# - #767c9d
-# - #506477
-# - #303340
-# - #1b1e28
-# - #e4f0fb
-# - #1b212e
-# - #ffffff
-
 [manager]
 cwd = { fg = "#e4f0fb" }
 
-hovered         = { fg = "#5de4c7", bg = "#303340" }
+hovered         = { fg = "#000000", bg = "#ffffff" }
 preview_hovered = { underline = false }
 find_keyword  = { fg = "#f9e2af", italic = true }
 find_position = { fg = "#f5c2e7", bg = "reset", italic = true }

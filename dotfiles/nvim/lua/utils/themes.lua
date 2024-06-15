@@ -25,6 +25,13 @@ function M.adjustConflicts(match)
     vim.cmd.hi 'Normal guibg=none ctermbg=none'
     vim.cmd.hi 'MsgSeparator guibg=none ctermbg=none'
 
+    vim.cmd.hi 'TelescopePreviewNormal guibg=none'
+    vim.cmd.hi 'TelescopePreviewBorder guibg=none'
+    vim.cmd.hi 'TelescopeResultsNormal guibg=none'
+    vim.cmd.hi 'TelescopeResultsBorder guibg=none'
+    vim.cmd.hi 'TelescopePromptNormal guibg=none'
+    vim.cmd.hi 'TelescopePromptBorder guibg=none'
+
     vim.api.nvim_set_hl(0, 'LazyReasonSource', { fg = '#5de4c7' })
     vim.api.nvim_set_hl(0, 'LazyReasonFt', { fg = '#5de4c7' })
 

@@ -60,4 +60,23 @@ return {
             themes.update(theme)
         end,
     },
+
+    {
+        -- Remixed Kanagawa colourscheme with muted colors. For Neovim.
+        -- SEE: https://github.com/sho-87/kanagawa-paper.nvim
+        'sho-87/kanagawa-paper.nvim',
+
+        priority = 1000,
+
+        config = function()
+            local plugin = require 'kanagawa-paper'
+
+            plugin.setup {
+                transparent = true,
+                dimInactive = true,
+            }
+
+            themes.update(theme)
+        end,
+    },
 }
