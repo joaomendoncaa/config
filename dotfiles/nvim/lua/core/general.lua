@@ -10,6 +10,8 @@ g._NERD_FONT = true
 g.navic_silence = true
 -- skip backwards compatibility routines and speed up loading
 g.skip_ts_context_commentstring_module = true
+-- light theme on markdown preview
+g.mkdp_theme = 'light'
 
 g.mapleader = ' '
 g.maplocalleader = ' '
