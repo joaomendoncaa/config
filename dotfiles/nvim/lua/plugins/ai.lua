@@ -13,6 +13,7 @@ return {
                     accept_suggestion = '<C-y>',
                     clear_suggestion = '<C-c>',
                 },
+                log_level = 'off',
             }
         end,
     },
