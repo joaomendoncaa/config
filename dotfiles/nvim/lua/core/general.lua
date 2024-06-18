@@ -12,6 +12,8 @@ g.navic_silence = true
 g.skip_ts_context_commentstring_module = true
 -- light theme on markdown preview
 g.mkdp_theme = 'light'
+-- disable auto close when changing buffers
+g.mkdp_auto_close = 0
 
 g.mapleader = ' '
 g.maplocalleader = ' '
