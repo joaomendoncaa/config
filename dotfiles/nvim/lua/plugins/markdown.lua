@@ -17,6 +17,7 @@ return {
         cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
         ft = { 'markdown' },
 
+        -- In the case npm is not installed the plugin has an utility to do so.
         build = function()
             vim.fn['mkdp#util#install']()
         end,
@@ -36,12 +37,8 @@ return {
             local crypto = require 'utils.crypto'
 
             local custom_css = [[
-                body {
-                    font-family: Arial, sans-serif;
-                }
-
-                h1 {
-                    color: blue;
+                #page-ctn {
+                    max-width: unset;
                 }
             ]]
 
@@ -49,19 +46,25 @@ return {
             local hash = crypto.hashString(custom_css)
             local path = prefix .. hash .. '.css'
 
-            local file = io.open(path, 'r')
+            local custom_css_file = io.open(path, 'r')
 
-            if file then
-                file:close()
+            if custom_css_file then
+                custom_css_file:close()
             else
-                file = io.open(path, 'w')
-
-                if not file then
+                custom_css_file = io.open(path, 'w')
+                if not custom_css_file then
                     error('Failed to create or write to the temporary CSS file: ' .. path)
                 end
 
-                file:write(custom_css)
-                file:close()
+                local mkdp_css_file = io.open(vim.fn.stdpath 'data' .. '/lazy/markdown-preview.nvim/app/_static/markdown.css', 'r')
+                if not mkdp_css_file then
+                    error 'Failed to open mkdp CSS file'
+                end
+
+                custom_css_file:write(mkdp_css_file:read '*a' .. '\n' .. custom_css)
+
+                custom_css_file:close()
+                mkdp_css_file:close()
             end
 
             vim.g.mkdp_markdown_css = path
