@@ -39,6 +39,14 @@ return {
             local custom_css = [[
                 #page-ctn {
                     max-width: unset;
+                    min-height: 100vh;
+
+                    display: flex;
+                    flex-direction: column
+                }
+
+                .markdown-body {
+                    flex-grow: 1;
                 }
             ]]
 
