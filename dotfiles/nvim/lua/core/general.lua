@@ -14,6 +14,9 @@ g.skip_ts_context_commentstring_module = true
 g.mkdp_theme = 'light'
 -- disable auto close when changing buffers
 g.mkdp_auto_close = 0
+-- disable warnings when using vim-multi
+g.VM_silent_exit = 1
+g.VM_show_warnings = 0
 
 g.mapleader = ' '
 g.maplocalleader = ' '
