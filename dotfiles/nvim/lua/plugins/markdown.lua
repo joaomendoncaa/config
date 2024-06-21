@@ -48,6 +48,11 @@ return {
                 .markdown-body {
                     flex-grow: 1;
                 }
+
+                .markdown-body > *, .markdown-body > *:first-child {
+                    margin: 0 auto;
+                    max-width: 800px;
+                }
             ]]
 
             local prefix = '/tmp/mkdp-custom_css-'
