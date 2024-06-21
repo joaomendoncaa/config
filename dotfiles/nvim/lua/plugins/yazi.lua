@@ -13,11 +13,11 @@ return {
 
         local keymap = vim.keymap.set
 
-        local search_parent = function()
+        local search_cwd = function()
             plugin.yazi(nil, vim.fn.getcwd())
         end
 
-        local search_cwd = function()
+        local search_parent = function()
             local bufnr = vim.api.nvim_get_current_buf()
             local bufname = vim.api.nvim_buf_get_name(bufnr)
             local bufdir = vim.fn.fnamemodify(bufname, ':p:h')
