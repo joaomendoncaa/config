@@ -3,3 +3,17 @@ ratio = [1, 4, 3]
 show_hidden = true
 linemode = "size"
 show_symlink = true
+
+[plugin]
+prepend_previewers = [
+    { name = "*.ts", run = "batcat" },
+    { name = "*.tsx", run = "batcat" },
+    { name = "*.js", run = "batcat" },
+    { name = "*.jsx", run = "batcat" },
+    { name = "*.rs", run = "batcat" },
+    { name = "*.go", run = "batcat" },
+    { name = "*.md", run = "batcat" },
+    { name = "*.lua", run = "batcat" },
+    { name = "*.sh", run = "batcat" },
+    { name = "*.py", run = "batcat" }
+]
