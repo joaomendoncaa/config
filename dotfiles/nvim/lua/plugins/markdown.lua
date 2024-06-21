@@ -30,7 +30,7 @@ return {
         -- the CSS you want injected.
         --
         -- It also registers a `VimLeavePre` autocommand to clean up the temporary
-        -- CSS file when neovim is existed.
+        -- CSS file when neovim is exited.
         --
         -- SEE: https://github.com/iamcco/markdown-preview.nvim?tab=readme-ov-file#markdownpreview-config
         init = function()
