@@ -3,6 +3,39 @@
 local o = vim.opt
 local g = vim.g
 local autocmd = vim.api.nvim_create_autocmd
+local usercmd = vim.api.nvim_create_user_command
+
+local toggle_wrap = function()
+    vim.cmd 'set wrap!'
+end
+
+local auto_highlight_yank = function()
+    vim.highlight.on_yank()
+end
+
+local auto_greeter = function()
+    if not require('utils.flags').isOne(vim.env.NVIM_PERF) then
+        print(string.format('󱐋 %s', vim.fn.getcwd()))
+        return
+    end
+
+    local stats = require('lazy').stats()
+
+    vim.api.nvim_echo({
+        { '󱐋', '@function' },
+        { ' ' },
+        { string.format('%d/%d plugins loaded in %d ms', stats.loaded, stats.count, stats.startuptime), '' },
+        { ' ' },
+        {
+            string.format('[ LazyStart = %d ms | LazyDone = %d ms | UIEnter = %d ms ]', stats.times.LazyStart, stats.times.LazyDone, stats.times.UIEnter),
+            '@comment',
+        },
+    }, false, {})
+end
+
+local auto_colorscheme = function(args)
+    require('utils.themes').update(args.match)
+end
 
 -- flag plugins that there's a nerd font installed
 g._NERD_FONT = true
@@ -51,39 +84,21 @@ o.conceallevel = 0
 autocmd('TextYankPost', {
     desc = 'Briefly highlight text range when yanking.',
     group = vim.api.nvim_create_augroup('text-yank-post-highlighting', { clear = true }),
-    callback = function()
-        vim.highlight.on_yank()
-    end,
+    callback = auto_highlight_yank,
 })
 
 autocmd('ColorScheme', {
     desc = 'Make necessary adjustments to the selected colorscheme.',
     group = vim.api.nvim_create_augroup('color-scheme-background-removal', { clear = true }),
-    callback = function(args)
-        require('utils.themes').update(args.match)
-    end,
+    callback = auto_colorscheme,
 })
 
 autocmd('User', {
     desc = 'Echo lazy stats into command line on start.',
     pattern = 'LazyVimStarted',
-    callback = function()
-        if not require('utils.flags').isOne(vim.env.NVIM_PERF) then
-            print(string.format('󱐋 %s', vim.fn.getcwd()))
-            return
-        end
+    callback = auto_greeter,
+})
 
-        local stats = require('lazy').stats()
-
-        vim.api.nvim_echo({
-            { '󱐋', '@function' },
-            { ' ' },
-            { string.format('%d/%d plugins loaded in %d ms', stats.loaded, stats.count, stats.startuptime), '' },
-            { ' ' },
-            {
-                string.format('[ LazyStart = %d ms | LazyDone = %d ms | UIEnter = %d ms ]', stats.times.LazyStart, stats.times.LazyDone, stats.times.UIEnter),
-                '@comment',
-            },
-        }, false, {})
-    end,
+usercmd('ToggleWrap', toggle_wrap, {
+    desc = 'Toggle wrapping of lines.',
 })

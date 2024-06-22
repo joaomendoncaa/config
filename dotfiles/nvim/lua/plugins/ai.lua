@@ -8,7 +8,20 @@ return {
         enabled = require('utils.flags').isOne(vim.env.NVIM_AI),
 
         config = function()
-            require('supermaven-nvim').setup {
+            local plugin = require 'supermaven-nvim'
+            local plugin_api = require 'supermaven-nvim.api'
+
+            local toggle = function()
+                plugin_api.toggle()
+
+                local status = plugin_api.is_running() and 'enabled' or 'disabled'
+
+                print('AI suggestions are now ' .. status .. '.')
+            end
+
+            vim.api.nvim_create_user_command('ToggleAI', toggle, {})
+
+            plugin.setup {
                 keymaps = {
                     accept_word = '<Tab>',
                     accept_suggestion = '<C-y>',
