@@ -49,8 +49,10 @@ return {
                     flex-grow: 1;
                 }
 
-                .markdown-body > *, .markdown-body > *:first-child {
-                    margin: 0 auto;
+                .markdown-body > * {
+                    margin-right: auto!important;
+                    margin-left: auto!important;
+
                     max-width: 800px;
                 }
             ]]
