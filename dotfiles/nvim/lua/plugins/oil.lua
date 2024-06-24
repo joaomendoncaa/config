@@ -7,7 +7,7 @@ return {
         event = 'VeryLazy',
 
         dependencies = {
-            { 'nvim-tree/nvim-web-devicons', enabled = vim.g._NERD_FONT },
+            { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
         },
 
         config = function()

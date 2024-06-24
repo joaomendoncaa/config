@@ -38,7 +38,7 @@ local auto_colorscheme = function(args)
 end
 
 -- flag plugins that there's a nerd font installed
-g._NERD_FONT = true
+g.NVIM_NERD_FONT = true
 -- silence nvim-navic errors/warnings
 g.navic_silence = true
 -- skip backwards compatibility routines and speed up loading

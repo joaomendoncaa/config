@@ -16,7 +16,7 @@ return {
     dependencies = {
         'nvim-telescope/telescope-ui-select.nvim',
         'nvim-lua/plenary.nvim',
-        { 'nvim-tree/nvim-web-devicons', enabled = vim.g._NERD_FONT },
+        { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
 
         {
             -- FZF sorter for telescope written in C.
