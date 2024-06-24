@@ -26,7 +26,7 @@ return {
                 bufdir = vim.fn.getcwd()
             end
 
-            plugin.yazi(nil, bufdir)
+            plugin.yazi(nil, bufname)
         end
 
         keymap('n', '<leader>e', search_parent, { desc = 'Open the file [E]xplorer in parent directory.' })
