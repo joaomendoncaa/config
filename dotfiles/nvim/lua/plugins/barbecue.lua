@@ -12,6 +12,10 @@ return {
         { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
     },
 
+    init = function()
+        vim.g.navic_silence = true
+    end,
+
     config = function()
         require('barbecue').setup {
             -- prevent barbecue from updating itself automatically

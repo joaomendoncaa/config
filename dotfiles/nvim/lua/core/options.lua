@@ -39,21 +39,9 @@ end
 
 -- flag plugins that there's a nerd font installed
 g.NVIM_NERD_FONT = true
--- silence nvim-navic errors/warnings
-g.navic_silence = true
--- skip backwards compatibility routines and speed up loading
-g.skip_ts_context_commentstring_module = true
--- light theme on markdown preview
-g.mkdp_theme = 'light'
--- disable auto close when changing buffers
-g.mkdp_auto_close = 0
--- disable warnings when using vim-multi
-g.VM_silent_exit = 1
-g.VM_show_warnings = 0
 
 g.mapleader = ' '
 g.maplocalleader = ' '
-
 o.termguicolors = true
 o.laststatus = 0
 o.signcolumn = 'yes'

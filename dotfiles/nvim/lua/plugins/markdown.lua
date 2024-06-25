@@ -35,6 +35,7 @@ return {
         -- SEE: https://github.com/iamcco/markdown-preview.nvim?tab=readme-ov-file#markdownpreview-config
         init = function()
             local crypto = require 'utils.crypto'
+            local g = vim.g
 
             local custom_css = [[
                 #page-ctn {
@@ -82,8 +83,6 @@ return {
                 mkdp_css_file:close()
             end
 
-            vim.g.mkdp_markdown_css = path
-
             vim.api.nvim_create_autocmd('VimLeavePre', {
                 desc = 'Cleanup temporary CSS file.',
 
@@ -93,6 +92,10 @@ return {
                     os.remove(path)
                 end,
             })
+
+            g.mkdp_markdown_css = path
+            g.mkdp_theme = 'light'
+            g.mkdp_auto_close = 0
         end,
 
         config = function()
