@@ -1,3 +1,6 @@
+local g = vim.g
+local keymap = vim.keymap.set
+
 return {
     {
         -- Plugin for calling lazygit from within neovim.
@@ -13,9 +16,8 @@ return {
         },
 
         init = function()
-            local g = vim.g
-
-            vim.keymap.set('n', '<leader>lg', '<CMD>LazyGit<CR>', { desc = 'Launch [L]azy[G]it.' })
+            keymap('n', '<leader>gl', '<CMD>LazyGit<CR>', { desc = '[G]it: Launch [L]azyGit.' })
+            keymap('n', '<leader>grv', '<cmd>silent! !gh repo view --web<CR>', { desc = '[G]it: [R]epository [V]iew.' })
 
             g.lazygit_floating_window_scaling_factor = 0.775
             g.lazygit_floating_window_use_plenary = 0
@@ -32,7 +34,11 @@ return {
         event = 'VeryLazy',
 
         config = function()
-            require('gitsigns').setup {
+            local plugin = require 'gitsigns'
+
+            keymap('n', '<leader>gh', '<CMD>Gitsigns preview_hunk_inline<CR>', { desc = '[G]it: Preview [H]unk inline.' })
+
+            plugin.setup {
                 signs = {
                     add = { text = '+' },
                     change = { text = '~' },
