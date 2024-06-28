@@ -4,6 +4,7 @@ local o = vim.opt
 local g = vim.g
 local autocmd = vim.api.nvim_create_autocmd
 local usercmd = vim.api.nvim_create_user_command
+local strings = require 'utils.strings'
 
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
@@ -20,17 +21,25 @@ local auto_greeter = function()
     end
 
     local stats = require('lazy').stats()
+    local title = string.format('%d/%d plugins loaded in %d ms', stats.loaded, stats.count, stats.startuptime)
+    local subtitle =
+        string.format('[ LazyStart = %d ms | LazyDone = %d ms | UIEnter = %d ms ]', stats.times.LazyStart, stats.times.LazyDone, stats.times.UIEnter)
 
-    vim.api.nvim_echo({
+    local chunks = {
         { '󱐋', '@function' },
         { ' ' },
-        { string.format('%d/%d plugins loaded in %d ms', stats.loaded, stats.count, stats.startuptime), '' },
+        { title, '' },
         { ' ' },
-        {
-            string.format('[ LazyStart = %d ms | LazyDone = %d ms | UIEnter = %d ms ]', stats.times.LazyStart, stats.times.LazyDone, stats.times.UIEnter),
-            '@comment',
-        },
-    }, false, {})
+        { subtitle, '@comment' },
+    }
+
+    local truncated_chunks = strings.truncateChunks(chunks, {
+        length = vim.o.columns / 2,
+        separator = '...',
+        separator_hg = '@comment',
+    })
+
+    vim.api.nvim_echo(truncated_chunks, true, {})
 end
 
 local auto_colorscheme = function(args)
@@ -72,6 +81,12 @@ o.whichwrap = 'lh'
 o.wrap = false
 o.conceallevel = 0
 
+vim.api.nvim_create_autocmd({ 'User' }, {
+    group = vim.api.nvim_create_augroup('user-lazyvimstarted-greeter', { clear = true }),
+    pattern = 'LazyVimStarted',
+    callback = auto_greeter,
+})
+
 autocmd({ 'TextYankPost' }, {
     desc = 'Briefly highlight text range when yanking.',
     group = vim.api.nvim_create_augroup('text-yank-post-highlighting', { clear = true }),
@@ -82,12 +97,6 @@ autocmd({ 'ColorScheme' }, {
     desc = 'Make necessary adjustments to the selected colorscheme.',
     group = vim.api.nvim_create_augroup('color-scheme-background-removal', { clear = true }),
     callback = auto_colorscheme,
-})
-
-autocmd({ 'User' }, {
-    desc = 'Echo lazy stats into command line on start.',
-    pattern = 'LazyVimStarted',
-    callback = auto_greeter,
 })
 
 usercmd('ToggleWrap', toggle_wrap, {

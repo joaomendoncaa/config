@@ -36,7 +36,8 @@ return {
         config = function()
             local plugin = require 'gitsigns'
 
-            keymap('n', '<leader>gh', '<CMD>Gitsigns preview_hunk_inline<CR>', { desc = '[G]it: Preview [H]unk inline.' })
+            keymap({ 'n', 'v' }, '<leader>ghp', '<CMD>Gitsigns preview_hunk_inline<CR>', { desc = '[G]it: [H]unk [P]review.' })
+            keymap({ 'n', 'v' }, '<leader>ghr', '<CMD>Gitsigns reset_hunk<CR>', { desc = '[G]it: [H]unk [R]eset.' })
 
             plugin.setup {
                 signs = {
