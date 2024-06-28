@@ -57,6 +57,7 @@ function M.truncateChunks(chunks, opts)
     local unrolled_chunks = {}
 
     -- unroll chunks to a list of [character, highlight_group]
+    -- TODO: this is extremely nasty, but utf8 is the one to blame, not me. might cleanup one day (I won't)
     for _, chunk in ipairs(chunks) do
         local chunk_text = chunk[1]
         local chunk_hg = chunk[2] or ''
