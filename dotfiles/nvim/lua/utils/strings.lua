@@ -40,15 +40,11 @@ function M.truncateChunks(chunks, opts)
     local separator = opts.separator or '...'
     local separator_hg = opts.separator_hg or ''
 
-    print('length', length)
-
     -- calculate total length of all chunks
     local total_length = 0
     for _, chunk in ipairs(chunks) do
         total_length = total_length + #chunk[1]
     end
-
-    print('total_length', total_length)
 
     -- if total length is less or equal to the maxium length, return the original chunks
     if total_length <= length then
@@ -59,8 +55,6 @@ function M.truncateChunks(chunks, opts)
     local part_length = math.floor((length - sep_length) / 2)
     local truncated_chunks = {}
     local unrolled_chunks = {}
-
-    print('part_length', part_length)
 
     -- unroll chunks to a list of [character, highlight_group]
     for _, chunk in ipairs(chunks) do
