@@ -10,6 +10,10 @@ local toggle_wrap = function()
     vim.cmd 'set wrap!'
 end
 
+local buffer_delete = function()
+    vim.cmd 'call delete(expand("%")) | bdelete!'
+end
+
 local auto_highlight_yank = function()
     vim.highlight.on_yank()
 end
@@ -99,4 +103,8 @@ autocmd({ 'ColorScheme' }, {
 
 usercmd('ToggleWrap', toggle_wrap, {
     desc = 'Toggle wrapping of lines.',
+})
+
+usercmd('BufferDelete', buffer_delete, {
+    desc = 'Delete the current file.',
 })
