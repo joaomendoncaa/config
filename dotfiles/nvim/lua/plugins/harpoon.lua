@@ -6,10 +6,6 @@ return {
     branch = 'harpoon2',
     keys = {
         '<leader>h',
-        '<a-1>',
-        '<a-2>',
-        '<a-3>',
-        '<a-4>',
     },
 
     dependencies = {
@@ -17,37 +13,51 @@ return {
     },
 
     config = function()
-        local harpoon = require 'harpoon'
+        local plugin = require 'harpoon'
+
         local keymap = vim.keymap.set
 
-        harpoon:setup {
+        local add = function()
+            local file_name = vim.fn.expand '%'
+            plugin:list():add()
+            print('Harpoon buffer added: ' .. file_name)
+        end
+
+        local remove = function()
+            local file_name = vim.fn.expand '%'
+            plugin:list():remove()
+            print('Harpoon buffer removed: ' .. file_name)
+        end
+
+        local clear = function()
+            plugin:list():clear()
+            print 'Harpoon buffers cleared.'
+        end
+
+        local list = function()
+            plugin.ui:toggle_quick_menu(plugin:list())
+        end
+
+        local select = function(n)
+            plugin:list():select(n)
+        end
+
+        keymap('n', '<leader>ha', add, { desc = '[H]arpoon list [A]ppend.' })
+        keymap('n', '<leader>hc', clear, { desc = '[H]arpoon list [C]lear.' })
+        keymap('n', '<leader>hr', remove, { desc = '[H]arpoon view [R]emove current buffer..' })
+        keymap('n', '<leader>hl', list, { desc = '[H]arpoon view [L]ist.' })
+
+        for i = 1, 9 do
+            keymap('n', '<leader>h' .. i, function()
+                select(i)
+            end, { desc = 'Select [H]arpoon buffer in position ' .. i .. '.' })
+        end
+
+        plugin:setup {
             settings = {
                 save_on_toggle = true,
                 sync_on_ui_close = true,
-                key = function()
-                    return vim.loop.cwd()
-                end,
             },
         }
-
-        keymap('n', '<leader>ha', function()
-            harpoon:list():add()
-        end, { desc = '[H]arpoon List [A]ppend.' })
-        keymap('n', '<leader>hl', function()
-            harpoon.ui:toggle_quick_menu(harpoon:list())
-        end, { desc = '[H]ist [L]ist.' })
-
-        keymap('n', '<a-1>', function()
-            harpoon:list():select(1)
-        end, { desc = 'Select H[A]rpoon Buffer in Position 1.' })
-        keymap('n', '<a-2>', function()
-            harpoon:list():select(2)
-        end, { desc = 'Select H[A]rpoon Buffer in Position 2.' })
-        keymap('n', '<a-3>', function()
-            harpoon:list():select(3)
-        end, { desc = 'Select H[A]rpoon Buffer in Position 3.' })
-        keymap('n', '<a-4>', function()
-            harpoon:list():select(4)
-        end, { desc = 'Select H[A]rpoon Buffer in Position 4.' })
     end,
 }

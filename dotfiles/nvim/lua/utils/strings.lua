@@ -57,38 +57,40 @@ function M.truncateChunks(chunks, opts)
     local truncated_chunks = {}
     local unrolled_chunks = {}
 
-    -- unroll chunks to a list of [character, highlight_group]
-    --  TODO: this is extremely *nasty*, but utf8 is the one to blame, not me. might cleanup one day (I won't)
+    -- unroll chunks to a linear list of single [character, highlight_group]s
+    -- but construct these single character chunks with utf8 encoding
     for _, chunk in ipairs(chunks) do
         local chunk_text = chunk[1]
         local chunk_hg = chunk[2] or ''
+        local chunk_length = #chunk_text
 
-        -- Insert each character of chunk_text as a separate chunk
-        local i = 1
-        while i <= #chunk_text do
-            local char = chunk_text:sub(i, i)
+        local char_pointer = 1
 
-            -- Check if the current character is a multi-byte character
-            -- This assumes that all bytes in a multi-byte character have a byte value greater than 127
-            if string.byte(char) >= 128 then
-                -- Append the next byte(s) to form the full multi-byte character
-                local j = i + 1
-                while j <= #chunk_text do
-                    local next_char = chunk_text:sub(j, j)
+        while char_pointer <= chunk_length do
+            local utf8_char_buffer = chunk_text:sub(char_pointer, char_pointer)
+
+            -- check if the current character is a multi-byte character
+            -- assuming all bytes in a "multi-byte" character have a byte value greater than 127
+            if string.byte(utf8_char_buffer) >= 128 then
+                local next_char_pointer = char_pointer + 1
+
+                while next_char_pointer <= chunk_length do
+                    local next_char = chunk_text:sub(next_char_pointer, next_char_pointer)
+
                     if string.byte(next_char) >= 128 then
-                        char = char .. next_char
-                        j = j + 1
+                        utf8_char_buffer = utf8_char_buffer .. next_char
+                        next_char_pointer = next_char_pointer + 1
                     else
                         break
                     end
                 end
             end
 
-            -- Insert the character slice into unrolled_chunks
-            table.insert(unrolled_chunks, { char, chunk_hg })
+            -- insert the newly constructed utf8 character into unrolled_chunks as one
+            table.insert(unrolled_chunks, { utf8_char_buffer, chunk_hg })
 
-            -- Move to the next character
-            i = i + #char
+            -- move pointer to the next character
+            char_pointer = char_pointer + #utf8_char_buffer
         end
     end
 
@@ -96,7 +98,7 @@ function M.truncateChunks(chunks, opts)
     local pos_end = #unrolled_chunks - part_length
 
     -- loop through each table inside unrolled_chunks and in case it
-    -- is within the range of start and end to remove it
+    -- is not empty and within the range to be truncated remove it
     for k, v in ipairs(unrolled_chunks) do
         local is_string = type(v[1]) == 'string'
         local has_text = v[1]:len() > 0
@@ -129,8 +131,6 @@ function M.fromTable(tbl)
         end
     end
 
-    -- Remove the trailing comma and space
-    -- TODO: hacky, but works
     if result:sub(-2) == ', ' then
         result = result:sub(1, -3)
     end
