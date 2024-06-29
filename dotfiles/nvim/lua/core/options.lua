@@ -25,21 +25,19 @@ local auto_greeter = function()
     local subtitle =
         string.format('[ LazyStart = %d ms | LazyDone = %d ms | UIEnter = %d ms ]', stats.times.LazyStart, stats.times.LazyDone, stats.times.UIEnter)
 
-    local chunks = {
+    local perf_log = strings.truncateChunks({
         { '󱐋', '@function' },
         { ' ' },
-        { title, '' },
+        { title },
         { ' ' },
         { subtitle, '@comment' },
-    }
-
-    local truncated_chunks = strings.truncateChunks(chunks, {
+    }, {
         length = vim.o.columns / 2,
         separator = '...',
         separator_hg = '@comment',
     })
 
-    vim.api.nvim_echo(truncated_chunks, true, {})
+    vim.api.nvim_echo(perf_log, true, {})
 end
 
 local auto_colorscheme = function(args)

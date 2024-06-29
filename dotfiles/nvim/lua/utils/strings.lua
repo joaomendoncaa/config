@@ -1,12 +1,14 @@
 local M = {}
 
---- Truncate a string in the middle, inserting a separator.
+---@alias HighlightedChunks table<string, string>[]
+
+---Truncate a string in the middle, inserting a separator.
 ---
 ---@param str string The string to be truncated
 ---@param opts table Optional parameters
 ---             length - The maximum allowed length of the string
 ---             separator - The separator to insert in the middle of the truncated string
----@return string The truncated string
+---@return string string The truncated string
 ---
 ---TODO: be able to choose the position of the separator (left, right, center)
 function M.truncateString(str, opts)
@@ -23,16 +25,15 @@ end
 
 ---Truncate chunks with a separator while preserving highlight groups.
 ---
----@param chunks any[] A list of `[text, hl_group]` arrays, each representing a
----               text chunk with specified highlight. `hl_group` element can
----               be omitted for no highlight.
----@param opts table Optional parameters
+---@param chunks HighlightedChunks A list of `{ text, hl_group }` arrays, each representing a text chunk with specified highlight. `hl_group` element can be omitted for no highlight.
+---@param opts table Optional parameters.
 ---             length - The maximum allowed length of the string
 ---             separator - The separator to insert in the middle of the truncated string
 ---             separator_hg - The highlight group to use for the separator
----@return any[] The truncated chunks
+---@return HighlightedChunks chunks The truncated chunks
 ---
 ---TODO: be able to choose the position of the separator (left, right, center)
+---TODO: support chunks nesting
 function M.truncateChunks(chunks, opts)
     opts = opts or {}
 
@@ -57,7 +58,7 @@ function M.truncateChunks(chunks, opts)
     local unrolled_chunks = {}
 
     -- unroll chunks to a list of [character, highlight_group]
-    -- TODO: this is extremely nasty, but utf8 is the one to blame, not me. might cleanup one day (I won't)
+    --  TODO: this is extremely *nasty*, but utf8 is the one to blame, not me. might cleanup one day (I won't)
     for _, chunk in ipairs(chunks) do
         local chunk_text = chunk[1]
         local chunk_hg = chunk[2] or ''
