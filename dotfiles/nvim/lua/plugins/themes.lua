@@ -1,5 +1,7 @@
 local themes = require 'utils.themes'
+
 local theme = vim.env.NVIM_THEME or 'default'
+local priority = 1000
 
 return {
     {
@@ -7,7 +9,7 @@ return {
         -- SEE: https://github.com/olivercederborg/poimandres.nvim
         'olivercederborg/poimandres.nvim',
 
-        priority = 1000,
+        priority = priority,
 
         config = function()
             local plugin = require 'poimandres'
@@ -27,7 +29,7 @@ return {
         -- SEE: https://github.com/ellisonleao/gruvbox.nvim
         'ellisonleao/gruvbox.nvim',
 
-        priotity = 1000,
+        priotity = priority,
 
         config = function()
             local plugin = require 'gruvbox'
@@ -39,34 +41,11 @@ return {
     },
 
     {
-        -- A delightful mostly gray scale colorscheme thats soft on the eyes, and supports heaps of neovim plugins.
-        -- SEE: https://github.com/slugbyte/lackluster.nvim
-        'slugbyte/lackluster.nvim',
-
-        priority = 1000,
-
-        config = function()
-            local plugin = require 'lackluster'
-
-            plugin.setup {
-                tweek_background = {
-                    normal = 'none',
-                    telescope = 'none',
-                    menu = 'none',
-                    popup = 'none',
-                },
-            }
-
-            themes.update(theme)
-        end,
-    },
-
-    {
         -- Remixed Kanagawa colourscheme with muted colors. For Neovim.
         -- SEE: https://github.com/sho-87/kanagawa-paper.nvim
         'sho-87/kanagawa-paper.nvim',
 
-        priority = 1000,
+        priority = priority,
 
         config = function()
             local plugin = require 'kanagawa-paper'
