@@ -5,8 +5,6 @@ local keymap = vim.keymap.set
 
 keymap('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = '[E]scape from search highlights.' })
 
-keymap('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message.' })
-keymap('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message.' })
 keymap('n', '<leader>q', vim.diagnostic.open_float, { desc = '[Q]uickly show diagnostic error messages.' })
 keymap('n', '<leader>Q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list.' })
 
