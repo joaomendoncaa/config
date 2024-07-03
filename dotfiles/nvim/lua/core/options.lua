@@ -1,19 +1,10 @@
 -- Nvim globals, options and auto commands.
 
 local strings = require 'utils.strings'
+local commands = require 'utils.commands'
 
 local o = vim.opt
 local g = vim.g
-
-local autocmd = vim.api.nvim_create_autocmd
-
-local usercmd = vim.api.nvim_create_user_command
-
-local augroup = function(id, opts)
-    opts = opts or {}
-    opts.clear = opts.clear or true
-    vim.api.nvim_create_augroup(id, opts)
-end
 
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
@@ -92,29 +83,19 @@ o.whichwrap = 'lh'
 o.wrap = false
 o.conceallevel = 0
 
-autocmd({ 'TextYankPost' }, {
-    desc = 'Briefly highlight text range when yanking.',
-    group = augroup 'text-yank-post-highlighting',
+commands.new('ToggleWrap', toggle_wrap)
+
+commands.new('BufferDelete', buffer_delete)
+
+commands.auto({ 'TextYankPost' }, {
     callback = auto_highlight_yank,
 })
 
-autocmd({ 'User' }, {
-    desc = 'Echo perf/cwd info on startup.',
+commands.auto({ 'User' }, {
     pattern = 'LazyVimStarted',
-    group = augroup 'user-lazyvimstarted-greeter',
     callback = auto_greeter,
 })
 
-autocmd({ 'ColorScheme' }, {
-    desc = 'Make necessary adjustments to the selected colorscheme.',
-    group = augroup 'color-scheme-background-removal',
+commands.auto({ 'ColorScheme' }, {
     callback = auto_colorscheme,
-})
-
-usercmd('ToggleWrap', toggle_wrap, {
-    desc = 'Toggle wrapping of lines.',
-})
-
-usercmd('BufferDelete', buffer_delete, {
-    desc = 'Delete the current file.',
 })
