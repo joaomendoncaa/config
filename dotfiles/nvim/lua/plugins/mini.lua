@@ -10,6 +10,10 @@ return {
 
         require('mini.surround').setup()
 
+        require('mini.sessions').setup()
+
+        require('mini.move').setup()
+
         require('mini.jump2d').setup {
             mappings = {
                 start_jumping = 'S',
