@@ -135,6 +135,7 @@ return {
             rust_analyzer = {},
             tailwindcss = {},
             stylua = {},
+            biome = {},
             lua_ls = {
                 settings = {
                     Lua = {
