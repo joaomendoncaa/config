@@ -58,6 +58,7 @@ g.maplocalleader = ' '
 
 o.termguicolors = true
 o.laststatus = 0
+o.statusline = '%#StatusLine#' .. string.rep(' ', vim.api.nvim_win_get_width(0)) .. '%#StatusLineNC#'
 o.signcolumn = 'yes'
 o.cursorline = true
 o.number = true

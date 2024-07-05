@@ -33,6 +33,9 @@ function M.adjustConflicts(match)
         end,
     }
 
+    hi 'StatusLine guibg=none guifg=none'
+    hi 'StatusLineNC guibg=none guifg=none'
+
     hi 'Normal guibg=none ctermbg=none'
     hi 'MsgSeparator guibg=none ctermbg=none'
 
