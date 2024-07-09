@@ -7,13 +7,33 @@ return {
     cmd = { 'Conform', 'ConformInfo' },
 
     config = function()
-        require('conform').setup {
+        local plugin = require 'conform'
+
+        local format_buffer = function()
+            plugin.format { async = true, lsp_fallback = true }
+        end
+
+        local formatter_biome = function()
+            local buffer_path = vim.api.nvim_buf_get_name(0)
+            local cwd = vim.fn.getcwd()
+            local has_biome_json = vim.fn.filereadable(cwd .. '/biome.json')
+
+            if has_biome_json then
+                return {
+                    inherit = false,
+                    command = 'biome',
+                    args = { 'format', '--write', buffer_path },
+                }
+            end
+
+            return 'prettier'
+        end
+
+        plugin.setup {
             notify_on_error = false,
             format_on_save = function(bufnr)
-                -- Disable "format_on_save lsp_fallback" for languages that don't
-                -- have a well standardized coding style. You can add additional
-                -- languages here or re-enable it for the disabled ones.
                 local disable_filetypes = { c = true, cpp = true }
+
                 return {
                     timeout_ms = 500,
                     lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
@@ -24,12 +44,19 @@ return {
                 lua = { 'stylua' },
                 sh = { 'shfmt' },
             },
+            formatters = {
+                typescriptreact = formatter_biome,
+                javascriptreact = formatter_biome,
+                javascript = formatter_biome,
+                typescript = formatter_biome,
+                css = formatter_biome,
+                scss = formatter_biome,
+                json = formatter_biome,
+            },
         }
 
         local keymap = vim.keymap.set
 
-        keymap('n', '<leader>f', function()
-            require('conform').format { async = true, lsp_fallback = true }
-        end, { desc = '[F]ormat buffer.' })
+        keymap('n', '<leader>f', format_buffer, { desc = '[F]ormat buffer.' })
     end,
 }

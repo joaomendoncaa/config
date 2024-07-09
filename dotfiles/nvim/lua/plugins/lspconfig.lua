@@ -71,11 +71,18 @@ return {
     },
 
     config = function()
-        vim.api.nvim_create_autocmd('LspAttach', {
-            group = vim.api.nvim_create_augroup('lsp-attach', { clear = true }),
+        local commands = require 'utils.commands'
+
+        commands.auto('LspAttach', {
+            group = commands.augroup 'lsp-attach',
 
             callback = function(event)
                 local builtin = require 'telescope.builtin'
+                local client = vim.lsp.get_client_by_id(event.data.client_id)
+                local buffer = event.buf
+
+                local has_highlights = client and client.server_capabilities.documentHighlightProvider
+                local has_inlay_hints = client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint
 
                 local keymap = vim.keymap.set
 
@@ -88,28 +95,23 @@ return {
                 keymap('n', '<leader>sw', builtin.lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
                 keymap({ 'n', 'v' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]ist Code [A]ctions.' })
 
-                local client = vim.lsp.get_client_by_id(event.data.client_id)
-                if client and client.server_capabilities.documentHighlightProvider then
-                    -- INFO: The following autocommands are used to highlight references of the
-                    -- word under your cursor when your cursor rests there for a little while.
-                    -- SEE: `:help CursorHold` for information about when this is executed
-                    --
-                    -- When you move your cursor, the highlights will be cleared (the second autocommand).
-                    local highlight_augroup = vim.api.nvim_create_augroup('lsp-highlight', { clear = false })
-                    vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
-                        buffer = event.buf,
+                if has_highlights then
+                    local highlight_augroup = commands.augroup('lsp-highlight', { clear = false })
+
+                    commands.auto({ 'CursorHold', 'CursorHoldI' }, {
+                        buffer = buffer,
                         group = highlight_augroup,
                         callback = vim.lsp.buf.document_highlight,
                     })
 
-                    vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
-                        buffer = event.buf,
+                    commands.auto({ 'CursorMoved', 'CursorMovedI' }, {
+                        buffer = buffer,
                         group = highlight_augroup,
                         callback = vim.lsp.buf.clear_references,
                     })
 
-                    vim.api.nvim_create_autocmd('LspDetach', {
-                        group = vim.api.nvim_create_augroup('lsp-detach', { clear = true }),
+                    commands.auto('LspDetach', {
+                        group = commands.augroup('lsp-detach', { clear = true }),
                         callback = function(event2)
                             vim.lsp.buf.clear_references()
                             vim.api.nvim_clear_autocmds { group = 'lsp-highlight', buffer = event2.buf }
@@ -117,8 +119,7 @@ return {
                     })
                 end
 
-                -- if lsp supports it, toggle inlay hints
-                if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
+                if has_inlay_hints then
                     keymap('n', '<leader>th', function()
                         vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
                         print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
@@ -127,8 +128,7 @@ return {
             end,
         })
 
-        local capabilities = vim.lsp.protocol.make_client_capabilities()
-        capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+        local capabilities = vim.tbl_deep_extend('force', vim.lsp.protocol.make_client_capabilities(), require('cmp_nvim_lsp').default_capabilities())
 
         local servers = {
             gopls = {},
@@ -160,6 +160,7 @@ return {
                     -- by the server configuration above. Useful when disabling
                     -- certain features of an LSP (for example, turning off formatting for tsserver)
                     server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+
                     require('lspconfig')[server_name].setup(server)
                 end,
             },
