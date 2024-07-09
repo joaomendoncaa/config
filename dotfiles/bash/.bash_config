@@ -104,6 +104,9 @@ export PATH="/opt/nvim-linux64/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
+# go bins
+export PATH="$HOME/go/bin:$PATH"
+
 # Solana
 export PATH="/home/joao/.local/share/solana/install/active_release/bin:$PATH"
 export WALLET_KEYPAIR_ORE="/home/joao/.wallets/solana/ore-miner.json"
