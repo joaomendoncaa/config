@@ -75,6 +75,7 @@ o.updatetime = 250
 o.splitright = true
 o.splitbelow = true
 o.inccommand = 'split'
+o.smoothscroll = true
 o.scrolloff = 10
 o.hlsearch = true
 o.completeopt = { 'menu,menuone,noselect' }
