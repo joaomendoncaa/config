@@ -11,27 +11,35 @@ return {
         },
 
         config = function()
-            require('oil').setup {
-                keymaps = {
-                    ['<a-h>'] = 'actions.parent',
-                    ['<a-l>'] = 'actions.select',
-                },
+            local plugin = require 'oil'
+
+            local keymap = vim.keymap.set
+
+            keymap('n', '-', '<CMD>Oil<CR>', { desc = 'Open file explorer with oil.nvim in cwd.' })
+
+            plugin.setup {
                 default_file_explorer = true,
-                view_options = {
-                    show_hidden = true,
-                    show_ignored = true,
-                },
+                delete_to_trash = true,
+                skip_confirm_for_simple_edits = true,
                 columns = {
                     'icon',
                 },
+                keymaps = {
+                    h = 'actions.parent',
+                    l = 'actions.select',
+                },
+                view_options = {
+                    show_hidden = true,
+                    show_ignored = true,
+                    is_always_hidden = function(n, _)
+                        return n == '..' or n == '.git'
+                    end,
+                },
                 win_options = {
                     signcolumn = 'yes:2',
+                    wrap = true,
                 },
-                delete_to_trash = true,
-                skip_confirm_for_simple_edits = true,
             }
-
-            vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open file explorer with oil.nvim in cwd.' })
         end,
     },
 
