@@ -116,28 +116,4 @@ function M.truncateChunks(chunks, opts)
     return truncated_chunks
 end
 
----Stringify a table
----
----@param tbl table The table to stringify.
----@return string string The stringified table.
-function M.fromTable(tbl)
-    local result = '{'
-
-    for k, v in pairs(tbl) do
-        if type(v) == 'table' then
-            result = result .. k .. '=' .. M.fromTable(v) .. ', '
-        else
-            result = result .. k .. '=' .. tostring(v) .. ', '
-        end
-    end
-
-    if result:sub(-2) == ', ' then
-        result = result:sub(1, -3)
-    end
-
-    result = result .. '}'
-
-    return result
-end
-
 return M
