@@ -23,7 +23,6 @@ return {
 
             plugin.setup {
                 keymaps = {
-                    accept_word = '<Tab>',
                     accept_suggestion = '<C-y>',
                     clear_suggestion = '<C-c>',
                 },
