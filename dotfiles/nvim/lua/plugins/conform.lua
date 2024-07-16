@@ -24,13 +24,13 @@ return {
                 }
             end,
             formatters_by_ft = {
-                typescriptreact = { 'biome' },
-                javascriptreact = { 'biome' },
-                javascript = { 'biome' },
-                typescript = { 'biome' },
-                css = { 'biome' },
-                scss = { 'biome' },
-                json = { 'biome' },
+                typescriptreact = { 'biome', 'prettier' },
+                javascriptreact = { 'biome', 'prettier' },
+                javascript = { 'biome', 'prettier' },
+                typescript = { 'biome', 'prettier' },
+                css = { 'biome', 'prettier' },
+                scss = { 'biome', 'prettier' },
+                json = { 'biome', 'prettier' },
 
                 lua = { 'stylua' },
                 sh = { 'shfmt' },
