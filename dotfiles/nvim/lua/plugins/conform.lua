@@ -13,22 +13,6 @@ return {
             plugin.format { async = true, lsp_fallback = true }
         end
 
-        local formatter_biome = function()
-            local buffer_path = vim.api.nvim_buf_get_name(0)
-            local cwd = vim.fn.getcwd()
-            local has_biome_json = vim.fn.filereadable(cwd .. '/biome.json')
-
-            if has_biome_json then
-                return {
-                    inherit = false,
-                    command = 'biome',
-                    args = { 'format', '--write', buffer_path },
-                }
-            end
-
-            return 'prettier'
-        end
-
         plugin.setup {
             notify_on_error = false,
             format_on_save = function(bufnr)
@@ -41,17 +25,24 @@ return {
             end,
             formatters_by_ft = {
                 ['*'] = { 'prettier' },
+                typescriptreact = { 'biome' },
+                javascriptreact = { 'biome' },
+                javascript = { 'biome' },
+                typescript = { 'biome' },
+                css = { 'biome' },
+                scss = { 'biome' },
+                json = { 'biome' },
                 lua = { 'stylua' },
                 sh = { 'shfmt' },
             },
             formatters = {
-                typescriptreact = formatter_biome,
-                javascriptreact = formatter_biome,
-                javascript = formatter_biome,
-                typescript = formatter_biome,
-                css = formatter_biome,
-                scss = formatter_biome,
-                json = formatter_biome,
+                biome = {
+                    prepend_args = {
+                        'check',
+                        '--unsafe',
+                        '--write',
+                    },
+                },
             },
         }
 
