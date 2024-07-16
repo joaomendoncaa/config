@@ -19,12 +19,11 @@ return {
                 local disabled_filetypes = { c = true, cpp = true }
 
                 return {
-                    timeout_ms = 500,
+                    timeout_ms = 100,
                     lsp_fallback = not disabled_filetypes[vim.bo[bufnr].filetype],
                 }
             end,
             formatters_by_ft = {
-                ['*'] = { 'prettier' },
                 typescriptreact = { 'biome' },
                 javascriptreact = { 'biome' },
                 javascript = { 'biome' },
@@ -32,6 +31,7 @@ return {
                 css = { 'biome' },
                 scss = { 'biome' },
                 json = { 'biome' },
+
                 lua = { 'stylua' },
                 sh = { 'shfmt' },
             },
