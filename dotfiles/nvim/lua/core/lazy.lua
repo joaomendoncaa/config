@@ -20,8 +20,9 @@ local lazyopts = {
     },
 }
 
+---@diagnostic disable-next-line
 if not vim.uv.fs_stat(lazypath) then
-    vim.fn.system {
+    local out = vim.fn.system {
         'git',
         'clone',
         '--filter=blob:none',
@@ -29,6 +30,10 @@ if not vim.uv.fs_stat(lazypath) then
         lazyrepo,
         lazypath,
     }
+
+    if vim.v.shell_error ~= 0 then
+        error('Error cloning lazy.nvim repo: ' .. out)
+    end
 end
 
 vim.opt.rtp:prepend(lazypath)
