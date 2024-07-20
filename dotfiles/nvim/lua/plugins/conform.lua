@@ -8,32 +8,53 @@ return {
 
     config = function()
         local plugin = require 'conform'
+        local commands = require 'utils.commands'
+        local formatters = require 'utils.formatters'
 
-        local format_buffer = function()
-            plugin.format { async = true, lsp_fallback = true }
+        local keymap = vim.keymap.set
+
+        local format = function()
+            local formatter = formatters.get_closest {
+                biome = { 'biome.json' },
+                prettier = {
+                    'prettier.config.js',
+                    '.prettierrc',
+                    '.prettierrc.json',
+                    '.prettierrc.yaml',
+                    '.prettierrc.yml',
+                },
+            }
+
+            if not formatter then
+                plugin.format { async = true, lsp_fallback = true }
+            else
+                plugin.format { async = true, lsp_fallback = false, formatters = formatter }
+            end
         end
+
+        keymap('n', '<leader>f', format, { desc = '[F]ormat buffer.' })
+
+        commands.user('Format', format)
+
+        commands.auto({ 'BufWritePre' }, { callback = format })
 
         plugin.setup {
             notify_on_error = false,
-            format_on_save = function(bufnr)
-                local disabled_filetypes = { c = true, cpp = true }
-
-                return {
-                    timeout_ms = 100,
-                    lsp_fallback = not disabled_filetypes[vim.bo[bufnr].filetype],
-                }
-            end,
             formatters_by_ft = {
-                typescriptreact = { 'biome', 'prettier' },
-                javascriptreact = { 'biome', 'prettier' },
-                javascript = { 'biome', 'prettier' },
-                typescript = { 'biome', 'prettier' },
+                html = { 'biome', 'prettier' },
+                templ = { 'templ' },
                 css = { 'biome', 'prettier' },
-                scss = { 'biome', 'prettier' },
+                javascript = { 'biome', 'prettier' },
+                javascriptreact = { 'biome', 'prettier' },
+                typescript = { 'biome', 'prettier' },
+                typescriptreact = { 'biome', 'prettier' },
+                yaml = { 'biome', 'prettier' },
                 json = { 'biome', 'prettier' },
-
-                lua = { 'stylua' },
+                jsonc = { 'biome', 'prettier' },
+                svelte = { 'biome', 'prettier' },
+                sql = { 'sql_formatter' },
                 sh = { 'shfmt' },
+                lua = { 'stylua' },
             },
             formatters = {
                 biome = {
@@ -43,11 +64,12 @@ return {
                         '--write',
                     },
                 },
+                prettier = {
+                    prepend_args = {
+                        '--write',
+                    },
+                },
             },
         }
-
-        local keymap = vim.keymap.set
-
-        keymap('n', '<leader>f', format_buffer, { desc = '[F]ormat buffer.' })
     end,
 }

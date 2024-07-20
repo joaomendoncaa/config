@@ -1,6 +1,6 @@
 local M = {}
 
-function M.new(name, command, opts)
+function M.user(name, command, opts)
     opts = opts or {}
     vim.api.nvim_create_user_command(name, command, opts)
 end

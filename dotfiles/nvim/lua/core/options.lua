@@ -85,9 +85,9 @@ o.whichwrap = 'lh'
 o.wrap = false
 o.conceallevel = 0
 
-commands.new('ToggleWrap', toggle_wrap)
+commands.user('ToggleWrap', toggle_wrap)
 
-commands.new('BufferDelete', buffer_delete)
+commands.user('BufferDelete', buffer_delete)
 
 commands.auto({ 'TextYankPost' }, {
     callback = auto_highlight_yank,
