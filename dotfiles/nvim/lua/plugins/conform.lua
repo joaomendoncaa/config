@@ -17,11 +17,16 @@ return {
             local formatter = formatters.get_closest {
                 biome = { 'biome.json' },
                 prettier = {
-                    'prettier.config.js',
                     '.prettierrc',
                     '.prettierrc.json',
-                    '.prettierrc.yaml',
                     '.prettierrc.yml',
+                    '.prettierrc.yaml',
+                    '.prettierrc.json5',
+                    '.prettierrc.js',
+                    '.prettierrc.cjs',
+                    '.prettierrc.toml',
+                    'prettier.config.js',
+                    'prettier.config.cjs',
                 },
             }
 
