@@ -3,17 +3,20 @@ return {
     -- SEE: https://github.com/stevearc/conform.nvim
     'stevearc/conform.nvim',
 
-    event = { 'BufWritePre' },
+    event = 'BufWritePre',
+    keys = { '<leader>f' },
     cmd = { 'Conform', 'ConformInfo' },
 
-    config = function()
+    init = function()
         local plugin = require 'conform'
         local commands = require 'utils.commands'
         local formatters = require 'utils.formatters'
 
         local keymap = vim.keymap.set
 
-        local format = function()
+        local format_buffer = function()
+            local opts = { async = false, lsp_fallback = true }
+
             local formatter = formatters.get_closest {
                 biome = { 'biome.json' },
                 prettier = {
@@ -30,18 +33,18 @@ return {
                 },
             }
 
-            if not formatter then
-                plugin.format { async = true, lsp_fallback = true }
-            else
-                plugin.format { async = true, lsp_fallback = false, formatters = formatter }
+            if formatter then
+                table.insert(opts.formatters, formatter)
             end
+
+            plugin.format(opts)
         end
 
-        keymap('n', '<leader>f', format, { desc = '[F]ormat buffer.' })
+        keymap('n', '<leader>f', format_buffer, { desc = '[F]ormat buffer.' })
 
-        commands.user('Format', format)
+        commands.user('Format', format_buffer)
 
-        commands.auto({ 'BufWritePre' }, { callback = format })
+        commands.auto('BufWritePre', { callback = format_buffer })
 
         plugin.setup {
             notify_on_error = false,
