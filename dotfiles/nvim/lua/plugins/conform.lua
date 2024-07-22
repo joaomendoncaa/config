@@ -34,7 +34,7 @@ return {
             }
 
             if formatter then
-                table.insert(opts.formatters, formatter)
+                opts.formatters = formatter
             end
 
             plugin.format(opts)
