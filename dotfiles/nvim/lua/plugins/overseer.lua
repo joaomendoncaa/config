@@ -6,10 +6,23 @@ return {
     event = 'VeryLazy',
 
     init = function()
+        local commands = require 'utils.commands'
+
         local keymap = vim.keymap.set
 
-        keymap('n', '<leader>rp', '<CMD>OverseerToggle<CR>', { desc = 'Toggle [R]un tasks [P]anel.' })
-        keymap('n', '<leader>rt', '<CMD>OverseerRun<CR>', { desc = '[R]un [T]asks.' })
+        local tasks = function()
+            vim.cmd 'OverseerToggle'
+        end
+
+        local run = function()
+            vim.cmd 'OverseerRun'
+        end
+
+        keymap('n', '<leader>rp', tasks, { desc = 'Toggle [R]un tasks [P]anel.' })
+        keymap('n', '<leader>rt', run, { desc = '[R]un [T]asks.' })
+
+        commands.user('Run', run)
+        commands.user('Tasks', tasks)
     end,
 
     config = function()
