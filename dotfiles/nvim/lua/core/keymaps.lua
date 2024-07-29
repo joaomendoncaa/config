@@ -1,5 +1,5 @@
--- Custom keymaps.
--- NOTE: some keymaps are directly in their related plugin tables
+-- most keymaps are directly in their related plugin tables
+-- this file is for "global" keymaps unrelated to any plugin
 
 local keymap = vim.keymap.set
 

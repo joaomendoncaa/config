@@ -10,6 +10,7 @@ return {
         config = function()
             local plugin = require 'supermaven-nvim'
             local plugin_api = require 'supermaven-nvim.api'
+            local commands = require 'utils.commands'
 
             local toggle = function()
                 plugin_api.toggle()
@@ -19,7 +20,7 @@ return {
                 print('AI suggestions are now ' .. status .. '.')
             end
 
-            vim.api.nvim_create_user_command('ToggleAI', toggle, {})
+            commands.user('ToggleAI', toggle)
 
             plugin.setup {
                 keymaps = {

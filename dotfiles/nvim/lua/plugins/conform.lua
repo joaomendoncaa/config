@@ -3,9 +3,9 @@ return {
     -- SEE: https://github.com/stevearc/conform.nvim
     'stevearc/conform.nvim',
 
-    event = 'BufWritePre',
-    keys = { '<leader>f' },
+    event = { 'BufWritePre' },
     cmd = { 'Conform', 'ConformInfo' },
+    keys = { '<leader>f' },
 
     init = function()
         local plugin = require 'conform'

@@ -51,8 +51,21 @@ return {
             ft = 'lua',
 
             config = function()
-                require('lazydev').setup {}
+                require('lazydev').setup {
+                    library = {
+                        -- Load luvit types when the `vim.uv` word is found
+                        { path = 'luvit-meta/library', words = { 'vim%.uv' } },
+                    },
+                }
             end,
+        },
+
+        {
+            -- Meta type definitions for the Lua platform Luvit.
+            -- SEE: https://github.com/Bilal2453/luvit-meta
+            'Bilal2453/luvit-meta',
+
+            lazy = true,
         },
 
         {
@@ -82,9 +95,14 @@ return {
                 local buffer = event.buf
 
                 local has_highlights = client and client.server_capabilities.documentHighlightProvider
-                local has_inlay_hints = client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint
+                local has_inlay_hints = client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint)
 
                 local keymap = vim.keymap.set
+
+                local toggle_inlay_hints = function()
+                    vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
+                    print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
+                end
 
                 keymap('n', 'gd', builtin.lsp_definitions, { desc = '[G]oto [D]efinition.' })
                 keymap('n', 'gD', vim.lsp.buf.declaration, { desc = '[G]oto [D]eclaration' })
@@ -120,10 +138,7 @@ return {
                 end
 
                 if has_inlay_hints then
-                    keymap('n', '<leader>th', function()
-                        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
-                        print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
-                    end, { desc = '[T]oggle Inlay [H]ints.' })
+                    commands.user('ToggleInlayHints', toggle_inlay_hints)
                 end
             end,
         })

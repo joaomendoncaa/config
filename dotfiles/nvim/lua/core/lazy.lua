@@ -20,7 +20,6 @@ local lazyopts = {
     },
 }
 
----@diagnostic disable-next-line
 if not vim.uv.fs_stat(lazypath) then
     local out = vim.fn.system {
         'git',

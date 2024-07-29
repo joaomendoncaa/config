@@ -86,6 +86,12 @@ return {
 
         cmp.setup {
             sources = {
+                {
+                    name = 'lazydev',
+                    -- set group index to 0 to skip loading LuaLS completions as lazydev recommends it
+                    -- SEE: https://github.com/folke/lazydev.nvim?tab=readme-ov-file#-installation
+                    group_index = 0,
+                },
                 { name = 'nvim_lsp' },
                 { name = 'luasnip' },
                 { name = 'path' },

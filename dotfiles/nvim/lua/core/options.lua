@@ -56,6 +56,7 @@ g.NVIM_NERD_FONT = true
 g.mapleader = ' '
 g.maplocalleader = ' '
 
+o.clipboard = 'unnamedplus'
 o.termguicolors = true
 o.laststatus = 0
 o.statusline = '%#StatusLine#' .. string.rep(' ', vim.api.nvim_win_get_width(0)) .. '%#StatusLineNC#'
@@ -66,7 +67,6 @@ o.relativenumber = true
 o.fillchars = { eob = ' ' }
 o.mouse = 'a'
 o.showmode = false
-o.clipboard = 'unnamedplus'
 o.breakindent = true
 o.undofile = true
 o.ignorecase = true
