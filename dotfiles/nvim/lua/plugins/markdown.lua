@@ -97,9 +97,5 @@ return {
             g.mkdp_theme = 'light'
             g.mkdp_auto_close = 0
         end,
-
-        config = function()
-            vim.keymap.set('n', '<leader>p', '<CMD>MarkdownPreviewToggle<CR>', { desc = 'Markdown [P]review.' })
-        end,
     },
 }

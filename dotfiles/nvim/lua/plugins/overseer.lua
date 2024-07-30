@@ -10,7 +10,7 @@ return {
 
         local keymap = vim.keymap.set
 
-        local tasks = function()
+        local toggle_panel = function()
             vim.cmd 'OverseerToggle'
         end
 
@@ -18,11 +18,11 @@ return {
             vim.cmd 'OverseerRun'
         end
 
-        keymap('n', '<leader>rp', tasks, { desc = 'Toggle [R]un tasks [P]anel.' })
-        keymap('n', '<leader>rt', run, { desc = '[R]un [T]asks.' })
+        keymap('n', '<leader>pr', run, { desc = '[R]un [P]rocess.' })
+        keymap('n', '<leader>pp', toggle_panel, { desc = 'Toggle [P]rocesses [P]anel.' })
 
-        commands.user('Run', run)
-        commands.user('Tasks', tasks)
+        commands.user('ProcessesRun', run)
+        commands.user('ProcessesPanel', toggle_panel)
     end,
 
     config = function()
