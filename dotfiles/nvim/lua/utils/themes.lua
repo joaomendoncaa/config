@@ -94,11 +94,11 @@ function M.update(arg)
     end
 
     if tables.contains(themes, theme) then
-        update(theme)
-    else
-        vim.notify('Theme "' .. theme .. '" not found. Falling back to default theme.', vim.log.levels.WARN)
-        update 'default'
+        return update(theme)
     end
+
+    vim.notify('Theme "' .. theme .. '" not found. Falling back to default theme.', vim.log.levels.WARN)
+    update 'default'
 end
 
 return M
