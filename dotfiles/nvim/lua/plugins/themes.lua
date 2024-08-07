@@ -1,7 +1,4 @@
-local themes = require 'utils.themes'
-
-local theme = vim.env.NVIM_THEME or 'default'
-local priority = 1000
+local PRIORITY = 1000
 
 return {
     {
@@ -9,7 +6,7 @@ return {
         -- SEE: https://github.com/olivercederborg/poimandres.nvim
         'olivercederborg/poimandres.nvim',
 
-        priority = priority,
+        priority = PRIORITY,
 
         config = function()
             local plugin = require 'poimandres'
@@ -19,8 +16,6 @@ return {
                 disable_background = true,
                 disable_float_background = true,
             }
-
-            themes.update(theme)
         end,
     },
 
@@ -29,14 +24,12 @@ return {
         -- SEE: https://github.com/ellisonleao/gruvbox.nvim
         'ellisonleao/gruvbox.nvim',
 
-        priotity = priority,
+        priotity = PRIORITY,
 
         config = function()
             local plugin = require 'gruvbox'
 
             plugin.setup {}
-
-            themes.update(theme)
         end,
     },
 
@@ -45,7 +38,7 @@ return {
         -- SEE: https://github.com/sho-87/kanagawa-paper.nvim
         'sho-87/kanagawa-paper.nvim',
 
-        priority = priority,
+        priority = PRIORITY,
 
         config = function()
             local plugin = require 'kanagawa-paper'
@@ -54,8 +47,24 @@ return {
                 transparent = true,
                 dimInactive = true,
             }
+        end,
+    },
 
-            themes.update(theme)
+    {
+        -- Flow is an Nvim color scheme designed for transparent or dark backgrounds.
+        -- SEE: https://github.com/0xstepit/flow.nvim
+        '0xstepit/flow.nvim',
+
+        priority = PRIORITY,
+
+        config = function()
+            local plugin = require 'flow'
+
+            plugin.setup {
+                transparent = true,
+                fluo_color = 'yellow',
+                mode = 'bright',
+            }
         end,
     },
 }

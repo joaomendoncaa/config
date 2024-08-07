@@ -1,77 +1,93 @@
 local M = {}
 
-local hi = vim.cmd.hi
-local cmd = vim.cmd
-
-local sethl = function(group, opts)
-    vim.api.nvim_set_hl(0, group, opts)
-end
-
 function M.adjustConflicts(match)
     local adjustment_schemes = {
         default = function()
-            hi 'Title guifg=#8cf8f7'
+            vim.cmd.hi 'Title guifg=#8cf8f7'
         end,
 
         poimandres = function()
-            hi 'Comment gui=none'
-            hi 'LspReferenceWrite guibg=none'
-            hi 'LspReferenceText guibg=none'
-            hi 'LspReferenceRead guibg=none'
+            vim.cmd.hi 'Comment gui=none'
+            vim.cmd.hi 'LspReferenceWrite guibg=none'
+            vim.cmd.hi 'LspReferenceText guibg=none'
+            vim.cmd.hi 'LspReferenceRead guibg=none'
         end,
 
         gruvbox = function()
-            hi 'SignColumn guibg=none'
+            vim.cmd.hi 'SignColumn guibg=none'
         end,
 
         blue = function()
-            hi 'Comment gui=none'
+            vim.cmd.hi 'Comment gui=none'
         end,
 
         ['kanagawa-paper'] = function()
-            cmd 'hi clear MsgArea'
+            vim.cmd 'hi clear MsgArea'
+        end,
+
+        ['flow'] = function()
+            vim.cmd 'hi clear MsgArea'
         end,
     }
 
-    hi 'StatusLine guibg=none guifg=none'
-    hi 'StatusLineNC guibg=none guifg=none'
+    vim.cmd.hi 'StatusLine guibg=none guifg=none'
+    vim.cmd.hi 'StatusLineNC guibg=none guifg=none'
 
-    hi 'Normal guibg=none ctermbg=none'
-    hi 'MsgSeparator guibg=none ctermbg=none'
+    vim.cmd.hi 'Normal guibg=none ctermbg=none'
+    vim.cmd.hi 'MsgSeparator guibg=none ctermbg=none'
 
-    hi 'TelescopePreviewNormal guibg=none'
-    hi 'TelescopePreviewBorder guibg=none'
-    hi 'TelescopeResultsNormal guibg=none'
-    hi 'TelescopeResultsBorder guibg=none'
-    hi 'TelescopePromptNormal guibg=none'
-    hi 'TelescopePromptBorder guibg=none'
+    vim.cmd.hi 'TelescopePreviewNormal guibg=none'
+    vim.cmd.hi 'TelescopePreviewBorder guibg=none'
+    vim.cmd.hi 'TelescopeResultsNormal guibg=none'
+    vim.cmd.hi 'TelescopeResultsBorder guibg=none'
+    vim.cmd.hi 'TelescopePromptNormal guibg=none'
+    vim.cmd.hi 'TelescopePromptBorder guibg=none'
 
-    sethl('LazyReasonSource', { fg = '#5de4c7' })
-    sethl('LazyReasonFt', { fg = '#5de4c7' })
+    vim.api.nvim_set_hl(0, 'LazyReasonSource', { fg = '#5de4c7' })
+    vim.api.nvim_set_hl(0, 'LazyReasonFt', { fg = '#5de4c7' })
 
-    sethl('NormalFloat', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'NormalFloat', { bg = 'none' })
 
-    sethl('OverseerPENDING', { fg = '#fffac2' })
-    sethl('OverseerRUNNING', { fg = '#5de4c7' })
-    sethl('OverseerCANCELED', { fg = '#f087bd' })
-    sethl('OverseerSUCCESS', { fg = '#5de4c7' })
-    sethl('OverseerFAILURE', { fg = '#f087bd' })
-    sethl('OverseerDISPOSED', { fg = '#d0679d' })
+    vim.api.nvim_set_hl(0, 'OverseerPENDING', { fg = '#fffac2' })
+    vim.api.nvim_set_hl(0, 'OverseerRUNNING', { fg = '#5de4c7' })
+    vim.api.nvim_set_hl(0, 'OverseerCANCELED', { fg = '#f087bd' })
+    vim.api.nvim_set_hl(0, 'OverseerSUCCESS', { fg = '#5de4c7' })
+    vim.api.nvim_set_hl(0, 'OverseerFAILURE', { fg = '#f087bd' })
+    vim.api.nvim_set_hl(0, 'OverseerDISPOSED', { fg = '#d0679d' })
 
-    sethl('DiagnosticSignOk', { bg = 'none' })
-    sethl('DiagnosticSignHint', { bg = 'none' })
-    sethl('DiagnosticSignInfo', { bg = 'none' })
-    sethl('DiagnosticSignWarn', { bg = 'none' })
-    sethl('DiagnosticSignError', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignOk', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignHint', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignInfo', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignWarn', { bg = 'none' })
+    vim.api.nvim_set_hl(0, 'DiagnosticSignError', { bg = 'none' })
 
     if adjustment_schemes[match] then
         adjustment_schemes[match]()
     end
 end
 
-function M.update(theme_key)
-    vim.cmd.colorscheme(theme_key)
-    M.adjustConflicts(theme_key)
+---Update the colorscheme.
+---
+---@param arg? string Optionally pass in a theme key, in case there's none or it's empty 'default' will be used instead.
+function M.update(arg)
+    local theme = arg and #arg > 0 and arg or vim.env.NVIM_THEME or 'default'
+
+    if theme == 'default' then
+        vim.cmd.colorscheme 'default'
+        M.adjustConflicts(theme)
+        return
+    end
+
+    local is_theme_loaded, _ = pcall(require, theme)
+
+    if is_theme_loaded then
+        vim.cmd.colorscheme(theme)
+        M.adjustConflicts(theme)
+    else
+        vim.notify('Theme ' .. theme .. ' not found. Falling back to default theme.', vim.log.levels.ERROR)
+        vim.cmd.colorscheme 'default'
+        M.adjustConflicts 'default'
+    end
 end
 
 return M

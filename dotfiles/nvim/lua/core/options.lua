@@ -2,6 +2,7 @@
 
 local strings = require 'utils.strings'
 local commands = require 'utils.commands'
+local themes = require 'utils.themes'
 
 local o = vim.opt
 local g = vim.g
@@ -16,6 +17,10 @@ end
 
 local auto_highlight_yank = function()
     vim.highlight.on_yank()
+end
+
+local auto_colorscheme = function()
+    themes.update()
 end
 
 local auto_greeter = function()
@@ -42,12 +47,6 @@ local auto_greeter = function()
     })
 
     vim.api.nvim_echo(perf_log, true, {})
-end
-
-local auto_colorscheme = function(args)
-    if args.match then
-        require('utils.themes').update(args.match)
-    end
 end
 
 -- flag plugins that there's a nerd font installed
@@ -98,6 +97,6 @@ commands.auto({ 'User' }, {
     callback = auto_greeter,
 })
 
-commands.auto({ 'ColorScheme' }, {
+commands.auto({ 'ColorScheme', 'BufEnter' }, {
     callback = auto_colorscheme,
 })
