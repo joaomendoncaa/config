@@ -97,6 +97,6 @@ commands.auto({ 'User' }, {
     callback = auto_greeter,
 })
 
-commands.auto({ 'ColorScheme', 'BufEnter' }, {
+commands.auto({ 'ColorScheme', 'UIEnter' }, {
     callback = auto_colorscheme,
 })
