@@ -31,9 +31,6 @@ return {
     },
 
     config = function(_, opts)
-        -- improve install connection by preferring git instead of curl
-        require('nvim-treesitter.install').prefer_git = true
-
         require('nvim-treesitter.configs').setup(opts)
     end,
 }
