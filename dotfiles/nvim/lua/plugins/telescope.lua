@@ -14,8 +14,9 @@ return {
     },
 
     dependencies = {
-        'nvim-telescope/telescope-ui-select.nvim',
         'nvim-lua/plenary.nvim',
+        'nvim-telescope/telescope-ui-select.nvim',
+        'debugloop/telescope-undo.nvim',
         { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
 
         {
@@ -40,7 +41,7 @@ return {
     -- SEE: https://github.com/nvim-telescope/telescope.nvim/blob/master/developers.md
     config = function()
         local utils_themes = require 'utils.themes'
-        local telescope = require 'telescope'
+        local plugin = require 'telescope'
         local builtin = require 'telescope.builtin'
         local pickers = require 'telescope.pickers'
         local finders = require 'telescope.finders'
@@ -51,6 +52,10 @@ return {
         local action_state = require 'telescope.actions.state'
 
         local keymap = vim.keymap.set
+
+        local search_undo = function()
+            plugin.extensions.undo.undo()
+        end
 
         local search_files_cwd = function()
             builtin.find_files {
@@ -154,6 +159,7 @@ return {
         keymap('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics.' })
         keymap('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat).' })
         keymap('n', '<leader>sb', builtin.buffers, { desc = '[S]earch open [B]uffers.' })
+        keymap('n', '<leader>su', search_undo, { desc = '[S]earch [U]ndo history.' })
         keymap('n', '<leader>st', search_themes, { desc = '[S]earch [T]heme.' })
         keymap('n', '<leader>se', search_enviroment, { desc = '[S]earch [E]nvironment Variables.' })
         keymap('n', '<leader>ss', search_files_cwd, { desc = '[S]earch [S]elected directory files.' })
@@ -161,13 +167,25 @@ return {
         keymap('n', '<leader>/', fzf_buffer, { desc = '[/] Fuzzily search in current buffer.' })
         keymap('n', '<leader>s/', fzf_files, { desc = '[S]earch [/] in Open Files.' })
 
-        pcall(telescope.load_extension, 'fzf')
-        pcall(telescope.load_extension, 'ui-select')
+        pcall(plugin.load_extension, 'fzf')
+        pcall(plugin.load_extension, 'ui-select')
+        pcall(plugin.load_extension, 'undo')
 
-        telescope.setup {
+        plugin.setup {
             extensions = {
                 ['ui-select'] = {
                     themes.get_dropdown(),
+                },
+                undo = {
+                    use_delta = true,
+                    use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
+                    side_by_side = false,
+                    vim_diff_opts = {
+                        ctxlen = vim.o.scrolloff,
+                    },
+                    entry_format = 'state #$ID, $STAT, $TIME',
+                    time_format = '',
+                    saved_only = false,
                 },
             },
             defaults = {
