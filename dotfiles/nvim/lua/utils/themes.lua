@@ -5,26 +5,30 @@ local tables = require 'utils.tables'
 ---Map of adjustments for each theme.
 ---NOTE: there's an _all key that represents adjustments for all themes
 local ADJUSTMENTS = {
-    default = function()
+    ['default'] = function()
         vim.cmd.hi 'Title guifg=#8cf8f7'
     end,
 
-    poimandres = function()
+    ['poimandres'] = function()
         vim.cmd.hi 'Comment gui=none'
-        vim.cmd.hi 'LspReferenceWrite guibg=none'
-        vim.cmd.hi 'LspReferenceText guibg=none'
-        vim.cmd.hi 'LspReferenceRead guibg=none'
+
+        vim.api.nvim_set_hl(0, 'LspReferenceWrite', { bg = 'none' })
+        vim.api.nvim_set_hl(0, 'LspReferenceText', { bg = 'none' })
+        vim.api.nvim_set_hl(0, 'LspReferenceRead', { bg = 'none' })
+
+        vim.api.nvim_set_hl(0, 'TelescopeResultsBorder', { fg = '#303340' })
+        vim.api.nvim_set_hl(0, 'TelescopePreviewBorder', { fg = '#303340' })
     end,
 
-    gruvbox = function()
+    ['gruvbox'] = function()
         vim.cmd.hi 'SignColumn guibg=none'
     end,
 
-    blue = function()
+    ['blue'] = function()
         vim.cmd.hi 'Comment gui=none'
     end,
 
-    flow = function()
+    ['flow'] = function()
         vim.cmd 'hi clear MsgArea'
     end,
 
@@ -33,6 +37,8 @@ local ADJUSTMENTS = {
     end,
 
     _all = function()
+        vim.opt.background = 'dark'
+
         vim.cmd.hi 'barbecue_normal guibg=none'
         vim.cmd.hi 'barbecue_separator guibg=none'
         vim.cmd.hi 'barbecue_context guibg=none'
@@ -89,21 +95,17 @@ function M.update(arg)
     local theme = arg and #arg > 0 and arg or vim.env.NVIM_THEME or 'default'
     local themes = vim.fn.getcompletion('*', 'color')
 
-    local update = function(t)
+    local up = function(t)
         vim.cmd.colorscheme(t)
         M.adjustConflicts(t)
     end
 
-    if theme == 'default' then
-        return update 'default'
-    end
-
     if tables.contains(themes, theme) then
-        return update(theme)
+        return up(theme)
     end
 
     vim.notify('Theme "' .. theme .. '" not found. Falling back to default theme.', vim.log.levels.WARN)
-    update 'default'
+    up 'default'
 end
 
 return M
