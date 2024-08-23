@@ -12,7 +12,7 @@ return {
             local plugin_api = require 'supermaven-nvim.api'
             local commands = require 'utils.commands'
 
-            local toggle = function()
+            local function toggle()
                 plugin_api.toggle()
 
                 local status = plugin_api.is_running() and 'enabled' or 'disabled'

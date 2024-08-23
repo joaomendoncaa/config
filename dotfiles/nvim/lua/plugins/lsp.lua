@@ -99,7 +99,7 @@ return {
 
                 local keymap = vim.keymap.set
 
-                local toggle_inlay_hints = function()
+                local function toggle_inlay_hints()
                     vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
                     print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
                 end

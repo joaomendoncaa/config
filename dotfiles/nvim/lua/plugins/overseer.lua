@@ -10,11 +10,11 @@ return {
 
         local keymap = vim.keymap.set
 
-        local toggle_panel = function()
+        local function toggle_panel()
             vim.cmd 'OverseerToggle'
         end
 
-        local run = function()
+        local function run()
             vim.cmd 'OverseerRun'
         end
 

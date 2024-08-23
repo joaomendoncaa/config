@@ -53,38 +53,38 @@ return {
 
         local keymap = vim.keymap.set
 
-        local search_undo = function()
+        local function search_undo()
             plugin.extensions.undo.undo()
         end
 
-        local search_files_cwd = function()
+        local function search_files_cwd()
             builtin.find_files {
                 hidden = true,
             }
         end
 
-        local search_files_config = function()
+        local function search_files_config()
             builtin.find_files {
                 cwd = os.getenv 'HOME' .. '/lab/config',
                 hidden = true,
             }
         end
 
-        local fzf_buffer = function()
+        local function fzf_buffer()
             builtin.current_buffer_fuzzy_find(themes.get_dropdown {
                 winblend = 0,
                 previewer = false,
             })
         end
 
-        local fzf_files = function()
+        local function fzf_files()
             builtin.live_grep {
                 grep_open_files = true,
                 prompt_title = 'Live Grep in Open Files.',
             }
         end
 
-        local search_enviroment = function(opts)
+        local function search_enviroment(opts)
             opts = themes.get_dropdown {
                 winblend = 0,
                 width = 0.5,
@@ -117,7 +117,7 @@ return {
                 :find()
         end
 
-        local search_themes = function()
+        local function search_themes()
             builtin.colorscheme(themes.get_dropdown {
                 winblend = 0,
 

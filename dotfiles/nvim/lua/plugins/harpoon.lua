@@ -17,28 +17,28 @@ return {
 
         local keymap = vim.keymap.set
 
-        local add = function()
+        local function add()
             local file_name = vim.fn.expand '%'
             plugin:list():add()
             print('Harpoon buffer added: ' .. file_name)
         end
 
-        local remove = function()
+        local function remove()
             local file_name = vim.fn.expand '%'
             plugin:list():remove()
             print('Harpoon buffer removed: ' .. file_name)
         end
 
-        local clear = function()
+        local function clear()
             plugin:list():clear()
             print 'Harpoon buffers cleared.'
         end
 
-        local list = function()
+        local function list()
             plugin.ui:toggle_quick_menu(plugin:list())
         end
 
-        local select = function(n)
+        local function select(n)
             plugin:list():select(n)
         end
 

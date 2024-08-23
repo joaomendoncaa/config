@@ -14,7 +14,7 @@ return {
 
         local keymap = vim.keymap.set
 
-        local format_buffer = function()
+        local function format_buffer()
             local opts = { async = false, lsp_fallback = true }
 
             local formatter = formatters.get_closest {
