@@ -12,6 +12,8 @@ local ADJUSTMENTS = {
     ['poimandres'] = function()
         vim.cmd.hi 'Comment gui=none'
 
+        vim.cmd.hi 'Title guifg=#5de4c7'
+
         vim.api.nvim_set_hl(0, 'LspReferenceWrite', { bg = 'none' })
         vim.api.nvim_set_hl(0, 'LspReferenceText', { bg = 'none' })
         vim.api.nvim_set_hl(0, 'LspReferenceRead', { bg = 'none' })
