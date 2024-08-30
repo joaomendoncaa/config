@@ -15,7 +15,7 @@ return {
         local keymap = vim.keymap.set
 
         local function format_buffer()
-            local opts = { async = false, lsp_fallback = true }
+            local opts = { async = false, lsp_format = 'lsp_fallback' }
 
             local formatter = formatters.get_closest {
                 biome = { 'biome.json' },
