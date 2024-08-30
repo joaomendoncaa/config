@@ -111,7 +111,7 @@ return {
                 keymap('n', '<leader>D', builtin.lsp_type_definitions, { desc = 'Type [D]efinition.' })
                 keymap('n', '<leader>ds', builtin.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
                 keymap('n', '<leader>sw', builtin.lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
-                keymap({ 'n', 'v' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]ist Code [A]ctions.' })
+                keymap({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]ist Code [A]ctions.' })
 
                 if has_highlights then
                     local highlight_augroup = commands.augroup('lsp-highlight', { clear = false })
