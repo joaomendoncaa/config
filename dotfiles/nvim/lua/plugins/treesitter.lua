@@ -5,6 +5,7 @@ return {
 
     event = { 'VeryLazy', 'BufEnter' },
     build = ':TSUpdate',
+    main = 'nvim-treesitter.configs',
     opts = {
         auto_install = true,
         ensure_installed = {
