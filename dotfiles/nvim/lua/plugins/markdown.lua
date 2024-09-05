@@ -6,11 +6,33 @@ return {
 
         ft = { 'markdown' },
 
-        init = function()
+        config = function()
             vim.g.vim_markdown_conceal = 0
         end,
+    },
 
-        config = function() end,
+    {
+        -- A simple markdown table editor that formats the table as you type.
+        -- SEE: https://github.com/SCJangra/table-nvim
+        'SCJangra/table-nvim',
+
+        ft = 'markdown',
+
+        config = function()
+            require('table-nvim').setup {
+                padd_column_separators = true,
+                mappings = {
+                    next = '<TAB>',
+                    prev = '<S-TAB>',
+                    insert_row_up = '<A-k>',
+                    insert_row_down = '<A-j>',
+                    insert_column_left = '<A-h>',
+                    insert_column_right = '<A-l>',
+                    insert_table = '<A-t>',
+                    insert_table_alt = '<A-S-t>',
+                },
+            }
+        end,
     },
 
     {

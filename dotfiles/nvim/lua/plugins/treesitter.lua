@@ -32,6 +32,8 @@ return {
     },
 
     config = function(_, opts)
-        require('nvim-treesitter.configs').setup(opts)
+        local configs = require 'nvim-treesitter.configs'
+
+        configs.setup(opts)
     end,
 }
