@@ -6,7 +6,9 @@ return {
     event = 'VeryLazy',
 
     config = function()
-        require('wit').setup {
+        local plugin = require 'wit'
+
+        plugin.setup {
             engine = 'google',
             command_search = 'Search',
             command_search_wiki = 'SearchWiki',
