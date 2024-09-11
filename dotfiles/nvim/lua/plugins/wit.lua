@@ -1,7 +1,7 @@
 return {
     -- Plugin that allows you to perform web searches directly from within neovim!
     -- SEE: https://github.com/aliqyan-21/wit.nvim
-    'joaomendoncaa/wit.nvim',
+    'aliqyan-21/wit.nvim',
 
     event = 'VeryLazy',
 
