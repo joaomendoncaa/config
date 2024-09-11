@@ -178,7 +178,7 @@ return {
                 },
                 undo = {
                     use_delta = true,
-                    use_custom_command = nil, -- setting this implies `use_delta = false`. Accepted format is: { "bash", "-c", "echo '$DIFF' | delta" }
+                    use_custom_command = nil,
                     side_by_side = false,
                     vim_diff_opts = {
                         ctxlen = vim.o.scrolloff,
@@ -189,7 +189,7 @@ return {
                 },
             },
             defaults = {
-                file_ignore_patterns = { '.git', 'node_modules' },
+                file_ignore_patterns = { '%.git', 'node_modules' },
             },
         }
     end,
