@@ -9,14 +9,12 @@ return {
 
         config = function()
             local plugin = require 'supermaven-nvim'
-            local plugin_api = require 'supermaven-nvim.api'
+            local api = require 'supermaven-nvim.api'
             local commands = require 'utils.commands'
 
             local function toggle()
-                plugin_api.toggle()
-
-                local status = plugin_api.is_running() and 'enabled' or 'disabled'
-
+                api.toggle()
+                local status = api.is_running() and 'enabled' or 'disabled'
                 print('AI suggestions are now ' .. status .. '.')
             end
 
@@ -24,7 +22,6 @@ return {
 
             plugin.setup {
                 keymaps = {
-                    accept_suggestion = '<C-y>',
                     clear_suggestion = '<C-c>',
                 },
                 log_level = 'off',
