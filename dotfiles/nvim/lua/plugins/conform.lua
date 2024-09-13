@@ -1,3 +1,9 @@
+local commands = require 'utils.commands'
+local formatters = require 'utils.formatters'
+local strings = require 'utils.strings'
+
+local has_format_on_save = true
+
 return {
     -- Lightweight yet powerful formatter plugin for Neovim.
     -- SEE: https://github.com/stevearc/conform.nvim
@@ -9,12 +15,46 @@ return {
 
     init = function()
         local plugin = require 'conform'
-        local commands = require 'utils.commands'
-        local formatters = require 'utils.formatters'
 
         local keymap = vim.keymap.set
 
-        local function format_buffer()
+        local function format_disable()
+            has_format_on_save = false
+
+            vim.api.nvim_set_hl(0, 'FormatDisabled', { fg = '#ff0000' })
+
+            vim.api.nvim_echo(
+                strings.truncateChunks {
+                    { '[OFF]', 'FormatDisabled' },
+                    { ' ' },
+                    { 'Formatting' },
+                },
+                true,
+                {}
+            )
+        end
+
+        local function format_enable()
+            has_format_on_save = true
+
+            vim.api.nvim_set_hl(0, 'FormatEnabled', { fg = '#00ff00' })
+
+            vim.api.nvim_echo(
+                strings.truncateChunks {
+                    { '[ON]', 'FormatEnabled' },
+                    { ' ' },
+                    { 'Formatting' },
+                },
+                true,
+                {}
+            )
+        end
+
+        local function format()
+            if not has_format_on_save then
+                return
+            end
+
             local opts = { async = false, lsp_format = 'lsp_fallback' }
 
             local formatter = formatters.get_closest {
@@ -40,16 +80,22 @@ return {
             plugin.format(opts)
         end
 
-        keymap('n', '<leader>f', format_buffer, { desc = '[F]ormat buffer.' })
+        keymap('n', '<leader>ff', format, { desc = '[F]ormat buffer.' })
+        keymap('n', '<leader>fk', format_enable, { desc = '[F]ormat enable.' })
+        keymap('n', '<leader>fj', format_disable, { desc = '[F]ormat disable.' })
 
-        commands.user('Format', format_buffer)
+        commands.user('Format', format)
+        commands.user('FormatDisable', format_disable)
+        commands.user('FormatEnable', format_enable)
 
-        commands.auto('BufWritePre', { callback = format_buffer })
+        commands.auto('BufWritePre', { callback = format })
 
         plugin.setup {
+            format_on_save = nil,
             notify_on_error = false,
             formatters_by_ft = {
                 html = { 'biome', 'prettier' },
+                toml = { 'biome' },
                 templ = { 'templ' },
                 css = { 'biome', 'prettier' },
                 javascript = { 'biome', 'prettier' },

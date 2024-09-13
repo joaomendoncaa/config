@@ -5,16 +5,15 @@ local M = {}
 ---Truncate a string in the middle, inserting a separator.
 ---
 ---@param str string The string to be truncated
----@param opts table Optional parameters
+---@param opts table? Optional parameters
 ---             length - The maximum allowed length of the string
 ---             separator - The separator to insert in the middle of the truncated string
 ---@return string string The truncated string
----
 ---TODO: be able to choose the position of the separator (left, right, center)
 function M.truncateString(str, opts)
     opts = opts or {}
 
-    local length = opts.length or 80
+    local length = opts.length or vim.o.columns / 2
     local separator = opts.separator or '...'
 
     local sep_length = #separator
@@ -26,18 +25,17 @@ end
 ---Truncate chunks with a separator while preserving highlight groups.
 ---
 ---@param chunks HighlightedChunks A list of `{ text, hl_group }` arrays, each representing a text chunk with specified highlight. `hl_group` element can be omitted for no highlight.
----@param opts table Optional parameters.
+---@param opts table? Optional parameters.
 ---             length - The maximum allowed length of the string
 ---             separator - The separator to insert in the middle of the truncated string
 ---             separator_hg - The highlight group to use for the separator
 ---@return HighlightedChunks chunks The truncated chunks
----
 ---TODO: be able to choose the position of the separator (left, right, center)
 ---TODO: support chunks nesting
 function M.truncateChunks(chunks, opts)
     opts = opts or {}
 
-    local length = opts.length or 80
+    local length = opts.length or vim.o.columns / 2
     local separator = opts.separator or '...'
     local separator_hg = opts.separator_hg or ''
 
