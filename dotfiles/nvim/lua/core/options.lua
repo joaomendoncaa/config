@@ -63,7 +63,6 @@ o.signcolumn = 'yes'
 o.cursorline = true
 o.number = true
 o.relativenumber = true
-o.fillchars = { eob = ' ' }
 o.mouse = 'a'
 o.showmode = false
 o.breakindent = true
