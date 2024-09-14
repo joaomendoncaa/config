@@ -99,6 +99,21 @@ return {
 
                 local keymap = vim.keymap.set
 
+                local function lsp_restart()
+                    vim.cmd 'LspRestart'
+                    print 'LSP Restarting'
+                end
+
+                local function lsp_start()
+                    vim.cmd 'LspStart'
+                    print 'LSP Started'
+                end
+
+                local function lsp_stop()
+                    vim.cmd 'LspStop'
+                    print 'LSP Stopped'
+                end
+
                 local function toggle_inlay_hints()
                     vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
                     print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
@@ -111,7 +126,10 @@ return {
                 keymap('n', '<leader>D', builtin.lsp_type_definitions, { desc = 'Type [D]efinition.' })
                 keymap('n', '<leader>ds', builtin.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
                 keymap('n', '<leader>sw', builtin.lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
-                keymap({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]ist Code [A]ctions.' })
+                keymap({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
+                keymap({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, { desc = '[L]sp [R]estart.' })
+                keymap({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, { desc = '[L]sp Start.' })
+                keymap({ 'n', 'v', 'x' }, '<leader>lj', lsp_stop, { desc = '[L]sp Stop.' })
 
                 if has_highlights then
                     local highlight_augroup = commands.augroup('lsp-highlight', { clear = false })
