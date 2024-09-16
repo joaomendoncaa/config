@@ -13,10 +13,6 @@ return {
 
         local keymap = vim.keymap.set
 
-        local function search_cwd()
-            plugin.yazi(nil, vim.fn.getcwd())
-        end
-
         local function search_parent()
             local bufnr = vim.api.nvim_get_current_buf()
             local bufname = vim.api.nvim_buf_get_name(bufnr)
@@ -29,9 +25,7 @@ return {
             plugin.yazi(nil, bufname)
         end
 
-        keymap('n', '<leader>e', search_parent, { desc = 'Open the file [E]xplorer in parent directory.' })
-
-        keymap('n', '<leader>E', search_cwd, { desc = 'Open the file [E]xplorer in cwd.' })
+        keymap('n', '<leader>E', search_parent, { desc = 'Open the file [E]xplorer in parent directory.' })
 
         plugin.setup {
             open_for_directories = false,
