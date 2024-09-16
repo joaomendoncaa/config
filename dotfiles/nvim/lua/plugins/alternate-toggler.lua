@@ -9,6 +9,7 @@ return {
         require('alternate-toggler').setup {
             alternates = {
                 ['=='] = '!=',
+                ['false'] = 'true',
             },
         }
 
