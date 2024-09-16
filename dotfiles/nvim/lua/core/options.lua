@@ -79,6 +79,7 @@ o.hlsearch = true
 o.completeopt = { 'menu,menuone,noselect' }
 o.shortmess:append 'c'
 o.shortmess:append 'I'
+o.fillchars:append { eob = ' ' }
 o.whichwrap = 'lh'
 o.wrap = false
 o.conceallevel = 0
