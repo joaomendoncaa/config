@@ -92,8 +92,9 @@ return {
 
         plugin.setup {
             format_on_save = nil,
-            notify_on_error = false,
+            notify_on_error = true,
             formatters_by_ft = {
+                yaml = { 'yamlfmt' },
                 html = { 'biome', 'prettier' },
                 toml = { 'biome' },
                 templ = { 'templ' },
@@ -102,7 +103,6 @@ return {
                 javascriptreact = { 'biome', 'prettier' },
                 typescript = { 'biome', 'prettier' },
                 typescriptreact = { 'biome', 'prettier' },
-                yaml = { 'biome', 'prettier' },
                 json = { 'biome', 'prettier' },
                 jsonc = { 'biome', 'prettier' },
                 svelte = { 'biome', 'prettier' },
