@@ -30,7 +30,6 @@ return {
                 window = {
                     position = 'right',
                     mappings = {
-                        ['<leader>e'] = 'close_window',
                         ['h'] = 'close_node',
                         ['l'] = 'open',
                     },

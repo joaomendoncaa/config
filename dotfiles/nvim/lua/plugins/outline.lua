@@ -5,7 +5,7 @@ return {
 
     cmd = { 'Outline', 'OutlineOpen' },
     keys = {
-        { '<leader>o', '<cmd>Outline<CR>', { desc = 'Toggle [O]utline.' } },
+        { '<leader>o' },
     },
 
     config = function()
@@ -14,7 +14,7 @@ return {
         local keymap = vim.keymap.set
         local autocmd = vim.api.nvim_create_autocmd
 
-        keymap('n', '<leader>o', '<cmd>Outline<CR>', { desc = 'Toggle [O]utline.' })
+        keymap('n', '<leader>o', '<cmd>OutlineOpen<CR>', { desc = 'Toggle [O]utline.' })
 
         autocmd('BufEnter', {
             pattern = '*',
