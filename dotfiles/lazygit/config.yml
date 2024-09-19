@@ -1,9 +1,9 @@
-gui: 
+gui:
   nerdFontsVersion: "3"
   authorColors:
     'joaomendoncaa': '#5DE4C7'
     '*': '#FFFFFF'
-  theme: 
+  theme:
     inactiveBorderColor:
       - '#506477'
     activeBorderColor:
@@ -12,16 +12,15 @@ gui:
     optionsTextColor:
       - '#303340'
     selectedLineBgColor:
-      - '#2A2C34' 
+      - '#2A2C34'
     cherryPickedCommitBgColor:
-      - red 
+      - red
     cherryPickedCommitFgColor:
-      - red 
+      - red
     unstagedChangesColor:
-      - '#FFFAC2' 
+      - '#FFFAC2'
     defaultFgColor:
-      - '#FFFFFF' 
+      - '#FFFFFF'
     searchingActiveBorderColor:
-      - '#5DE4C7' 
-
+      - '#5DE4C7'
 disableStartupPopups: true
