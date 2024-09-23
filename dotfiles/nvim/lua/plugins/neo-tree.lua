@@ -17,12 +17,26 @@ return {
     },
 
     config = function()
-        require('neo-tree').setup {
+        local plugin = require 'neo-tree'
+        local execute = require('neo-tree.command').execute
+
+        local function close()
+            execute { action = 'close' }
+        end
+
+        plugin.setup {
             close_if_last_window = true,
 
             window = {
                 mappings = {
                     ['P'] = { 'toggle_preview', config = { title = 'Preview' } },
+                },
+            },
+
+            event_handlers = {
+                {
+                    event = 'file_opened',
+                    handler = close,
                 },
             },
 

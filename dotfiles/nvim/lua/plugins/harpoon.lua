@@ -14,6 +14,7 @@ return {
 
     config = function()
         local plugin = require 'harpoon'
+        local commands = require 'utils.commands'
 
         local keymap = vim.keymap.set
 
@@ -42,6 +43,24 @@ return {
             plugin:list():select(n)
         end
 
+        -- local function handle_file_renames(args)
+        --     local p = vim.fn.expand '<afile>:p'
+        --     local n = vim.api.nvim_buf_get_name(args.buf)
+
+        --     print 'File renamed!'
+        --     print(vim.inspect { p, n })
+
+        --     -- if p ~= n then
+        --     --     local l = plugin:list()
+
+        --     --     for i, f in ipairs(l) do
+        --     --         if f.value == p then
+        --     --             l.[i] = n
+        --     --         end
+        --     --     end
+        --     -- end
+        -- end
+
         keymap('n', '<leader>ha', add, { desc = '[H]arpoon list [A]ppend.' })
         keymap('n', '<leader>hc', clear, { desc = '[H]arpoon list [C]lear.' })
         keymap('n', '<leader>hr', remove, { desc = '[H]arpoon view [R]emove current buffer..' })
@@ -52,6 +71,10 @@ return {
                 select(i)
             end, { desc = 'Select [H]arpoon buffer in position ' .. i .. '.' })
         end
+
+        -- commands.auto({ 'BufWritePre' }, {
+        --     callback = handle_file_renames,
+        -- })
 
         plugin:setup {
             settings = {
