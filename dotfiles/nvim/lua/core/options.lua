@@ -81,7 +81,7 @@ o.shortmess:append 'c'
 o.shortmess:append 'I'
 o.fillchars:append { eob = ' ' }
 o.whichwrap = 'lh'
-o.wrap = false
+o.wrap = true
 o.conceallevel = 0
 
 commands.user('ToggleWrap', toggle_wrap)
