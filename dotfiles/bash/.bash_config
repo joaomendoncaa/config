@@ -134,7 +134,7 @@ export BROWSER=wslview
 
 # nvim settings
 export NVIM_AI=1
-export NVIM_THEME=default
+export NVIM_THEME=kanagawa-paper
 
 # init starship
 eval "$(starship init bash)"
