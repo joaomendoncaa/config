@@ -47,7 +47,7 @@ return {
                     local plugin = require 'render-markdown'
 
                     plugin.setup {
-                        file_types = { 'markdown', 'Avante' },
+                        file_types = { 'Avante' },
                     }
                 end,
             },
