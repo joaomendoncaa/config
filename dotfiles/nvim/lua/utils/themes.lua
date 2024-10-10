@@ -41,11 +41,6 @@ local ADJUSTMENTS = {
     _all = function()
         vim.opt.background = 'dark'
 
-        vim.cmd.hi 'barbecue_normal guibg=none'
-        vim.cmd.hi 'barbecue_separator guibg=none'
-        vim.cmd.hi 'barbecue_context guibg=none'
-        vim.cmd.hi 'barbecue_dirname guibg=none'
-
         vim.cmd.hi 'StatusLine guibg=none guifg=none'
         vim.cmd.hi 'StatusLineNC guibg=none guifg=none'
 

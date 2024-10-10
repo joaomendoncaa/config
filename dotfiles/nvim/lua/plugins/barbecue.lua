@@ -17,27 +17,31 @@ return {
     end,
 
     config = function()
-        require('barbecue').setup {
-            -- prevent barbecue from updating itself automatically
-            create_autocmd = false,
-            -- replace icon with modified flag
-            show_modified = true,
-        }
+        local plugin = require 'barbecue'
+        local ui = require 'barbecue.ui'
+        local commands = require 'utils.commands'
 
         -- custom update for barbecue to be more performant when moving the cursor around
+        -- SEE: https://github.com/utilyre/barbecue.nvim?tab=readme-ov-file#-recipes
         vim.api.nvim_create_autocmd({
             'WinScrolled',
             'BufWinEnter',
             'CursorHold',
             'InsertLeave',
-
-            -- `show_modified` to `true`
             'BufModifiedSet',
         }, {
-            group = vim.api.nvim_create_augroup('barbecue.updater', {}),
+            group = commands.augroup 'barbecue.updater',
             callback = function()
-                require('barbecue.ui').update()
+                ui.update()
             end,
         })
+
+        plugin.setup {
+            create_autocmd = false,
+            show_modified = true,
+            theme = {
+                normal = { bg = 'none' },
+            },
+        }
     end,
 }
