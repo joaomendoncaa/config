@@ -50,4 +50,26 @@ return {
             }
         end,
     },
+
+    {
+        -- Neovim plugin that allows you to create a Github Gist from the current file.
+        -- SEE: https://github.com/Rawnly/gist.nvim
+        'Rawnly/gist.nvim',
+        cmd = { 'GistCreate', 'GistCreateFromFile', 'GistsList' },
+        config = true,
+    },
+
+    {
+        -- `GistsList` opens the selected gif in a terminal buffer,
+        -- nvim-unception uses neovim remote rpc functionality to open the gist in an actual buffer
+        -- and prevents neovim buffer inception
+        -- SEE: https://github.com/samjwill/nvim-unception
+        'samjwill/nvim-unception',
+
+        lazy = false,
+
+        init = function()
+            vim.g.unception_block_while_host_edits = true
+        end,
+    },
 }
