@@ -1,3 +1,8 @@
+# load env vars
+if [ -f ~/lab/config/dotfiles/bash/.env ]; then
+    export $(grep -v '^#' ~/lab/config/dotfiles/bash/.env | xargs)
+fi
+
 # If not running interactively, don't do anything
 case $- in
 *i*) ;;
