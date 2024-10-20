@@ -56,7 +56,13 @@ return {
         config = function()
             local plugin = require 'avante'
 
-            plugin.setup {}
+            plugin.setup {
+                windows = {
+                    sidebar_header = {
+                        enabled = false,
+                    },
+                },
+            }
         end,
     },
     {
