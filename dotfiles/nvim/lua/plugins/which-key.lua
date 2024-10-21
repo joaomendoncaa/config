@@ -7,6 +7,7 @@ return {
 
     config = function()
         require('which-key').setup {
+            preset = 'classic',
             icons = {
                 -- if there's a nerd font available, set icons to it
                 mappings = vim.g.NVIM_NERD_FONT,
@@ -45,8 +46,6 @@ return {
                 },
             },
             plugins = {
-                registers = true,
-
                 presets = {
                     operators = false,
                     motions = false,
