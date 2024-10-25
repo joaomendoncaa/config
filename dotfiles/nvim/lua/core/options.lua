@@ -15,6 +15,16 @@ local buffer_delete = function()
     vim.cmd 'call delete(expand("%")) | bdelete!'
 end
 
+local buffer_messages = function()
+    local result = vim.api.nvim_exec2('messages', { output = true })
+
+    vim.cmd 'new'
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(result.output, '\n'))
+    vim.bo.buftype = 'nofile'
+    vim.bo.bufhidden = 'wipe'
+    vim.bo.swapfile = false
+end
+
 local auto_highlight_yank = function()
     vim.highlight.on_yank()
 end
@@ -87,6 +97,8 @@ o.conceallevel = 0
 commands.user('ToggleWrap', toggle_wrap)
 
 commands.user('BufferDelete', buffer_delete)
+
+commands.user('BufferMessages', buffer_messages)
 
 commands.auto({ 'TextYankPost' }, {
     callback = auto_highlight_yank,
