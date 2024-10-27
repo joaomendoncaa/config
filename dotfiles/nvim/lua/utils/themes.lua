@@ -75,7 +75,6 @@ local ADJUSTMENTS = {
 }
 
 ---Adjust the colorscheme for conflicts.
----
 ---@param theme string The theme key.
 function M.adjustConflicts(theme)
     ADJUSTMENTS._all()
@@ -86,7 +85,6 @@ function M.adjustConflicts(theme)
 end
 
 ---Update the colorscheme.
----
 ---@param arg? string Optionally pass in a theme key, in case there's none or it's empty 'default' will be used instead.
 function M.update(arg)
     local theme = arg and #arg > 0 and arg or vim.env.NVIM_THEME or 'default'
@@ -101,7 +99,7 @@ function M.update(arg)
         return up(theme)
     end
 
-    vim.notify('Theme "' .. theme .. '" not found. Falling back to default theme.', vim.log.levels.WARN)
+    vim.notify('Theme "' .. theme .. '" not found — falling back to default theme.', vim.log.levels.WARN)
     up 'default'
 end
 
