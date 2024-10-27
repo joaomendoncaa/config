@@ -5,6 +5,7 @@ return {
 
     event = { 'LspAttach' },
     version = 'v0.*',
+
     dependencies = {
         {
             -- Set of preconfigured snippets for different languages.
@@ -12,6 +13,8 @@ return {
             'rafamadriz/friendly-snippets',
         },
     },
+
+    build = 'cargo build --release',
 
     config = function()
         local plugin = require 'blink.cmp'
@@ -39,13 +42,6 @@ return {
             accept = {
                 -- experimental auto-brackets support
                 auto_brackets = {
-                    enabled = true,
-                },
-            },
-
-            trigger = {
-                -- experimental signature help support
-                signature_help = {
                     enabled = true,
                 },
             },
