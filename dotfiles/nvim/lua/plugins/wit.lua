@@ -9,7 +9,7 @@ return {
         local plugin = require 'wit'
 
         plugin.setup {
-            engine = 'duckduckgo',
+            engine = 'perplexity',
             command_search = 'Search',
             command_search_wiki = 'SearchWiki',
             command_search_visual = 'SearchVisual',
