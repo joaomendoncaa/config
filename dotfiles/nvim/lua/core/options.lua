@@ -65,6 +65,7 @@ g.NVIM_NERD_FONT = true
 g.mapleader = ' '
 g.maplocalleader = ' '
 
+o.swapfile = false
 o.clipboard = 'unnamedplus'
 o.termguicolors = true
 o.laststatus = 0
