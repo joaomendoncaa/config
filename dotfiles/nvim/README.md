@@ -1,3 +1,3 @@
 # Neovim
 
-My neovim config, based off of [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (a229761).
+My neovim config, based off of [kickstart.nvim](https://github.com/nvim-lua/kickstart.nvim) (8d1ef97).
