@@ -107,6 +107,9 @@ fi
 # Nvim
 export PATH="/opt/nvim-linux64/bin:$PATH"
 
+# Cursor 
+export PATH="/mnt/c/Users/joao/AppData/Local/Programs/cursor/resources/app/bin:$PATH"
+
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
