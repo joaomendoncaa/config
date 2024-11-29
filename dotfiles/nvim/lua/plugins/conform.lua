@@ -116,7 +116,6 @@ return {
                         'check',
                         '--unsafe',
                         '--write',
-                        '--files-ignore-unknown',
                     },
                 },
                 prettier = {
