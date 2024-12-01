@@ -106,6 +106,7 @@ create_symlink() {
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+create_symlink "$HOME/.config/nix" "$DIR/dotfiles/nix"
 create_symlink "$HOME/.config/nvim" "$DIR/dotfiles/nvim"
 create_symlink "$HOME/.config/starship.toml" "$DIR/dotfiles/starship/starship.toml"
 create_symlink "$HOME/.config/yazi" "$DIR/dotfiles/yazi"

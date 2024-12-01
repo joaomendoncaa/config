@@ -1,4 +1,4 @@
 return {
-    'joaomendoncaa/sourcer.nvim',
+    dir = '~/lab/sourcer.nvim',
     opts = {},
 }
