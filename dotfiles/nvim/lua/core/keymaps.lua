@@ -12,3 +12,6 @@ keymap('x', 'p', [["_dP]], { desc = '[P]aste but preserve the clipboard buffer.'
 
 keymap('n', 'j', 'gj', { desc = '[J] Move down even in wrapped lines.' })
 keymap('n', 'k', 'gk', { desc = '[K] Move up even in wrapped lines.' })
+
+keymap({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', { desc = '[S]ave the current file.' })
+keymap({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wqa<CR>', { desc = 'Save all files and [Q]uit.' })
