@@ -36,68 +36,61 @@ local get_distance_between_paths = function(destination, origin)
     return distance
 end
 
----Get the formatter related to the current buffer
 ---@param formatters table<string, string[]>
 function M.get_closest(formatters)
     local current_buffer_path = vim.api.nvim_buf_get_name(0)
-
+    local current_working_dir = vim.fn.getcwd()
     local conform_formatters = require('conform').list_formatters(0)
-    local desired_formatters = {}
 
+    local desired_formatters = {}
     for _, value in ipairs(conform_formatters) do
-        table.insert(desired_formatters, value.name)
+        desired_formatters[value.name] = true
     end
 
-    -- shadow formatters with only the available ones
-    formatters = require('utils.tables').filter(formatters, desired_formatters)
-
-    ---Get the distance to the closest formatter config file
-    ---@type table<string, number>
-    local distance = {}
-
-    -- we'll look for the closest config file given the
-    -- formatters table we have above
+    local available_formatters = {}
     for formatter_name, formatter_config_paths in pairs(formatters) do
-        local config_path = nil
+        if desired_formatters[formatter_name] then
+            available_formatters[formatter_name] = formatter_config_paths
+        end
+    end
+
+    local distances = {}
+
+    for formatter_name, formatter_config_paths in pairs(available_formatters) do
+        local closest_config_path = nil
+        local shortest_distance = math.huge
 
         for _, path in ipairs(formatter_config_paths) do
-            -- we'll look for a config file recursively until we hit
-            -- the root of the project (which is considered a .git folder)
             local config_file_found = vim.fs.find(path, {
                 path = current_buffer_path,
-                stop = require('lspconfig.util').root_pattern '.git'(path),
                 upward = true,
+                stop = current_working_dir,
             })
 
-            -- if we find a config file that matches one of the file names
-            -- at formatter_config_paths set it as the preferred config
-            -- and break out of the loop
-            if config_file_found and config_file_found[1] ~= nil then
-                config_path = config_file_found[1]
-                break
+            if config_file_found and config_file_found[1] then
+                local current_distance = get_distance_between_paths(config_file_found[1], current_buffer_path)
+                if current_distance < shortest_distance then
+                    shortest_distance = current_distance
+                    closest_config_path = config_file_found[1]
+                end
             end
         end
 
-        if config_path ~= nil then
-            distance[formatter_name] = get_distance_between_paths(config_path, current_buffer_path)
+        if closest_config_path then
+            distances[formatter_name] = shortest_distance
         end
     end
 
-    local shortest_path_key = nil
-    local shortest_path_val = math.huge
-
-    for formatter_name, formatter_distance in pairs(distance) do
-        if formatter_distance < shortest_path_val then
-            shortest_path_key = formatter_name
-            shortest_path_val = formatter_distance
+    local closest_formatter = nil
+    local shortest_distance = math.huge
+    for formatter_name, distance in pairs(distances) do
+        if distance < shortest_distance then
+            closest_formatter = formatter_name
+            shortest_distance = distance
         end
     end
 
-    if shortest_path_key == nil then
-        return nil
-    end
-
-    return { shortest_path_key }
+    return closest_formatter and { closest_formatter } or nil
 end
 
 return M
