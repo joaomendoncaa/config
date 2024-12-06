@@ -27,13 +27,16 @@ return {
         highlight = {
             enable = true,
             additional_vim_regex_highlighting = { 'ruby' },
+
+            disable = function(_, buf)
+                local max_filesize = 50 * 1024
+
+                local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
+                if ok and stats and stats.size > max_filesize then
+                    return true
+                end
+            end,
         },
         indent = { enable = true, disable = { 'ruby' } },
     },
-
-    config = function(_, opts)
-        local configs = require 'nvim-treesitter.configs'
-
-        configs.setup(opts)
-    end,
 }
