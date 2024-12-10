@@ -15,8 +15,10 @@ return {
 
     dependencies = {
         'nvim-lua/plenary.nvim',
+        'nvim-lua/popup.nvim',
         'nvim-telescope/telescope-ui-select.nvim',
         'debugloop/telescope-undo.nvim',
+        'nvim-telescope/telescope-media-files.nvim',
         { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
 
         {
@@ -167,10 +169,6 @@ return {
         keymap('n', '<leader>/', fzf_buffer, { desc = '[/] Fuzzily search in current buffer.' })
         keymap('n', '<leader>s/', fzf_files, { desc = '[S]earch [/] in Open Files.' })
 
-        pcall(plugin.load_extension, 'fzf')
-        pcall(plugin.load_extension, 'ui-select')
-        pcall(plugin.load_extension, 'undo')
-
         plugin.setup {
             extensions = {
                 ['ui-select'] = {
@@ -187,10 +185,18 @@ return {
                     time_format = '',
                     saved_only = false,
                 },
+                media_files = {
+                    find_cmd = 'fdfind',
+                },
             },
             defaults = {
                 file_ignore_patterns = { '%.git', 'node_modules' },
             },
         }
+
+        pcall(plugin.load_extension, 'fzf')
+        pcall(plugin.load_extension, 'ui-select')
+        pcall(plugin.load_extension, 'undo')
+        pcall(plugin.load_extension, 'media_files')
     end,
 }

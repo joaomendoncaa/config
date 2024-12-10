@@ -21,33 +21,25 @@ return {
         local function format_disable()
             has_format_on_save = false
 
-            vim.api.nvim_set_hl(0, 'FormatDisabled', { fg = '#ff0000' })
+            vim.api.nvim_set_hl(0, 'T', { fg = '#ff0000' })
 
-            vim.api.nvim_echo(
-                strings.truncateChunks {
-                    { '[OFF]', 'FormatDisabled' },
-                    { ' ' },
-                    { 'Formatting' },
-                },
-                true,
-                {}
-            )
+            strings.echo(strings.truncateChunks {
+                { '[OFF]', 'T' },
+                { ' ' },
+                { 'Formatting' },
+            })
         end
 
         local function format_enable()
             has_format_on_save = true
 
-            vim.api.nvim_set_hl(0, 'FormatEnabled', { fg = '#00ff00' })
+            vim.api.nvim_set_hl(0, 'T', { fg = '#00ff00' })
 
-            vim.api.nvim_echo(
-                strings.truncateChunks {
-                    { '[ON]', 'FormatEnabled' },
-                    { ' ' },
-                    { 'Formatting' },
-                },
-                true,
-                {}
-            )
+            strings.echo(strings.truncateChunks {
+                { '[ON]', 'T' },
+                { ' ' },
+                { 'Formatting' },
+            })
         end
 
         local function format()

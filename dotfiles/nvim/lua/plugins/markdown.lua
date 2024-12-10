@@ -2,7 +2,7 @@ return {
     {
         -- Markdown Vim Mode.
         -- SEE: https://github.com/ixru/nvim-markdown
-        'joaomendoncaa/nvim-markdown',
+        'ixru/nvim-markdown',
 
         ft = { 'markdown' },
 
@@ -30,6 +30,25 @@ return {
                     insert_column_right = '<space>tl',
                     insert_table = '<A-t>',
                     insert_table_alt = '<A-S-t>',
+                },
+            }
+        end,
+    },
+
+    {
+        -- Plugin to improve viewing Markdown files in Neovim
+        -- SEE: https://github.com/MeanderingProgrammer/render-markdown.nvim
+        'MeanderingProgrammer/render-markdown.nvim',
+
+        ft = { 'markdown', 'codecompanion', 'sourcermarkdown' },
+        dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' },
+
+        config = function()
+            local plugin = require 'render-markdown'
+
+            plugin.setup {
+                heading = {
+                    icons = { '# ', '## ', '### ', '#### ', '##### ', '###### ' },
                 },
             }
         end,

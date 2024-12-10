@@ -9,8 +9,9 @@ return {
             local surround = require 'mini.surround'
             local sessions = require 'mini.sessions'
             local move = require 'mini.move'
-            local jump2d = require 'mini.jump2d'
             local commands = require 'utils.commands'
+            local jump2d = require 'mini.jump2d'
+            local diff = require 'mini.diff'
 
             local function get_session_path()
                 return vim.fn.getcwd():gsub('[/\\]', '_') .. '.vim'
@@ -33,22 +34,19 @@ return {
                 end,
             })
 
+            surround.setup {}
+            move.setup {}
+            diff.setup {}
+            ai.setup { n_lines = 500 }
             sessions.setup {
                 autoread = false,
                 autowrite = false,
                 directory = vim.fn.stdpath 'data' .. '/sessions/',
                 verbose = { read = false, write = false, delete = false },
             }
-
-            ai.setup { n_lines = 500 }
-
-            surround.setup {}
-
-            move.setup {}
-
             jump2d.setup {
                 mappings = {
-                    start_jumping = 'S',
+                    start_jumping = '<CR>',
                 },
                 silent = true,
             }

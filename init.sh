@@ -120,5 +120,7 @@ create_symlink "$HOME/.hushlogin" "$DIR/dotfiles/bash/.hushlogin"
 create_symlink "$HOME/biome.json" "$DIR/dotfiles/biome/config.json"
 create_symlink "/etc/wsl.conf" "$DIR/dotfiles/wsl/wsl.conf"
 
+create_symlink "$HOME/.local/bin/tmux-sessionizer" "$DIR/dotfiles/bin/tmux-sessionizer"
+
 # TODO: basic utils/res instalation + dynamic app instalation with dotfiles/**/install.sh
 # SEE: https://github.com/basecamp/omakub

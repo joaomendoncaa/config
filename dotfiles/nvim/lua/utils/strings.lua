@@ -2,6 +2,14 @@ local M = {}
 
 ---@alias HighlightedChunks table<string, string>[]
 
+---Facade for `vim.api.nvim_echo`
+function M.echo(chunks, async, opts)
+    async = async or false
+    opts = opts or {}
+
+    vim.api.nvim_echo(chunks, async, opts)
+end
+
 ---Truncate a string in the middle, inserting a separator.
 ---
 ---@param str string The string to be truncated
