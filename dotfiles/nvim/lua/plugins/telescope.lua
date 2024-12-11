@@ -62,6 +62,7 @@ return {
         local function search_files_cwd()
             builtin.find_files {
                 hidden = true,
+                no_ignore = true,
             }
         end
 
