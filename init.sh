@@ -117,6 +117,6 @@ create_symlink "$HOME/.bashrc" "$DIR/dotfiles/bash/.bashrc"
 create_symlink "$HOME/.profile" "$DIR/dotfiles/bash/.profile"
 create_symlink "$HOME/.hushlogin" "$DIR/dotfiles/bash/.hushlogin"
 create_symlink "$HOME/biome.json" "$DIR/dotfiles/biome/config.json"
-create_symlink "$HOME/.config/tmux/tmux.conf" "$DIR/dotfiles/wsl/wsl.conf"
+create_symlink "$HOME/.config/tmux/tmux.conf" "$DIR/dotfiles/tmux/tmux.conf"
 
 create_symlink "$HOME/.local/bin/git-dir-status" "$DIR/bin/git-dir-status"
