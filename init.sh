@@ -58,7 +58,6 @@ success() {
 	echo -e "${Green}$@ ${Color_Off} \n"
 }
 
-# Simplify creating a symlink to this repository /dotfiles/*
 create_symlink() {
 	local config_path="$1"
 	local source_path="$2"
@@ -118,9 +117,6 @@ create_symlink "$HOME/.bashrc" "$DIR/dotfiles/bash/.bashrc"
 create_symlink "$HOME/.profile" "$DIR/dotfiles/bash/.profile"
 create_symlink "$HOME/.hushlogin" "$DIR/dotfiles/bash/.hushlogin"
 create_symlink "$HOME/biome.json" "$DIR/dotfiles/biome/config.json"
-create_symlink "/etc/wsl.conf" "$DIR/dotfiles/wsl/wsl.conf"
+create_symlink "$HOME/.config/tmux/tmux.conf" "$DIR/dotfiles/wsl/wsl.conf"
 
-create_symlink "$HOME/.local/bin/tmux-sessionizer" "$DIR/dotfiles/bin/tmux-sessionizer"
-
-# TODO: basic utils/res instalation + dynamic app instalation with dotfiles/**/install.sh
-# SEE: https://github.com/basecamp/omakub
+create_symlink "$HOME/.local/bin/git-dir-status" "$DIR/bin/git-dir-status"
