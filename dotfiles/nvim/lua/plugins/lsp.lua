@@ -85,7 +85,8 @@ return {
 
     config = function()
         local commands = require 'utils.commands'
-        local builtin = require 'telescope.builtin'
+        -- @module fzf-lua
+        local fzf = require 'fzf-lua'
 
         local servers = {
             gopls = {},
@@ -210,13 +211,13 @@ return {
             local has_highlights = client and client.server_capabilities.documentHighlightProvider
             local has_inlay_hints = client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint)
 
-            keymap('n', 'gd', builtin.lsp_definitions, { desc = '[G]oto [D]efinition.' })
+            keymap('n', 'gd', fzf.lsp_definitions, { desc = '[G]oto [D]efinition.' })
             keymap('n', 'gD', vim.lsp.buf.declaration, { desc = '[G]oto [D]eclaration' })
-            keymap('n', 'gI', builtin.lsp_implementations, { desc = '[G]oto [I]mplementation.' })
-            keymap('n', 'gr', builtin.lsp_references, { desc = '[G]oto [R]eferences.' })
-            keymap('n', '<leader>D', builtin.lsp_type_definitions, { desc = 'Type [D]efinition.' })
-            keymap('n', '<leader>ds', builtin.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
-            keymap('n', '<leader>sw', builtin.lsp_dynamic_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
+            keymap('n', 'gI', fzf.lsp_implementations, { desc = '[G]oto [I]mplementation.' })
+            keymap('n', 'gr', fzf.lsp_references, { desc = '[G]oto [R]eferences.' })
+            keymap('n', '<leader>D', fzf.lsp_typedefs, { desc = 'Type [D]efinition.' })
+            keymap('n', '<leader>ds', fzf.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
+            keymap('n', '<leader>sw', fzf.lsp_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
             keymap({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
             keymap({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, { desc = '[L]sp [R]estart.' })
             keymap({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, { desc = '[L]sp Start.' })

@@ -22,8 +22,8 @@ return {
             require('table-nvim').setup {
                 padd_column_separators = true,
                 mappings = {
-                    next = '<TAB>',
-                    prev = '<S-TAB>',
+                    next = '<space>tn',
+                    prev = '<space>tp',
                     insert_row_up = '<space>tk',
                     insert_row_down = '<space>tj',
                     insert_column_left = '<space>th',

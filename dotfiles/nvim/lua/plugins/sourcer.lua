@@ -1,5 +1,5 @@
 return {
-    dir = '~/lab/sourcer.nvim',
-    event = 'VeryLazy',
-    opts = {},
+    -- dir = '~/lab/sourcer.nvim',
+    -- event = 'VeryLazy',
+    -- opts = {},
 }

@@ -7,15 +7,12 @@ return {
 
     dependencies = {
         'nvim-lua/plenary.nvim',
-        'nvim-telescope/telescope.nvim',
     },
 
-    config = function()
-        require('todo-comments').setup {
-            signs = true,
-            keywords = {
-                NOTE = { alt = { 'INFO', 'SEE' } },
-            },
-        }
-    end,
+    opts = {
+        signs = true,
+        keywords = {
+            NOTE = { alt = { 'INFO', 'SEE' } },
+        },
+    },
 }

@@ -18,14 +18,13 @@ return {
             end
 
             commands.auto('VimEnter', {
-                callback = function()
-                    local path = get_session_path()
-                    if vim.fn.filereadable(sessions.config.directory .. path) == 1 then
-                        vim.schedule(function()
-                            sessions.read(path)
-                        end)
+                callback = vim.schedule_wrap(function()
+                    local session = get_session_path()
+                    local path = sessions.config.directory .. session
+                    if vim.uv.fs_stat(path) then
+                        sessions.read(session)
                     end
-                end,
+                end),
             })
 
             commands.auto('VimLeave', {

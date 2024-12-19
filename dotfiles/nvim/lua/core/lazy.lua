@@ -4,7 +4,6 @@
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
 local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
 local lazyopts = {
-    lockfile = lazypath,
     change_detection = { notify = false },
     performance = {
         cache = { enabled = true },
