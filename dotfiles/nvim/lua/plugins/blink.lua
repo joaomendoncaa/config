@@ -3,9 +3,6 @@ return {
     --SEE: https://github.com/Saghen/blink.cmp
     'saghen/blink.cmp',
 
-    -- event = { 'LspAttach' },
-    lazy = false,
-
     dependencies = {
         {
             -- Set of preconfigured snippets for different languages.
@@ -22,19 +19,14 @@ return {
         ---@module 'blink.cmp'
         ---@type blink.cmp.Config
         plugin.setup {
-            highlight = {
+            appearance = {
+                -- Sets the fallback highlight groups to nvim-cmp's highlight groups
+                -- Useful for when your theme doesn't support blink.cmp
+                -- will be removed in a future release
                 use_nvim_cmp_as_default = true,
-            },
-
-            -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
-            -- adjusts spacing to ensure icons are aligned
-            nerd_font_variant = vim.g.NVIM_NERD_FONT and 'mono' or 'normal',
-
-            accept = {
-                -- experimental auto-brackets support
-                auto_brackets = {
-                    enabled = true,
-                },
+                -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
+                -- adjusts spacing to ensure icons are aligned
+                nerd_font_variant = vim.g.NVIM_NERD_FONT and 'mono' or 'normal',
             },
 
             keymap = {
@@ -87,6 +79,13 @@ return {
             },
 
             completion = {
+                accept = {
+                    -- experimental auto-brackets support
+                    auto_brackets = {
+                        enabled = true,
+                    },
+                },
+
                 menu = {
                     draw = {
                         columns = { { 'item_idx' }, { 'kind_icon' }, { 'label', 'label_description', gap = 1 } },
@@ -102,15 +101,14 @@ return {
             },
 
             sources = {
-                completion = {
-                    enabled_providers = function(_)
-                        if vim.bo.filetype == 'codecompanion' then
-                            return { 'codecompanion' }
-                        end
+                default = function()
+                    if vim.bo.filetype == 'codecompanion' then
+                        return { 'codecompanion' }
+                    end
 
-                        return { 'lsp', 'path', 'snippets', 'buffer', 'markdown' }
-                    end,
-                },
+                    return { 'lsp', 'path', 'snippets', 'buffer', 'markdown' }
+                end,
+
                 providers = {
                     markdown = { name = 'RenderMarkdown', module = 'render-markdown.integ.blink' },
                     codecompanion = {
