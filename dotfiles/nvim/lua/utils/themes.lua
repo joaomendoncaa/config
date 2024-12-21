@@ -6,13 +6,16 @@ local tables = require 'utils.tables'
 ---NOTE: there's an _all key that represents adjustments for all themes
 local ADJUSTMENTS = {
     ['default'] = function()
-        vim.cmd.hi 'Title guifg=#8cf8f7'
+        vim.cmd [[
+            hi Title guifg=#8cf8f7
+        ]]
     end,
 
     ['poimandres'] = function()
-        vim.cmd.hi 'Comment gui=none'
-
-        vim.cmd.hi 'Title guifg=#5de4c7'
+        vim.cmd [[
+            hi Comment gui=none
+            hi Title guifg=#5de4c7
+        ]]
 
         vim.api.nvim_set_hl(0, 'LspReferenceWrite', { bg = 'none' })
         vim.api.nvim_set_hl(0, 'LspReferenceText', { bg = 'none' })
@@ -23,36 +26,44 @@ local ADJUSTMENTS = {
     end,
 
     ['gruvbox'] = function()
-        vim.cmd.hi 'SignColumn guibg=none'
+        vim.cmd [[
+            hi SignColumn guibg=none
+        ]]
     end,
 
     ['blue'] = function()
-        vim.cmd.hi 'Comment gui=none'
+        vim.cmd [[
+            hi Comment gui=none
+        ]]
     end,
 
     ['flow'] = function()
-        vim.cmd 'hi clear MsgArea'
+        vim.cmd [[
+            hi clear MsgArea
+        ]]
     end,
 
     ['kanagawa-paper'] = function()
-        vim.cmd 'hi clear MsgArea'
+        vim.cmd [[
+            hi clear MsgArea
+        ]]
     end,
 
     _all = function()
         vim.opt.background = 'dark'
 
-        vim.cmd.hi 'StatusLine guibg=none guifg=none'
-        vim.cmd.hi 'StatusLineNC guibg=none guifg=none'
-
-        vim.cmd.hi 'Normal guibg=none ctermbg=none'
-        vim.cmd.hi 'MsgSeparator guibg=none ctermbg=none'
-
-        vim.cmd.hi 'TelescopePreviewNormal guibg=none'
-        vim.cmd.hi 'TelescopePreviewBorder guibg=none'
-        vim.cmd.hi 'TelescopeResultsNormal guibg=none'
-        vim.cmd.hi 'TelescopeResultsBorder guibg=none'
-        vim.cmd.hi 'TelescopePromptNormal guibg=none'
-        vim.cmd.hi 'TelescopePromptBorder guibg=none'
+        vim.cmd [[
+            hi StatusLine guibg=none guifg=none
+            hi StatusLineNC guibg=none guifg=none
+            hi Normal guibg=none ctermbg=none
+            hi MsgSeparator guibg=none ctermbg=none
+            hi TelescopePreviewNormal guibg=none
+            hi TelescopePreviewBorder guibg=none
+            hi TelescopeResultsNormal guibg=none
+            hi TelescopeResultsBorder guibg=none
+            hi TelescopePromptNormal guibg=none
+            hi TelescopePromptBorder guibg=none
+        ]]
 
         vim.api.nvim_set_hl(0, 'LazyReasonSource', { fg = '#5de4c7' })
         vim.api.nvim_set_hl(0, 'LazyReasonFt', { fg = '#5de4c7' })

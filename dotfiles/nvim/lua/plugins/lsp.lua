@@ -223,6 +223,7 @@ return {
             keymap({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, { desc = '[L]sp Start.' })
             keymap({ 'n', 'v', 'x' }, '<leader>lj', lsp_stop, { desc = '[L]sp Stop.' })
             keymap('n', '<leader>ll', list_lsps, { desc = '[L]sp [L]ist servers' })
+            keymap('n', '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
 
             if has_highlights then
                 local highlight_augroup = commands.augroup('lsp-highlight', { clear = false })

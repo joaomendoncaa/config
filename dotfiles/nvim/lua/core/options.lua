@@ -94,6 +94,7 @@ o.fillchars:append { eob = ' ' }
 o.whichwrap = 'lh'
 o.wrap = true
 o.conceallevel = 0
+o.sessionoptions = 'buffers,curdir,folds,help,tabpages,winsize,terminal'
 
 commands.user('ToggleWrap', toggle_wrap)
 

@@ -22,6 +22,18 @@ return {
                 }
             end
 
+            local function search_spelling()
+                fzf.spell_suggest {
+                    winopts = {
+                        relative = 'cursor',
+                        row = 1.01,
+                        col = 0,
+                        height = 0.2,
+                        width = 0.2,
+                    },
+                }
+            end
+
             local function search_enviroment()
                 local env_table = {}
                 for k, v in pairs(vim.fn.environ()) do
@@ -31,18 +43,25 @@ return {
             end
 
             keymap('n', '<leader>sg', fzf.live_grep, { desc = '[S]earch by [G]rep.' })
-            keymap('n', '<leader>sS', fzf.builtin, { desc = '[S]earch [S]elect Builtin.' })
+            keymap('n', '<leader>sf', fzf.builtin, { desc = '[S]earch [F]zf Builtins.' })
             keymap('n', '<leader>sk', fzf.keymaps, { desc = '[S]earch [K]eymaps.' })
             keymap('n', '<leader>sh', fzf.helptags, { desc = '[S]earch [H]elp.' })
             keymap('n', '<leader>sH', fzf.highlights, { desc = '[S]earch [H]ighlights.' })
             keymap('n', '<leader>sb', fzf.buffers, { desc = '[S]earch open [B]uffers.' })
-            keymap('n', '<leader>ss', fzf.files, { desc = '[S]earch [S]elected directory files.' })
+            keymap('n', '<leader>ss', fzf.files, { desc = '[S]earch [S]elected CWD directory files.' })
             keymap({ 'n', 'v', 'i' }, '<leader>sp', fzf.complete_path, { desc = '[S]earch [P]ath.' })
+            keymap('n', '<leader>sS', search_spelling, { desc = '[S]earch [S]pelling suggestions.' })
             keymap('n', '<leader>sc', search_files_config, { desc = '[S]earch [S]elected directory files.' })
             keymap('n', '<leader>se', search_enviroment, { desc = '[S]earch [E]nvironment Variables.' })
             keymap('n', '<leader>st', search_themes, { desc = '[S]earch [T]heme.' })
 
             fzf.setup {
+                file_ignore_patterns = { 'node_modules' },
+                winopts = {
+                    preview = {
+                        layout = 'vertical',
+                    },
+                },
                 previewers = {
                     builtin = {
                         syntax_limit_b = 1024 * 100,
