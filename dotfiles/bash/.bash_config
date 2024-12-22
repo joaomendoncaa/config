@@ -275,3 +275,6 @@ if [[ ${BASH_VERSINFO[0]:-0} -eq 4 && ${BASH_VERSINFO[1]:-0} -ge 4 || ${BASH_VER
 fi
 
 # eval "$(zoxide init bash)"
+
+# Enable vi mode
+set -o vi
