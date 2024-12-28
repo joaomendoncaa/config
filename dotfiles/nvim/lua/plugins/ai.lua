@@ -34,6 +34,10 @@ return {
                 plugin.prompt 'inline'
             end
 
+            local ask_docstrings = function()
+                plugin.prompt 'docstrings'
+            end
+
             local ask_lsp_diagnostics = function()
                 plugin.prompt 'lsp'
             end
@@ -92,6 +96,7 @@ return {
             key({ 'n', 'v' }, '<leader>aa', toggle_chat_buffer, 'AI: Toggle chat buffer')
             key({ 'n', 'v' }, '<leader>al', ask_lsp_diagnostics, 'AI: Explain LSP diagnostics')
             key({ 'n', 'v' }, '<leader>ai', ask_inline, 'AI: Inline')
+            key({ 'v' }, '<leader>ad', ask_docstrings, 'AI: Add docstrings')
             key({ 'v' }, '<leader>ae', ask_explain_snippet, 'AI: Explain snippet')
             key({ 'v' }, '<leader>af', ask_fix_snippet, 'AI: Fix snippet')
 
@@ -102,9 +107,46 @@ return {
 
             plugin.setup {
                 prompt_library = {
-                    ['Custom Prompt'] = {
+                    ['Generate Docstring'] = {
+                        strategy = 'inline',
+                        description = 'Add appropriate documentation to the selected code',
                         opts = {
-                            short_name = 'inline',
+                            short_name = 'docstrings',
+                            auto_submit = true,
+                        },
+                        prompts = {
+                            {
+                                role = 'system',
+                                content = function(context)
+                                    return 'You are a senior '
+                                        .. context.filetype
+                                        .. ' developer. You add clear and appropriate documentation based on code context.'
+                                end,
+                            },
+                            {
+                                role = 'user',
+                                content = function(context)
+                                    local text = require('codecompanion.helpers.actions').get_code(context.start_line, context.end_line)
+                                    return string.format(
+                                        [[
+Add appropriate documentation to this code:
+- For functions: Add proper docstrings following language conventions, including types if present
+- For configuration/script code: Add simple descriptive comments explaining purpose
+- Do NOT modify any of the actual code - only add documentation
+- Keep any existing documentation style
+- Return the complete code with added documentation
+
+```%s
+%s
+```]],
+                                        context.filetype,
+                                        text
+                                    )
+                                end,
+                                opts = {
+                                    contains_code = true,
+                                },
+                            },
                         },
                     },
                 },
