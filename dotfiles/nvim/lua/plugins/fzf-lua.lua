@@ -42,6 +42,7 @@ return {
                 fzf.fzf_exec(env_table)
             end
 
+            keymap({ 'n', 'v' }, '<leader>sp', fzf.complete_path, { desc = '[S]earch [P]ath.' })
             keymap('n', '<leader>sg', fzf.live_grep, { desc = '[S]earch by [G]rep.' })
             keymap('n', '<leader>sf', fzf.builtin, { desc = '[S]earch [F]zf Builtins.' })
             keymap('n', '<leader>sk', fzf.keymaps, { desc = '[S]earch [K]eymaps.' })
@@ -49,7 +50,6 @@ return {
             keymap('n', '<leader>sH', fzf.highlights, { desc = '[S]earch [H]ighlights.' })
             keymap('n', '<leader>sb', fzf.buffers, { desc = '[S]earch open [B]uffers.' })
             keymap('n', '<leader>ss', fzf.files, { desc = '[S]earch [S]elected CWD directory files.' })
-            keymap({ 'n', 'v', 'i' }, '<leader>sp', fzf.complete_path, { desc = '[S]earch [P]ath.' })
             keymap('n', '<leader>sS', search_spelling, { desc = '[S]earch [S]pelling suggestions.' })
             keymap('n', '<leader>sc', search_files_config, { desc = '[S]earch [S]elected directory files.' })
             keymap('n', '<leader>se', search_enviroment, { desc = '[S]earch [E]nvironment Variables.' })
