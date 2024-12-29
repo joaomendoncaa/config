@@ -134,6 +134,12 @@ echo "Starting Installation..."
 
 if ! command -v nix-env >/dev/null 2>&1; then
 	curl -fsSL https://nixos.org/nix/install | sh -s -- --daemon
+
+	if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then
+		. ~/.nix-profile/etc/profile.d/nix.sh
+	elif [ -e /etc/profile.d/nix.sh ]; then
+		. /etc/profile.d/nix.sh
+	fi
 fi
 
 if ! grep -q "experimental-features.*nix-command" ~/.config/nix/nix.conf 2>/dev/null; then
