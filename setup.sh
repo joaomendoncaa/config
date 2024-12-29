@@ -56,6 +56,17 @@ success() {
 	echo -e "${GREEN}$@ ${COLOR_RESET} \n"
 }
 
+path() {
+	local new_path="$1"
+
+	if [[ ":$PATH:" != *":$new_path:"* ]]; then
+		export PATH="$new_path:$PATH"
+		success "Added $new_path to PATH"
+	else
+		info "Path $new_path already exists in PATH"
+	fi
+}
+
 symlink() {
 	local config_path="$1"
 	local source_path="$2"
@@ -112,17 +123,6 @@ symlink() {
 	esac
 }
 
-path() {
-	local new_path="$1"
-
-	if [[ ":$PATH:" != *":$new_path:"* ]]; then
-		export PATH="$new_path:$PATH"
-		success "Added $new_path to PATH"
-	else
-		info "Path $new_path already exists in PATH"
-	fi
-}
-
 echo "Pulling in config.jmmm.sh..."
 
 rm -rf $CONFIG_SOURCE
@@ -130,24 +130,39 @@ mkdir -p $CONFIG_SOURCE
 git clone https://github.com/joaomendoncaa/config.git "$CONFIG_SOURCE"
 cd $CONFIG_SOURCE
 
-echo "Starting Installation..."
-
 echo "Removing previous nix installation..."
 
-sudo rm -rf /nix
-sudo rm -rf /etc/bashrc.backup-before-nix
-sudo rm -rf /etc/bash.bashrc.backup-before-nix
-sudo rm -rf /etc/profile.d/nix.sh.backup-before-nix
-sudo rm -rf /etc/zshrc.backup-before-nix
+sudo systemctl stop nix-daemon.service
+sudo systemctl disable nix-daemon.socket nix-daemon.service
+sudo systemctl daemon-reload
 
-if ! command -v nix-env >/dev/null 2>&1; then
-	curl -fsSL https://nixos.org/nix/install | sh -s -- --daemon
+sudo rm -rf \
+	/nix \
+	/etc/nix \
+	/var/root/.nix-profile \
+	~root/.nix-profile \
+	~root/.nix-channels \
+	~root/.nix-defexpr \
+	/etc/tmpfiles.d/nix-daemon.conf \
+	/etc/profile.d/nix.sh \
+	/etc/zshrc.backup-before-nix \
+	/etc/bashrc.backup-before-nix \
+	/etc/bash.bashrc.backup-before-nix \
+	/etc/profile.d/nix.sh.backup-before-nix
 
-	if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then
-		. ~/.nix-profile/etc/profile.d/nix.sh
-	elif [ -e /etc/profile.d/nix.sh ]; then
-		. /etc/profile.d/nix.sh
-	fi
+for i in $(seq 1 32); do
+	sudo userdel nixbld$i
+done
+sudo groupdel nixbld
+
+echo "Starting Installation..."
+
+sh <(curl -L https://nixos.org/nix/install) --daemon
+
+if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then
+	. ~/.nix-profile/etc/profile.d/nix.sh
+elif [ -e /etc/profile.d/nix.sh ]; then
+	. /etc/profile.d/nix.sh
 fi
 
 if ! grep -q "experimental-features.*nix-command" ~/.config/nix/nix.conf 2>/dev/null; then
