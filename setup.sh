@@ -132,6 +132,14 @@ cd $CONFIG_SOURCE
 
 echo "Starting Installation..."
 
+echo "Removing previous nix installation..."
+
+sudo rm -rf /nix
+sudo rm -rf /etc/bashrc.backup-before-nix
+sudo rm -rf /etc/bash.bashrc.backup-before-nix
+sudo rm -rf /etc/profile.d/nix.sh.backup-before-nix
+sudo rm -rf /etc/zshrc.backup-before-nix
+
 if ! command -v nix-env >/dev/null 2>&1; then
 	curl -fsSL https://nixos.org/nix/install | sh -s -- --daemon
 
