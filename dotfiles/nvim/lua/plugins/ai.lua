@@ -164,6 +164,31 @@ Add appropriate documentation to this code:
                                 description = 'AI: Hide the chat buffer',
                             },
                         },
+                        slash_commands = {
+                            buffer = {
+                                callback = 'strategies.chat.slash_commands.buffer',
+                                description = 'Insert open buffers',
+                                opts = {
+                                    contains_code = true,
+                                    provider = 'fzf_lua',
+                                },
+                            },
+                            file = {
+                                opts = {
+                                    provider = 'fzf_lua',
+                                },
+                            },
+                            help = {
+                                opts = {
+                                    provider = 'fzf_lua',
+                                },
+                            },
+                            symbols = {
+                                opts = {
+                                    provider = 'fzf_lua',
+                                },
+                            },
+                        },
                     },
                     inline = {
                         adapter = 'anthropic',
