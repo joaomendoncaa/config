@@ -33,6 +33,11 @@ local auto_colorscheme = function()
     themes.update()
 end
 
+local replace_content_with_clipboard = function()
+    vim.cmd 'norm! GVggp'
+    vim.cmd 'w'
+end
+
 local auto_greeter = function()
     if not require('utils.flags').isOne(vim.env.NVIM_PERF) then
         print(string.format('󱐋 %s', vim.fn.getcwd()))
@@ -95,12 +100,18 @@ o.whichwrap = 'lh'
 o.wrap = true
 o.conceallevel = 0
 o.sessionoptions = 'buffers,curdir,folds,help,tabpages,winsize,terminal'
+o.foldcolumn = '0'
+o.foldlevel = 99
+o.foldlevelstart = 99
+o.foldenable = true
 
 commands.user('ToggleWrap', toggle_wrap)
 
 commands.user('BufferDelete', buffer_delete)
 
 commands.user('BufferMessages', buffer_messages)
+
+commands.user('ReplaceContentWithClipboard', replace_content_with_clipboard)
 
 commands.auto({ 'TextYankPost' }, {
     callback = auto_highlight_yank,

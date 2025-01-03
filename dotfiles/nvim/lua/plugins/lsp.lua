@@ -84,9 +84,9 @@ return {
     },
 
     config = function()
-        local commands = require 'utils.commands'
         -- @module fzf-lua
         local fzf = require 'fzf-lua'
+        local commands = require 'utils.commands'
 
         local servers = {
             gopls = {},
@@ -109,24 +109,50 @@ return {
 
         local keymap = vim.keymap.set
 
+        local function toggle_inlay_hints()
+            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
+            print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
+        end
+
         local function lsp_restart()
             vim.cmd 'LspRestart'
-            print 'LSP Restarting'
+            vim.notify('LSP Restarting...', vim.log.levels.WARN)
         end
 
         local function lsp_start()
             vim.cmd 'LspStart'
-            print 'LSP Started'
+            vim.notify('LSP Started.', vim.log.levels.INFO)
         end
 
         local function lsp_stop()
             vim.cmd 'LspStop'
-            print 'LSP Stopped'
+            vim.notify('LSP Stopping...', vim.log.levels.OFF)
         end
 
-        local function toggle_inlay_hints()
-            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
-            print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
+        local function lsp_list()
+            local clients = vim.lsp.get_clients()
+            local current_buf = vim.api.nvim_get_current_buf()
+
+            if #clients == 0 then
+                vim.notify('No active LSP clients', vim.log.levels.INFO)
+                return
+            end
+
+            local notif = 'Current buffer LSP clients\n\n'
+
+            for i, client in ipairs(clients) do
+                local status = client.attached_buffers[current_buf] and '|A|' or '|D|'
+                local li = '- ' .. status .. ' ' .. client.name
+
+                if i == #clients then
+                    notif = notif .. li
+                    break
+                end
+
+                notif = notif .. li .. '\n'
+            end
+
+            vim.notify(notif, vim.log.levels.INFO)
         end
 
         local function stop_lsp_by_name(opts)
@@ -174,33 +200,17 @@ return {
             end
         end
 
-        local function list_lsps()
-            local clients = vim.lsp.get_clients()
-
-            if #clients == 0 then
-                print 'No active LSP clients'
-                return
-            end
-
-            local notif = 'Active clients: {'
-
-            for i, client in ipairs(clients) do
-                if i == #clients then
-                    notif = notif .. client.name
-                else
-                    notif = notif .. client.name .. ', '
-                end
-            end
-
-            vim.notify(notif, vim.log.levels.INFO)
-        end
-
         local function handle_mason_setup(server_name)
             local server = servers[server_name] or {}
-            -- INFO: This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for tsserver)
-            server.capabilities = vim.tbl_deep_extend('force', {}, vim.lsp.protocol.make_client_capabilities(), server.capabilities or {})
+
+            server.capabilities = vim.tbl_deep_extend('force', {
+                textDocument = {
+                    foldingRange = {
+                        dynamicRegistration = false,
+                        lineFoldingOnly = true,
+                    },
+                },
+            }, vim.lsp.protocol.make_client_capabilities(), server.capabilities or {})
 
             require('lspconfig')[server_name].setup(server)
         end
@@ -222,7 +232,7 @@ return {
             keymap({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, { desc = '[L]sp [R]estart.' })
             keymap({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, { desc = '[L]sp Start.' })
             keymap({ 'n', 'v', 'x' }, '<leader>lj', lsp_stop, { desc = '[L]sp Stop.' })
-            keymap('n', '<leader>ll', list_lsps, { desc = '[L]sp [L]ist servers' })
+            keymap('n', '<leader>ll', lsp_list, { desc = '[L]sp [L]ist servers' })
             keymap('n', '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
 
             if has_highlights then
