@@ -1,5 +1,4 @@
 local commands = require 'utils.commands'
-local formatters = require 'utils.formatters'
 local strings = require 'utils.strings'
 
 local has_format_on_save = true
@@ -20,9 +19,7 @@ return {
 
         local function format_disable()
             has_format_on_save = false
-
             vim.api.nvim_set_hl(0, 'T', { fg = '#ff0000' })
-
             strings.echo(strings.truncateChunks {
                 { '[OFF]', 'T' },
                 { ' ' },
@@ -32,9 +29,7 @@ return {
 
         local function format_enable()
             has_format_on_save = true
-
             vim.api.nvim_set_hl(0, 'T', { fg = '#00ff00' })
-
             strings.echo(strings.truncateChunks {
                 { '[ON]', 'T' },
                 { ' ' },
@@ -47,29 +42,7 @@ return {
                 return
             end
 
-            local opts = { async = false, lsp_format = 'lsp_fallback' }
-
-            local formatter = formatters.get_closest {
-                biome = { 'biome.json' },
-                prettier = {
-                    '.prettierrc',
-                    '.prettierrc.json',
-                    '.prettierrc.yml',
-                    '.prettierrc.yaml',
-                    '.prettierrc.json5',
-                    '.prettierrc.js',
-                    '.prettierrc.cjs',
-                    '.prettierrc.toml',
-                    'prettier.config.js',
-                    'prettier.config.cjs',
-                },
-            }
-
-            if formatter then
-                opts.formatters = formatter
-            end
-
-            plugin.format(opts)
+            plugin.format { async = true, lsp_format = 'lsp_fallback' }
         end
 
         keymap('n', '<leader>ff', format, { desc = '[F]ormat buffer.' })
@@ -104,6 +77,10 @@ return {
             },
             formatters = {
                 biome = {
+                    condition = function()
+                        return vim.fn.filereadable(vim.fn.getcwd() .. '/biome.json') == 1
+                    end,
+
                     prepend_args = {
                         'check',
                         '--unsafe',
@@ -111,6 +88,9 @@ return {
                     },
                 },
                 prettier = {
+                    condition = function()
+                        return vim.fn.filereadable(vim.fn.getcwd() .. '/biome.json') == 0
+                    end,
                     prepend_args = {
                         '--write',
                     },
