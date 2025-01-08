@@ -132,9 +132,19 @@ cd $CONFIG_SOURCE
 
 echo "Removing previous nix installation..."
 
-sudo systemctl stop nix-daemon.service
-sudo systemctl disable nix-daemon.socket nix-daemon.service
-sudo systemctl daemon-reload
+if systemctl is-active --quiet nix-daemon.service; then
+	sudo systemctl stop nix-daemon.service || info "Failed to stop nix-daemon.service, it may not be running"
+fi
+
+if systemctl is-enabled --quiet nix-daemon.socket 2>/dev/null; then
+	sudo systemctl disable nix-daemon.socket || info "Failed to disable nix-daemon.socket"
+fi
+
+if systemctl is-enabled --quiet nix-daemon.service 2>/dev/null; then
+	sudo systemctl disable nix-daemon.service || info "Failed to disable nix-daemon.service"
+fi
+
+sudo systemctl daemon-reload || info "Failed to reload systemd daemon"
 
 sudo rm -rf \
 	/nix \
@@ -151,9 +161,14 @@ sudo rm -rf \
 	/etc/profile.d/nix.sh.backup-before-nix
 
 for i in $(seq 1 32); do
-	sudo userdel nixbld$i
+	if id "nixbld$i" &>/dev/null; then
+		sudo userdel "nixbld$i" 2>/dev/null || info "Could not remove nixbld$i user"
+	fi
 done
-sudo groupdel nixbld
+
+if getent group nixbld >/dev/null; then
+	sudo groupdel nixbld 2>/dev/null || info "Could not remove nixbld group"
+fi
 
 echo "Starting Installation..."
 
