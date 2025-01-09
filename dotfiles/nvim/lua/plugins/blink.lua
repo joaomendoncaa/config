@@ -4,11 +4,8 @@ return {
     'saghen/blink.cmp',
 
     dependencies = {
-        {
-            -- Set of preconfigured snippets for different languages.
-            --  SEE: https://github.com/rafamadriz/friendly-snippets
-            'rafamadriz/friendly-snippets',
-        },
+        'moyiz/blink-emoji.nvim',
+        'rafamadriz/friendly-snippets',
     },
 
     build = 'cargo build --release',
@@ -106,7 +103,7 @@ return {
                         return { 'codecompanion' }
                     end
 
-                    return { 'lsp', 'path', 'snippets', 'buffer', 'markdown' }
+                    return { 'lsp', 'path', 'snippets', 'buffer', 'markdown', 'emoji' }
                 end,
 
                 providers = {
@@ -115,6 +112,12 @@ return {
                         name = 'CodeCompanion',
                         module = 'codecompanion.providers.completion.blink',
                         enabled = true,
+                    },
+                    emoji = {
+                        module = 'blink-emoji',
+                        name = 'Emoji',
+                        score_offset = 15,
+                        opts = { insert = true },
                     },
                 },
             },
