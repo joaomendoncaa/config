@@ -110,7 +110,6 @@ function M.update(arg)
         return up(theme)
     end
 
-    vim.notify('Theme "' .. theme .. '" not found — falling back to default theme.', vim.log.levels.WARN)
     up 'default'
 end
 
