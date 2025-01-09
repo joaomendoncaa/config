@@ -9,6 +9,44 @@ end
 
 return {
     {
+        -- The official Neovim plugin for Supermaven.
+        -- SEE: https://github.com/supermaven-inc/supermaven-nvim
+        'supermaven-inc/supermaven-nvim',
+
+        event = 'VeryLazy',
+        enabled = require('utils.flags').isOne(vim.env.NVIM_AI),
+
+        config = function()
+            local plugin = require 'supermaven-nvim'
+            local api = require 'supermaven-nvim.api'
+            local commands = require 'utils.commands'
+            local strings = require 'utils.strings'
+
+            local function toggle()
+                local is_on = api.is_running()
+
+                api.toggle()
+
+                vim.api.nvim_set_hl(0, 'T', { fg = is_on and '#ff0000' or '#00ff00' })
+
+                strings.echo(strings.truncateChunks {
+                    { is_on and '[OFF]' or '[ON]', 'T' },
+                    { ' ' },
+                    { 'AI suggestions' },
+                })
+            end
+
+            commands.user('ToggleAISuggestions', toggle)
+            key('n', '<leader>at', toggle, 'AI: Toggle inline suggestions')
+
+            plugin.setup {
+                keymaps = { clear_suggestion = '<C-c>' },
+                log_level = 'off',
+            }
+        end,
+    },
+
+    {
         -- ✨ AI-powered coding, seamlessly in Neovim. Supports Anthropic, Copilot, Gemini, Ollama, OpenAI and xAI LLMs.
         -- SEE: https://github.com/olimorris/codecompanion.nvim
         'olimorris/codecompanion.nvim',
@@ -25,30 +63,7 @@ return {
             --- @module  'codecompanion'
             local plugin = require 'codecompanion'
             local commands = require 'utils.commands'
-
-            local toggle_chat_buffer = function()
-                plugin.toggle()
-            end
-
-            local ask_inline = function()
-                plugin.prompt 'inline'
-            end
-
-            local ask_docstrings = function()
-                plugin.prompt 'docstrings'
-            end
-
-            local ask_lsp_diagnostics = function()
-                plugin.prompt 'lsp'
-            end
-
-            local ask_explain_snippet = function()
-                plugin.prompt 'explain'
-            end
-
-            local ask_fix_snippet = function()
-                plugin.prompt 'fix'
-            end
+            local a = require('utils.functions').a
 
             local close_if_last_window = function()
                 local current_win = vim.api.nvim_get_current_win()
@@ -93,12 +108,12 @@ return {
                 end
             end
 
-            key({ 'n', 'v' }, '<leader>aa', toggle_chat_buffer, 'AI: Toggle chat buffer')
-            key({ 'n', 'v' }, '<leader>al', ask_lsp_diagnostics, 'AI: Explain LSP diagnostics')
-            key({ 'n', 'v' }, '<leader>ai', ask_inline, 'AI: Inline')
-            key({ 'v' }, '<leader>ad', ask_docstrings, 'AI: Add docstrings')
-            key({ 'v' }, '<leader>ae', ask_explain_snippet, 'AI: Explain snippet')
-            key({ 'v' }, '<leader>af', ask_fix_snippet, 'AI: Fix snippet')
+            key({ 'n', 'v' }, '<leader>aa', plugin.toggle, 'AI: Toggle chat buffer')
+            key({ 'n', 'v' }, '<leader>al', a(plugin.prompt, 'lsp'), 'AI: Explain LSP diagnostics')
+            key({ 'n', 'v' }, '<leader>ai', a(plugin.prompt, 'inline'), 'AI: Inline')
+            key({ 'v' }, '<leader>ad', a(plugin.prompt, 'docstrings'), 'AI: Add docstrings')
+            key({ 'v' }, '<leader>ae', a(plugin.prompt, 'explain'), 'AI: Explain snippet')
+            key({ 'v' }, '<leader>af', a(plugin.prompt, 'fix'), 'AI: Fix snippet')
 
             commands.auto('WinEnter', {
                 group = commands.augroup 'CodeCompanionCloseIfLastWindow',
@@ -155,39 +170,21 @@ Add appropriate documentation to this code:
                         adapter = 'anthropic',
                         keymaps = {
                             hide = {
-                                modes = {
-                                    n = 'q',
-                                },
-                                callback = function(chat)
-                                    chat.ui:hide()
+                                modes = { n = 'q' },
+                                callback = function(_)
+                                    vim.cmd 'CodeCompanionChat Toggle'
                                 end,
-                                description = 'AI: Hide the chat buffer',
                             },
                         },
                         slash_commands = {
                             buffer = {
                                 callback = 'strategies.chat.slash_commands.buffer',
                                 description = 'Insert open buffers',
-                                opts = {
-                                    contains_code = true,
-                                    provider = 'fzf_lua',
-                                },
+                                opts = { contains_code = true, provider = 'fzf_lua' },
                             },
-                            file = {
-                                opts = {
-                                    provider = 'fzf_lua',
-                                },
-                            },
-                            help = {
-                                opts = {
-                                    provider = 'fzf_lua',
-                                },
-                            },
-                            symbols = {
-                                opts = {
-                                    provider = 'fzf_lua',
-                                },
-                            },
+                            file = { opts = { provider = 'fzf_lua' } },
+                            help = { opts = { provider = 'fzf_lua' } },
+                            symbols = { opts = { provider = 'fzf_lua' } },
                         },
                     },
                     inline = {
@@ -197,58 +194,12 @@ Add appropriate documentation to this code:
                 adapters = {
                     anthropic = function()
                         return require('codecompanion.adapters').extend('anthropic', {
-                            env = {
-                                api_key = vim.env.ANTHROPIC_API_KEY,
-                            },
+                            env = { api_key = vim.env.ANTHROPIC_API_KEY },
                         })
                     end,
                 },
 
-                display = {
-                    chat = {
-                        intro_message = 'Press ? for options',
-                    },
-                },
-            }
-        end,
-    },
-
-    {
-        -- The official Neovim plugin for Supermaven.
-        -- SEE: https://github.com/supermaven-inc/supermaven-nvim
-        'supermaven-inc/supermaven-nvim',
-
-        event = 'VeryLazy',
-        enabled = require('utils.flags').isOne(vim.env.NVIM_AI),
-
-        config = function()
-            local plugin = require 'supermaven-nvim'
-            local api = require 'supermaven-nvim.api'
-            local commands = require 'utils.commands'
-            local strings = require 'utils.strings'
-
-            local function toggle()
-                local is_on = api.is_running()
-
-                api.toggle()
-
-                vim.api.nvim_set_hl(0, 'T', { fg = is_on and '#ff0000' or '#00ff00' })
-
-                strings.echo(strings.truncateChunks {
-                    { is_on and '[OFF]' or '[ON]', 'T' },
-                    { ' ' },
-                    { 'AI suggestions' },
-                })
-            end
-
-            commands.user('ToggleAISuggestions', toggle)
-            key('n', '<leader>at', toggle, 'AI: Toggle inline suggestions')
-
-            plugin.setup {
-                keymaps = {
-                    clear_suggestion = '<C-c>',
-                },
-                log_level = 'off',
+                display = { chat = { intro_message = 'Press ? for options' } },
             }
         end,
     },
