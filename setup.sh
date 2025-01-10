@@ -207,4 +207,4 @@ echo "Adding new binaries PATH..."
 
 path "$HOME/.local/bin"
 
-echo "Setup complete!"
+echo "Setup complete! 🥳"
