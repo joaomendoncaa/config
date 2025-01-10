@@ -196,6 +196,7 @@ symlink "$HOME/.config/atuin" "$CONFIG_SOURCE/dotfiles/atuin"
 symlink "$HOME/.gitconfig" "$CONFIG_SOURCE/dotfiles/git/.gitconfig"
 symlink "$HOME/.bashrc" "$CONFIG_SOURCE/dotfiles/bash/.bashrc"
 symlink "$HOME/biome.json" "$CONFIG_SOURCE/dotfiles/biome/config.json"
+symlink "/etc/wsl.conf" "$CONFIG_SOURCE/dotfiles/wsl/wsl.conf"
 
 echo "Creating symlinks for binaries..."
 
