@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_SOURCE="$HOME/.config.jmmm.sh"
+
+echo "Pulling in config.jmmm.sh..."
+
+rm -rf $CONFIG_SOURCE
+mkdir -p $CONFIG_SOURCE
+git clone https://github.com/joaomendoncaa/config.git "$CONFIG_SOURCE"
+cd $CONFIG_SOURCE

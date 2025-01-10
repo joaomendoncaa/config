@@ -123,13 +123,6 @@ symlink() {
 	esac
 }
 
-echo "Pulling in config.jmmm.sh..."
-
-rm -rf $CONFIG_SOURCE
-mkdir -p $CONFIG_SOURCE
-git clone https://github.com/joaomendoncaa/config.git "$CONFIG_SOURCE"
-cd $CONFIG_SOURCE
-
 echo "Removing previous nix installation..."
 
 if systemctl is-active --quiet nix-daemon.service; then
@@ -202,8 +195,6 @@ symlink "$HOME/.config/atuin" "$CONFIG_SOURCE/dotfiles/atuin"
 symlink "$HOME/.starship" "$CONFIG_SOURCE/dotfiles/starship/starship.toml"
 symlink "$HOME/.gitconfig" "$CONFIG_SOURCE/dotfiles/git/.gitconfig"
 symlink "$HOME/.bashrc" "$CONFIG_SOURCE/dotfiles/bash/.bashrc"
-symlink "$HOME/.profile" "$CONFIG_SOURCE/dotfiles/bash/.profile"
-symlink "$HOME/.hushlogin" "$CONFIG_SOURCE/dotfiles/bash/.hushlogin"
 symlink "$HOME/biome.json" "$CONFIG_SOURCE/dotfiles/biome/config.json"
 
 echo "Creating symlinks for binaries..."
