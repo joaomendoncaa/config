@@ -148,6 +148,7 @@ sudo rm -rf \
 	~root/.nix-defexpr \
 	/etc/tmpfiles.d/nix-daemon.conf \
 	/etc/profile.d/nix.sh \
+	/etc/zsh/zshrc.backup-before-nix \
 	/etc/zshrc.backup-before-nix \
 	/etc/bashrc.backup-before-nix \
 	/etc/bash.bashrc.backup-before-nix \
@@ -165,7 +166,7 @@ fi
 
 echo "Starting Installation..."
 
-sh <(curl -L https://nixos.org/nix/install) --daemon
+sh <(curl -L https://nixos.org/nix/install) --daemon --yes
 
 if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then
 	. ~/.nix-profile/etc/profile.d/nix.sh
@@ -192,7 +193,7 @@ symlink "$HOME/.config/yazi" "$CONFIG_SOURCE/dotfiles/yazi"
 symlink "$HOME/.config/tmux" "$CONFIG_SOURCE/dotfiles/tmux"
 symlink "$HOME/.config/lazygit" "$CONFIG_SOURCE/dotfiles/lazygit"
 symlink "$HOME/.config/atuin" "$CONFIG_SOURCE/dotfiles/atuin"
-symlink "$HOME/.starship" "$CONFIG_SOURCE/dotfiles/starship/starship.toml"
+symlink "$HOME/.config/starship.toml" "$CONFIG_SOURCE/dotfiles/starship/starship.toml"
 symlink "$HOME/.gitconfig" "$CONFIG_SOURCE/dotfiles/git/.gitconfig"
 symlink "$HOME/.bashrc" "$CONFIG_SOURCE/dotfiles/bash/.bashrc"
 symlink "$HOME/biome.json" "$CONFIG_SOURCE/dotfiles/biome/config.json"
