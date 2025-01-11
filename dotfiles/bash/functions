@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+function gi() { 
+    curl -sL "https://www.toptal.com/developers/gitignore/api/$@"
+}
+
+function add_to_path() {
+    if [[ ":$PATH:" != *":$1:"* ]]; then
+        export PATH="$1:$PATH"
+    fi
+}

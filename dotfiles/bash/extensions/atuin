@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+curl -s https://raw.githubusercontent.com/rcaloras/bash-preexec/master/bash-preexec.sh -o ~/.bash-preexec.sh 2>/dev/null || true
+source ~/.bash-preexec.sh
+
+eval "$(atuin init bash)"

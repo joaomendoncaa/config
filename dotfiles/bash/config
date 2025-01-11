@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+
+source "$BASH_CONFIG_DIR/alias"
+source "$BASH_CONFIG_DIR/functions"
+
+source "$BASH_CONFIG_DIR/extensions/zoxide"
+source "$BASH_CONFIG_DIR/extensions/atuin"
+source "$BASH_CONFIG_DIR/extensions/starship"
+
+export XDG_CONFIG_HOME="$HOME/.config"
+export BUN_INSTALL="$HOME/.bun"
+export NVM_DIR="$HOME/.nvm"
+export EDITOR='nvim'
+export VISUAL='nvim'
+export NVIM_AI=1
+export NVIM_THEME=kanagawa-paper
+
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+HISTCONTROL=ignoreboth
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+shopt -s histappend
+shopt -s checkwinsize
+set -o vi
+bind 'set completion-ignore-case on'
+
+# Load env vars if they exist
+if [ -f "$BASH_CONFIG_DIR/.env" ]; then
+    export $(grep -v '^#' "$BASH_CONFIG_DIR/.env" | xargs)
+fi
+
+# Platform detection and specific settings
+if grep -q "WSL" /proc/version 2>/dev/null; then
+    export BROWSER=wslview
+else
+    export BROWSER=xdg-open
+fi
+
+# Bash completion
+if ! shopt -oq posix; then
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
+fi
+
+add_to_path "/opt/nvim-linux64/bin"
+add_to_path "/mnt/c/Users/joao/AppData/Local/Programs/cursor/resources/app/bin"
+add_to_path "$BUN_INSTALL/bin"
+add_to_path "$HOME/go/bin"
+add_to_path "/home/joao/.local/share/solana/install/active_release/bin"
+export PNPM_HOME="/home/joao/.local/share/pnpm"
+
+case ":$PATH:" in
+    *":$PNPM_HOME:"*) ;;
+    *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
+
