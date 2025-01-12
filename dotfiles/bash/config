@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
+HISTCONTROL=ignoreboth
+HISTSIZE=1000
+HISTFILESIZE=2000
+
+shopt -s histappend
+shopt -s checkwinsize
+set -o vi
+bind 'set completion-ignore-case on'
+
 source "$BASH_CONFIG_DIR/alias"
 source "$BASH_CONFIG_DIR/functions"
-
 source "$BASH_CONFIG_DIR/extensions/zoxide"
 source "$BASH_CONFIG_DIR/extensions/atuin"
 source "$BASH_CONFIG_DIR/extensions/starship"
@@ -20,28 +28,11 @@ export NVIM_THEME=kanagawa-paper
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-
-HISTCONTROL=ignoreboth
-HISTSIZE=1000
-HISTFILESIZE=2000
-
-shopt -s histappend
-shopt -s checkwinsize
-set -o vi
-bind 'set completion-ignore-case on'
-
-# Load env vars if they exist
-if [ -f "$BASH_CONFIG_DIR/.env" ]; then
-    export $(grep -v '^#' "$BASH_CONFIG_DIR/.env" | xargs)
-fi
+[ -f "$BASH_CONFIG_DIR/.env" ] && export $(grep -v '^[[:space:]]*#' "$BASH_CONFIG_DIR/.env" | xargs -0)
 
 add_to_path "/opt/nvim-linux64/bin"
 add_to_path "/mnt/c/Users/joao/AppData/Local/Programs/cursor/resources/app/bin"
 add_to_path "$BUN_INSTALL/bin"
 add_to_path "$HOME/go/bin"
 add_to_path "/home/joao/.local/share/solana/install/active_release/bin"
-
-case ":$PATH:" in
-*":$PNPM_HOME:"*) ;;
-*) export PATH="$PNPM_HOME:$PATH" ;;
-esac
+add_to_path $PNPM_HOME
