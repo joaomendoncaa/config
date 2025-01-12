@@ -18,6 +18,7 @@ export NVIM_THEME=kanagawa-paper
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 
 HISTCONTROL=ignoreboth
 HISTSIZE=1000
@@ -31,13 +32,6 @@ bind 'set completion-ignore-case on'
 # Load env vars if they exist
 if [ -f "$BASH_CONFIG_DIR/.env" ]; then
     export $(grep -v '^#' "$BASH_CONFIG_DIR/.env" | xargs)
-fi
-
-# Platform detection and specific settings
-if grep -q "WSL" /proc/version 2>/dev/null; then
-    export BROWSER=wslview
-else
-    export BROWSER=xdg-open
 fi
 
 # Bash completion
@@ -57,9 +51,6 @@ add_to_path "/home/joao/.local/share/solana/install/active_release/bin"
 export PNPM_HOME="/home/joao/.local/share/pnpm"
 
 case ":$PATH:" in
-    *":$PNPM_HOME:"*) ;;
-    *) export PATH="$PNPM_HOME:$PATH" ;;
+*":$PNPM_HOME:"*) ;;
+*) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
-
