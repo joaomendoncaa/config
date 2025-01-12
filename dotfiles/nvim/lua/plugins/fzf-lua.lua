@@ -18,7 +18,7 @@ return {
 
             local function search_files_config()
                 fzf.files {
-                    cwd = os.getenv 'HOME' .. '/lab/config',
+                    cwd = os.getenv 'HOME' .. '/.config.jmmm.sh',
                 }
             end
 
