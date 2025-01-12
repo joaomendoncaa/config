@@ -10,6 +10,7 @@ source "$BASH_CONFIG_DIR/extensions/starship"
 export XDG_CONFIG_HOME="$HOME/.config"
 export BUN_INSTALL="$HOME/.bun"
 export NVM_DIR="$HOME/.nvm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 export EDITOR='nvim'
 export VISUAL='nvim'
 export NVIM_AI=1
@@ -34,21 +35,11 @@ if [ -f "$BASH_CONFIG_DIR/.env" ]; then
     export $(grep -v '^#' "$BASH_CONFIG_DIR/.env" | xargs)
 fi
 
-# Bash completion
-if ! shopt -oq posix; then
-    if [ -f /usr/share/bash-completion/bash_completion ]; then
-        . /usr/share/bash-completion/bash_completion
-    elif [ -f /etc/bash_completion ]; then
-        . /etc/bash_completion
-    fi
-fi
-
 add_to_path "/opt/nvim-linux64/bin"
 add_to_path "/mnt/c/Users/joao/AppData/Local/Programs/cursor/resources/app/bin"
 add_to_path "$BUN_INSTALL/bin"
 add_to_path "$HOME/go/bin"
 add_to_path "/home/joao/.local/share/solana/install/active_release/bin"
-export PNPM_HOME="/home/joao/.local/share/pnpm"
 
 case ":$PATH:" in
 *":$PNPM_HOME:"*) ;;
