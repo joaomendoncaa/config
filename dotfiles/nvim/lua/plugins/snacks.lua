@@ -11,12 +11,6 @@ return {
         local plugin = require 'snacks'
         local key = vim.keymap.set
 
-        key('n', '<leader>s', function()
-            plugin.scratch()
-        end, { desc = 'Toggle Scratch Buffer' })
-        key('n', '<leader>S', function()
-            plugin.scratch.select()
-        end, { desc = 'Select Scratch Buffer' })
         key('n', '<leader>n', function()
             plugin.notifier.show_history()
         end, { desc = 'Notification History' })
