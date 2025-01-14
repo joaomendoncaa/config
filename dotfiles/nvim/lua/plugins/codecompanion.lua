@@ -1,51 +1,6 @@
-local key = function(mode, lhs, rhs, opts)
-    local defaults = { silent = true, noremap = true }
-    if type(opts) == 'string' then
-        defaults.desc = opts
-    end
-    opts = type(opts) == 'table' and opts or {}
-    vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('force', defaults, opts))
-end
+local progress_handle = nil
 
 return {
-    {
-        -- The official Neovim plugin for Supermaven.
-        -- SEE: https://github.com/supermaven-inc/supermaven-nvim
-        'supermaven-inc/supermaven-nvim',
-
-        event = 'VeryLazy',
-        enabled = require('utils.flags').isOne(vim.env.NVIM_AI),
-
-        config = function()
-            local plugin = require 'supermaven-nvim'
-            local api = require 'supermaven-nvim.api'
-            local commands = require 'utils.commands'
-            local strings = require 'utils.strings'
-
-            local function toggle()
-                local is_on = api.is_running()
-
-                api.toggle()
-
-                vim.api.nvim_set_hl(0, 'T', { fg = is_on and '#ff0000' or '#00ff00' })
-
-                strings.echo(strings.truncateChunks {
-                    { is_on and '[OFF]' or '[ON]', 'T' },
-                    { ' ' },
-                    { 'AI suggestions' },
-                })
-            end
-
-            commands.user('ToggleAISuggestions', toggle)
-            key('n', '<leader>at', toggle, 'AI: Toggle inline suggestions')
-
-            plugin.setup {
-                keymaps = { clear_suggestion = '<C-c>' },
-                log_level = 'off',
-            }
-        end,
-    },
-
     {
         -- ✨ AI-powered coding, seamlessly in Neovim. Supports Anthropic, Copilot, Gemini, Ollama, OpenAI and xAI LLMs.
         -- SEE: https://github.com/olimorris/codecompanion.nvim
@@ -55,6 +10,7 @@ return {
 
         dependencies = {
             'nvim-lua/plenary.nvim',
+            'j-hui/fidget.nvim',
             'nvim-treesitter/nvim-treesitter',
             'saghen/blink.cmp',
         },
@@ -63,7 +19,45 @@ return {
             --- @module  'codecompanion'
             local plugin = require 'codecompanion'
             local commands = require 'utils.commands'
-            local a = require('utils.functions').a
+            local progress = require 'fidget.progress'
+            local f = require('utils.functions').f
+
+            local handle_request_cb = function(request)
+                local is_request_started = request.match == 'CodeCompanionRequestStarted'
+                local is_request_finished = request.match == 'CodeCompanionRequestFinished'
+
+                if not is_request_started and not is_request_finished then
+                    return
+                end
+
+                if request.match == 'CodeCompanionRequestStarted' then
+                    progress_handle = progress.handle.create {
+                        title = '🤖',
+                        message = "Gennin'",
+                        lsp_client = { name = 'Anthropic' },
+                    }
+                    return
+                end
+
+                if request.match == 'CodeCompanionRequestFinished' then
+                    if not progress_handle then
+                        return
+                    end
+
+                    progress_handle:finish()
+                    progress_handle = nil
+                    return
+                end
+            end
+
+            local key = function(mode, lhs, rhs, opts)
+                local defaults = { silent = true, noremap = true }
+                if type(opts) == 'string' then
+                    defaults.desc = opts
+                end
+                opts = type(opts) == 'table' and opts or {}
+                vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('force', defaults, opts))
+            end
 
             local close_if_last_window = function()
                 local current_win = vim.api.nvim_get_current_win()
@@ -108,16 +102,39 @@ return {
                 end
             end
 
+            local hide_chat = function()
+                if vim.bo.filetype ~= 'codecompanion' then
+                    return
+                end
+
+                local chat = plugin.last_chat()
+
+                if not chat then
+                    return
+                end
+
+                if chat.ui:is_visible() then
+                    return chat.ui:hide()
+                end
+            end
+
+            key('n', 'q', hide_chat, { desc = 'AI: Hide chat buffer', noremap = true, silent = true })
             key({ 'n', 'v' }, '<leader>aa', plugin.toggle, 'AI: Toggle chat buffer')
-            key({ 'n', 'v' }, '<leader>al', a(plugin.prompt, 'lsp'), 'AI: Explain LSP diagnostics')
-            key({ 'n', 'v' }, '<leader>ai', a(plugin.prompt, 'inline'), 'AI: Inline')
-            key({ 'v' }, '<leader>ad', a(plugin.prompt, 'docstrings'), 'AI: Add docstrings')
-            key({ 'v' }, '<leader>ae', a(plugin.prompt, 'explain'), 'AI: Explain snippet')
-            key({ 'v' }, '<leader>af', a(plugin.prompt, 'fix'), 'AI: Fix snippet')
+            key({ 'n', 'v' }, '<leader>al', f(plugin.prompt, 'lsp'), 'AI: Explain LSP diagnostics')
+            key({ 'n', 'v' }, '<leader>ai', f(plugin.prompt, 'inline'), 'AI: Inline')
+            key({ 'v' }, '<leader>ad', f(plugin.prompt, 'docstrings'), 'AI: Add docstrings')
+            key({ 'v' }, '<leader>ae', f(plugin.prompt, 'explain'), 'AI: Explain snippet')
+            key({ 'v' }, '<leader>af', f(plugin.prompt, 'fix'), 'AI: Fix snippet')
 
             commands.auto('WinEnter', {
                 group = commands.augroup 'CodeCompanionCloseIfLastWindow',
                 callback = close_if_last_window,
+            })
+
+            commands.auto('User', {
+                pattern = 'CodeCompanionRequest*',
+                group = commands.augroup 'CodeCompanionHooks',
+                callback = handle_request_cb,
             })
 
             plugin.setup {
@@ -168,14 +185,6 @@ Add appropriate documentation to this code:
                 strategies = {
                     chat = {
                         adapter = 'anthropic',
-                        keymaps = {
-                            hide = {
-                                modes = { n = 'q' },
-                                callback = function(_)
-                                    vim.cmd 'CodeCompanionChat Toggle'
-                                end,
-                            },
-                        },
                         slash_commands = {
                             buffer = {
                                 callback = 'strategies.chat.slash_commands.buffer',
@@ -185,6 +194,16 @@ Add appropriate documentation to this code:
                             file = { opts = { provider = 'fzf_lua' } },
                             help = { opts = { provider = 'fzf_lua' } },
                             symbols = { opts = { provider = 'fzf_lua' } },
+                        },
+                        keymaps = {
+                            stop = {
+                                modes = {
+                                    n = 'c',
+                                },
+                                index = 5,
+                                callback = 'keymaps.stop',
+                                description = 'Stop Request',
+                            },
                         },
                     },
                     inline = {
@@ -199,7 +218,15 @@ Add appropriate documentation to this code:
                     end,
                 },
 
-                display = { chat = { intro_message = 'Press ? for options' } },
+                display = {
+                    chat = {
+                        intro_message = 'Press ? for options',
+                    },
+                },
+
+                opts = {
+                    log_level = 'INFO',
+                },
             }
         end,
     },

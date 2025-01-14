@@ -6,7 +6,7 @@ local M = {}
 --- @param fn function The function to be called
 --- @param ... any Arguments to pass to fn when invoked
 --- @return function New function that will call fn with the bound arguments
-function M.a(fn, ...)
+function M.f(fn, ...)
     local args = { ... }
     return function()
         return fn(unpack(args))
