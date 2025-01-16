@@ -1,5 +1,3 @@
-local progress_handle = nil
-
 return {
     {
         -- ✨ AI-powered coding, seamlessly in Neovim. Supports Anthropic, Copilot, Gemini, Ollama, OpenAI and xAI LLMs.
@@ -20,6 +18,8 @@ return {
             local plugin = require 'codecompanion'
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
+            local progress_handle = nil
+
             local f = require('utils.functions').f
 
             local handle_request_cb = function(request)
@@ -30,7 +30,11 @@ return {
                     return
                 end
 
-                if request.match == 'CodeCompanionRequestStarted' then
+                if not progress_handle then
+                    progress_handle = nil
+                end
+
+                if is_request_started then
                     progress_handle = progress.handle.create {
                         title = '🤖',
                         message = "Gennin'",
@@ -39,7 +43,7 @@ return {
                     return
                 end
 
-                if request.match == 'CodeCompanionRequestFinished' then
+                if is_request_finished then
                     if not progress_handle then
                         return
                     end

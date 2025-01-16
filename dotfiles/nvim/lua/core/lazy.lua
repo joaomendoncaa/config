@@ -7,6 +7,7 @@ local lazyopts = {
     change_detection = { notify = false },
     performance = {
         cache = { enabled = true },
+        reset_packpath = true,
         rtp = {
             disabled_plugins = {
                 'netrwPlugin',

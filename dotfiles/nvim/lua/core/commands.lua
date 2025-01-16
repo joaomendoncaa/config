@@ -1,6 +1,5 @@
 local strings = require 'utils.strings'
 local commands = require 'utils.commands'
-local themes = require 'utils.themes'
 
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
@@ -59,10 +58,6 @@ local auto_highlight_yank = function()
     vim.highlight.on_yank()
 end
 
-local auto_colorscheme = function()
-    themes.update()
-end
-
 local replace_content_with_clipboard = function()
     vim.cmd 'norm! GVggp'
     vim.cmd 'w'
@@ -109,10 +104,6 @@ commands.auto({ 'TextYankPost' }, {
 commands.auto({ 'User' }, {
     pattern = 'LazyVimStarted',
     callback = auto_greeter,
-})
-
-commands.auto({ 'ColorScheme', 'UIEnter' }, {
-    callback = auto_colorscheme,
 })
 
 commands.user('Touch', touch_command, {
