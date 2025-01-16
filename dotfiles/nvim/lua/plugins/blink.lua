@@ -3,6 +3,8 @@ return {
     --SEE: https://github.com/Saghen/blink.cmp
     'saghen/blink.cmp',
 
+    event = 'VeryLazy',
+
     dependencies = {
         'moyiz/blink-emoji.nvim',
         'rafamadriz/friendly-snippets',

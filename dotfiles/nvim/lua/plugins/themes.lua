@@ -50,8 +50,8 @@ commands.auto({ 'ColorScheme', 'UIEnter' }, {
 
         local cb = function(t)
             vim.opt.background = 'dark'
-            vim.cmd 'hi clear MsgArea'
             vim.cmd.colorscheme(t)
+            vim.cmd 'hi clear MsgArea'
 
             highlights {
                 SignColumn = { bg = 'none' },

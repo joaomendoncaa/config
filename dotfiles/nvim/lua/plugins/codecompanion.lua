@@ -5,6 +5,7 @@ return {
         'olimorris/codecompanion.nvim',
 
         enabled = require('utils.flags').isOne(vim.env.NVIM_AI),
+        event = 'VeryLazy',
 
         dependencies = {
             'nvim-lua/plenary.nvim',

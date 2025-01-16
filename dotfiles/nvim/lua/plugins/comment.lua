@@ -3,6 +3,8 @@ return {
     -- SEE: https://github.com/numToStr/Comment.nvim
     'numToStr/Comment.nvim',
 
+    event = 'VeryLazy',
+
     dependencies = {
         'nvim-treesitter/nvim-treesitter',
         'JoosepAlviste/nvim-ts-context-commentstring',

@@ -4,7 +4,12 @@ return {
         -- SEE: https://github.com/ibhagwan/fzf-lua
         'ibhagwan/fzf-lua',
 
-        dependencies = { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
+        event = 'VeryLazy',
+
+        dependencies = {
+            'nvim-tree/nvim-web-devicons',
+            enabled = vim.g.NVIM_NERD_FONT,
+        },
 
         config = function()
             local fzf = require 'fzf-lua'
