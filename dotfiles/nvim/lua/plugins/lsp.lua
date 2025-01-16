@@ -84,8 +84,6 @@ return {
     },
 
     config = function()
-        -- @module fzf-lua
-        local fzf = require 'fzf-lua'
         local commands = require 'utils.commands'
 
         local servers = {
@@ -221,13 +219,6 @@ return {
             local has_highlights = client and client.server_capabilities.documentHighlightProvider
             local has_inlay_hints = client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint)
 
-            keymap('n', 'gd', fzf.lsp_definitions, { desc = '[G]oto [D]efinition.' })
-            keymap('n', 'gD', vim.lsp.buf.declaration, { desc = '[G]oto [D]eclaration' })
-            keymap('n', 'gI', fzf.lsp_implementations, { desc = '[G]oto [I]mplementation.' })
-            keymap('n', 'gr', fzf.lsp_references, { desc = '[G]oto [R]eferences.' })
-            keymap('n', '<leader>D', fzf.lsp_typedefs, { desc = 'Type [D]efinition.' })
-            keymap('n', '<leader>ds', fzf.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
-            keymap('n', '<leader>sw', fzf.lsp_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
             keymap({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
             keymap({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, { desc = '[L]sp [R]estart.' })
             keymap({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, { desc = '[L]sp Start.' })

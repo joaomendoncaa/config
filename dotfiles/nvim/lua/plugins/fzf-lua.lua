@@ -7,7 +7,6 @@ return {
         dependencies = { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
 
         config = function()
-            -- @module fzf-lua
             local fzf = require 'fzf-lua'
 
             local keymap = vim.keymap.set
@@ -54,6 +53,13 @@ return {
             keymap('n', '<leader>sc', search_files_config, { desc = '[S]earch [S]elected directory files.' })
             keymap('n', '<leader>se', search_enviroment, { desc = '[S]earch [E]nvironment Variables.' })
             keymap('n', '<leader>st', search_themes, { desc = '[S]earch [T]heme.' })
+            keymap('n', 'gd', fzf.lsp_definitions, { desc = '[G]oto [D]efinition.' })
+            keymap('n', 'gD', vim.lsp.buf.declaration, { desc = '[G]oto [D]eclaration' })
+            keymap('n', 'gI', fzf.lsp_implementations, { desc = '[G]oto [I]mplementation.' })
+            keymap('n', 'gr', fzf.lsp_references, { desc = '[G]oto [R]eferences.' })
+            keymap('n', '<leader>D', fzf.lsp_typedefs, { desc = 'Type [D]efinition.' })
+            keymap('n', '<leader>ds', fzf.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
+            keymap('n', '<leader>sw', fzf.lsp_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
 
             fzf.setup {
                 file_ignore_patterns = { 'node_modules' },
