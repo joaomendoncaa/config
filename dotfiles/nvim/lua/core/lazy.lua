@@ -16,6 +16,8 @@ local lazyopts = {
                 'tohtml',
                 'tutor',
                 'zipPlugin',
+                'spellfile',
+                'rplugin',
             },
         },
     },

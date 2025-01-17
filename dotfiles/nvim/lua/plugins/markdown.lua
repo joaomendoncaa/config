@@ -40,6 +40,8 @@ return {
         -- SEE: https://github.com/MeanderingProgrammer/render-markdown.nvim
         'MeanderingProgrammer/render-markdown.nvim',
 
+        event = 'VeryLazy',
+        lazy = true,
         ft = { 'markdown', 'codecompanion', 'sourcermarkdown' },
         dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' },
 
