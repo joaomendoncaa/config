@@ -1,6 +1,6 @@
 return {
     -- 🍿 A collection of small QoL plugins for Neovim.
-    -- SEE: https://github.com/folke/lazy.nvim
+    -- SEE: https://github.com/folke/snacks.nvim
 
     'folke/snacks.nvim',
 
@@ -9,51 +9,31 @@ return {
 
     config = function()
         local plugin = require 'snacks'
-        local key = vim.keymap.set
+        local key = require('utils.functions').key
+        local f = require('utils.functions').f
 
-        key('n', '<leader>n', function()
-            plugin.notifier.show_history()
-        end, { desc = 'Notification History' })
-        key('n', '<leader>bd', function()
-            plugin.bufdelete()
-        end, { desc = 'Delete Buffer' })
-        key('n', '<leader>cR', function()
-            plugin.rename.rename_file()
-        end, { desc = 'Rename File' })
-        key('n', '<leader>gb', function()
-            plugin.gitbrowse()
-        end, { desc = 'Git Browse' })
-        key('n', '<leader>gB', function()
-            plugin.git.blame_line()
-        end, { desc = 'Git Blame Line' })
-        key('n', '<leader>gf', function()
-            plugin.lazygit.log_file()
-        end, { desc = 'Lazygit Current File History' })
-        key('n', '<leader>gg', function()
-            plugin.lazygit()
-        end, { desc = 'Lazygit' })
-        key('n', '<leader>gl', function()
-            plugin.lazygit.log()
-        end, { desc = 'Lazygit Log (cwd)' })
-        key('n', '<leader>un', function()
-            plugin.notifier.hide()
-        end, { desc = 'Dismiss All Notifications' })
-        key('n', '<c-/>', function()
-            plugin.terminal()
-        end, { desc = 'Toggle Terminal' })
-        key('n', ']]', function()
-            plugin.words.jump(vim.v.count1)
-        end, { desc = 'Next Reference' })
-        key('n', '[[', function()
-            plugin.words.jump(-vim.v.count1)
-        end, { desc = 'Prev Reference' })
-        key('t', '<c-/>', '<cmd>lua require("snacks").terminal()<CR>', { desc = 'Toggle Terminal' })
-        key(
-            'n',
-            '<leader>N',
-            ':lua require("snacks").win { file = vim.api.nvim_get_runtime_file("doc/news.txt", false)[1], width = 0.6, height = 0.6, wo = { spell = false, wrap = false, signcolumn = "yes", statuscolumn = " ", conceallevel = 3 }, }<CR>',
-            { desc = 'Neovim News' }
-        )
+        local view_news = function()
+            plugin.win {
+                file = vim.api.nvim_get_runtime_file('doc/news.txt', false)[1],
+                width = 0.6,
+                height = 0.6,
+                wo = { spell = false, wrap = false, signcolumn = 'yes', statuscolumn = ' ', conceallevel = 3 },
+                border = 'rounded',
+            }
+        end
+
+        key('n', '<leader>nn', plugin.notifier.show_history, 'Notification History')
+        key('n', '<leader>nd', plugin.notifier.hide, 'Dismiss All Notifications')
+        key('n', '<leader>bd', plugin.bufdelete.delete, 'Delete Buffer')
+        key('n', '<leader>cR', plugin.rename.rename_file, 'Rename File')
+        key('n', '<leader>gb', plugin.gitbrowse.open, 'Git Browse')
+        key('n', '<leader>gB', plugin.git.blame_line, 'Git Blame Line')
+        key('n', '<leader>gf', plugin.lazygit.log_file, 'Lazygit Current File History')
+        key('n', '<leader>gg', plugin.lazygit.open, 'Lazygit')
+        key('n', '<leader>gl', plugin.lazygit.log, 'Lazygit Log (cwd)')
+        key('n', ']]', f(plugin.words.jump, vim.v.count1), 'Next Reference')
+        key('n', '[[', f(plugin.words.jump, -vim.v.count1), 'Prev Reference')
+        key('n', '<leader>N', view_news, 'Neovim News')
 
         plugin.setup {
             notifier = {

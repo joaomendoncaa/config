@@ -1,16 +1,19 @@
 local M = {}
 
---- Creates a function that calls fn with the provided arguments when invoked
---- Useful for getting a reference to a function with pre-bound arguments
----
---- @param fn function The function to be called
---- @param ... any Arguments to pass to fn when invoked
---- @return function New function that will call fn with the bound arguments
 function M.f(fn, ...)
     local args = { ... }
     return function()
         return fn(unpack(args))
     end
+end
+
+function M.key(mode, lhs, rhs, opts)
+    local defaults = { silent = true, noremap = true }
+    if type(opts) == 'string' then
+        defaults.desc = opts
+    end
+    opts = type(opts) == 'table' and opts or {}
+    vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('force', defaults, opts))
 end
 
 return M

@@ -12,9 +12,9 @@ return {
         },
 
         config = function()
+            ---@module 'fzf-lua'
             local fzf = require 'fzf-lua'
-
-            local keymap = vim.keymap.set
+            local key = require('utils.functions').key
 
             local function search_themes()
                 fzf.colorschemes { winopts = { height = 0.33, width = 0.33 } }
@@ -46,25 +46,68 @@ return {
                 fzf.fzf_exec(env_table)
             end
 
-            keymap({ 'n', 'v' }, '<leader>sp', fzf.complete_path, { desc = '[S]earch [P]ath.' })
-            keymap('n', '<leader>sg', fzf.live_grep, { desc = '[S]earch by [G]rep.' })
-            keymap('n', '<leader>sf', fzf.builtin, { desc = '[S]earch [F]zf Builtins.' })
-            keymap('n', '<leader>sk', fzf.keymaps, { desc = '[S]earch [K]eymaps.' })
-            keymap('n', '<leader>sh', fzf.helptags, { desc = '[S]earch [H]elp.' })
-            keymap('n', '<leader>sH', fzf.highlights, { desc = '[S]earch [H]ighlights.' })
-            keymap('n', '<leader>sb', fzf.buffers, { desc = '[S]earch open [B]uffers.' })
-            keymap('n', '<leader>ss', fzf.files, { desc = '[S]earch [S]elected CWD directory files.' })
-            keymap('n', '<leader>sS', search_spelling, { desc = '[S]earch [S]pelling suggestions.' })
-            keymap('n', '<leader>sc', search_files_config, { desc = '[S]earch [S]elected directory files.' })
-            keymap('n', '<leader>se', search_enviroment, { desc = '[S]earch [E]nvironment Variables.' })
-            keymap('n', '<leader>st', search_themes, { desc = '[S]earch [T]heme.' })
-            keymap('n', 'gd', fzf.lsp_definitions, { desc = '[G]oto [D]efinition.' })
-            keymap('n', 'gD', vim.lsp.buf.declaration, { desc = '[G]oto [D]eclaration' })
-            keymap('n', 'gI', fzf.lsp_implementations, { desc = '[G]oto [I]mplementation.' })
-            keymap('n', 'gr', fzf.lsp_references, { desc = '[G]oto [R]eferences.' })
-            keymap('n', '<leader>D', fzf.lsp_typedefs, { desc = 'Type [D]efinition.' })
-            keymap('n', '<leader>ds', fzf.lsp_document_symbols, { desc = '[D]ocument [S]ymbols.' })
-            keymap('n', '<leader>sw', fzf.lsp_workspace_symbols, { desc = '[W]orkspace [S]ymbols.' })
+            local function list_lsp_references()
+                local clients = vim.lsp.get_clients { bufnr = 0 }
+                if #clients == 0 then
+                    vim.notify('No LSP client attached', vim.log.levels.ERROR)
+                    return
+                end
+
+                local params = vim.lsp.util.make_position_params()
+                params.context = { includeDeclaration = true }
+                local results = vim.lsp.buf_request_sync(0, 'textDocument/references', params, 1000)
+                if not results then
+                    vim.notify('No LSP results received (timeout)', vim.log.levels.WARN)
+                    return
+                end
+
+                local refs = {}
+                for client_id, result in pairs(results) do
+                    if result.error then
+                        vim.notify(string.format('LSP Error from client %d: %s', client_id, vim.inspect(result.error)), vim.log.levels.ERROR)
+                        return
+                    end
+
+                    if result.result then
+                        for _, location in ipairs(result.result) do
+                            table.insert(refs, location)
+                        end
+                    end
+                end
+
+                if #refs == 0 then
+                    vim.notify('No references found', vim.log.levels.INFO)
+                    return
+                end
+
+                if #refs == 1 then
+                    vim.lsp.util.jump_to_location(refs[1])
+                    return
+                end
+
+                fzf.lsp_references()
+            end
+
+            key({ 'n', 'v' }, '<leader>sp', fzf.complete_path, '[S]earch [P]ath')
+            key('n', '<leader>sg', fzf.live_grep, '[S]earch by [G]rep')
+            key('n', '<leader>sf', fzf.builtin, '[S]earch [F]zf Builtins')
+            key('n', '<leader>sk', fzf.keymaps, '[S]earch [K]eymaps')
+            key('n', '<leader>sh', fzf.helptags, '[S]earch [H]elp')
+            key('n', '<leader>sH', fzf.highlights, '[S]earch [H]ighlights')
+            key('n', '<leader>sb', fzf.buffers, '[S]earch open [B]uffers')
+            key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
+            key('n', '<leader>sS', search_spelling, '[S]earch [S]pelling suggestions')
+            key('n', '<leader>sc', search_files_config, '[S]earch [S]elected directory files')
+            key('n', '<leader>se', search_enviroment, '[S]earch [E]nvironment Variables')
+            key('n', '<leader>st', search_themes, '[S]earch [T]heme')
+            key('n', 'gr', list_lsp_references, '[G]oto [R]eferences')
+            key('n', 'gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
+            key('n', 'gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+            key('n', 'gI', fzf.lsp_implementations, '[G]oto [I]mplementation')
+            key('n', 'gf', fzf.lsp_finder, '[G]oto [F]ind all locations')
+            key('n', '<leader>D', fzf.lsp_typedefs, 'Type [D]efinition')
+            key('n', '<leader>ds', fzf.lsp_document_symbols, '[D]ocument [S]ymbols')
+            key('n', '<leader>sw', fzf.lsp_workspace_symbols, '[W]orkspace [S]ymbols')
 
             fzf.setup {
                 file_ignore_patterns = { 'node_modules' },

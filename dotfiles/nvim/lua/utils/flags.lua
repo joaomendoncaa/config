@@ -1,15 +1,18 @@
 local M = {}
 
----Checks if the given value is 1
----
----@param ref any The value to check.
----@return boolean True if the value is 1, false otherwise.
-function M.isOne(ref)
-    if tonumber(ref or 0) ~= 1 then
-        return false
+function M.isTrue(ref)
+    if ref == true then
+        return true
     end
 
-    return true
+    local str = tostring(ref)
+    str = string.lower(str)
+
+    if str == 'true' or str == '1' then
+        return true
+    end
+
+    return false
 end
 
 return M

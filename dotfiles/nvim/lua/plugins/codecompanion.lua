@@ -4,7 +4,7 @@ return {
         -- SEE: https://github.com/olimorris/codecompanion.nvim
         'olimorris/codecompanion.nvim',
 
-        enabled = require('utils.flags').isOne(vim.env.NVIM_AI),
+        enabled = require('utils.flags').isTrue(vim.env.NVIM_AI),
         event = 'VeryLazy',
 
         dependencies = {
@@ -15,13 +15,13 @@ return {
         },
 
         config = function()
-            --- @module  'codecompanion'
             local plugin = require 'codecompanion'
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
+            local f = require('utils.functions').f
+            local key = require('utils.functions').key
             local progress_handle = nil
 
-            local f = require('utils.functions').f
 
             local handle_request_cb = function(request)
                 local is_request_started = request.match == 'CodeCompanionRequestStarted'
@@ -53,15 +53,6 @@ return {
                     progress_handle = nil
                     return
                 end
-            end
-
-            local key = function(mode, lhs, rhs, opts)
-                local defaults = { silent = true, noremap = true }
-                if type(opts) == 'string' then
-                    defaults.desc = opts
-                end
-                opts = type(opts) == 'table' and opts or {}
-                vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('force', defaults, opts))
             end
 
             local close_if_last_window = function()
@@ -107,8 +98,9 @@ return {
                 end
             end
 
-            local hide_chat = function()
+            local hide_chat_or_macro = function()
                 if vim.bo.filetype ~= 'codecompanion' then
+                    vim.api.nvim_feedkeys('q', 'n', false)
                     return
                 end
 
@@ -123,7 +115,7 @@ return {
                 end
             end
 
-            key('n', 'q', hide_chat, { desc = 'AI: Hide chat buffer', noremap = true, silent = true })
+            key('n', 'q', hide_chat_or_macro, { desc = 'AI: Hide chat buffer, or record macro', noremap = true, silent = true })
             key({ 'n', 'v' }, '<leader>aa', plugin.toggle, 'AI: Toggle chat buffer')
             key({ 'n', 'v' }, '<leader>al', f(plugin.prompt, 'lsp'), 'AI: Explain LSP diagnostics')
             key({ 'n', 'v' }, '<leader>ai', f(plugin.prompt, 'inline'), 'AI: Inline')

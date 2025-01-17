@@ -1,5 +1,6 @@
 local strings = require 'utils.strings'
 local commands = require 'utils.commands'
+local flags = require 'utils.flags'
 
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
@@ -64,7 +65,7 @@ local replace_content_with_clipboard = function()
 end
 
 local auto_greeter = function()
-    if not require('utils.flags').isOne(vim.env.NVIM_PERF) then
+    if not flags.isTrue(vim.env.NVIM_PERF) then
         print(string.format('󱐋 %s', vim.fn.getcwd()))
         return
     end
@@ -97,16 +98,8 @@ commands.user('BufferMessages', buffer_messages)
 
 commands.user('ReplaceContentWithClipboard', replace_content_with_clipboard)
 
-commands.auto({ 'TextYankPost' }, {
-    callback = auto_highlight_yank,
-})
+commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
 
-commands.auto({ 'User' }, {
-    pattern = 'LazyVimStarted',
-    callback = auto_greeter,
-})
+commands.auto({ 'User' }, { pattern = 'LazyVimStarted', callback = auto_greeter })
 
-commands.user('Touch', touch_command, {
-    nargs = '+',
-    complete = touch_complete,
-})
+commands.user('Touch', touch_command, { nargs = '+', complete = touch_complete })

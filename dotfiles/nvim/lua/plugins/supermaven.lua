@@ -5,7 +5,7 @@ return {
         'supermaven-inc/supermaven-nvim',
 
         event = 'VeryLazy',
-        enabled = require('utils.flags').isOne(vim.env.NVIM_AI),
+        enabled = require('utils.flags').isTrue(vim.env.NVIM_AI),
 
         config = function()
             local plugin = require 'supermaven-nvim'
