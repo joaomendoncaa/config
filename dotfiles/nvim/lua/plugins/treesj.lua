@@ -9,11 +9,7 @@ return {
             "<CMD>lua require('treesj').toggle()<CR>",
             { desc = 'Toggle block split.' },
         },
-        {
-            '<leader>m',
-            "<CMD>lua require('treesj').toggle { split = { recursive = true } }<CR>",
-            { desc = 'Toggle block split recursively.' },
-        },
+        { '<leader>m', "<CMD>lua require('treesj').toggle { split = { recursive = true } }<CR>", { desc = 'Toggle block split recursively.' } },
     },
 
     dependencies = { 'nvim-treesitter/nvim-treesitter' },
