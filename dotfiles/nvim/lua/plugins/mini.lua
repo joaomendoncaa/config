@@ -2,6 +2,8 @@ return {
     -- SEE: https://github.com/echasnovski/mini.nvim
     'echasnovski/mini.nvim',
 
+    event = 'VeryLazy',
+
     config = function()
         local key = require('utils.functions').key
         local commands = require 'utils.commands'

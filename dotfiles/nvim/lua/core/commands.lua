@@ -65,29 +65,19 @@ local replace_content_with_clipboard = function()
 end
 
 local auto_greeter = function()
-    if not flags.isTrue(vim.env.NVIM_PERF) then
-        print(string.format('󱐋 %s', vim.fn.getcwd()))
-        return
-    end
-
-    local stats = require('lazy').stats()
-    local title = string.format('%d/%d plugins loaded in %d ms', stats.loaded, stats.count, stats.startuptime)
-    local subtitle =
-        string.format('[ LazyStart = %d ms | LazyDone = %d ms | UIEnter = %d ms ]', stats.times.LazyStart, stats.times.LazyDone, stats.times.UIEnter)
-
-    local perf_log = strings.truncateChunks({
-        { '󱐋', '@function' },
+    local greeter = strings.truncateChunks({
+        { '󱐋', 'CursorLineNr' },
         { ' ' },
-        { title },
+        { vim.fn.getcwd() },
         { ' ' },
-        { subtitle, '@comment' },
+        { string.format('~ %d ms', require('lazy').stats().startuptime), 'comment' },
     }, {
         length = vim.o.columns / 2,
         separator = '...',
         separator_hg = '@comment',
     })
 
-    vim.api.nvim_echo(perf_log, true, {})
+    vim.api.nvim_echo(greeter, true, {})
 end
 
 commands.user('ToggleWrap', toggle_wrap)

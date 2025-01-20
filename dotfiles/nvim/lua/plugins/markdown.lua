@@ -133,7 +133,7 @@ return {
             vim.api.nvim_create_autocmd('VimLeavePre', {
                 desc = 'Cleanup temporary CSS file.',
 
-                group = vim.api.nvim_create_augroup('mkdp-cleanup-css', { clear = true }),
+                group = vim.api.nvim_create_augroup('MkdpCleanupCss', { clear = true }),
 
                 callback = function(_)
                     os.remove(path)

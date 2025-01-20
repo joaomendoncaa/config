@@ -3,7 +3,8 @@ return {
     -- SEE: https://github.com/nvim-treesitter/nvim-treesitter
     'nvim-treesitter/nvim-treesitter',
 
-    event = { 'VeryLazy', 'BufEnter' },
+    event = { 'BufReadPost', 'BufNewFile' },
+    cmd = { 'TSInstall', 'TSBufEnable', 'TSBufDisable', 'TSModuleInfo' },
     build = ':TSUpdate',
     main = 'nvim-treesitter.configs',
     opts = {

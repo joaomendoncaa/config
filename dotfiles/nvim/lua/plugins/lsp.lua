@@ -229,7 +229,7 @@ return {
             keymap('n', '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
 
             if has_highlights then
-                local highlight_augroup = commands.augroup('lsp-highlight', { clear = false })
+                local highlight_augroup = commands.augroup('LspHighlight', { clear = false })
 
                 commands.auto({ 'CursorHold', 'CursorHoldI' }, {
                     buffer = buffer,
@@ -244,7 +244,7 @@ return {
                 })
 
                 commands.auto('LspDetach', {
-                    group = commands.augroup('lsp-detach', { clear = true }),
+                    group = commands.augroup('LspDetach', { clear = true }),
                     callback = function(event2)
                         vim.lsp.buf.clear_references()
                         vim.api.nvim_clear_autocmds { group = 'lsp-highlight', buffer = event2.buf }
@@ -258,7 +258,7 @@ return {
         end
 
         commands.auto('LspAttach', {
-            group = commands.augroup 'lsp-attach',
+            group = commands.augroup 'LspAttach',
             callback = on_attach,
         })
 

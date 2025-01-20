@@ -1,11 +1,10 @@
 return {
-    -- A VS Code like winbar for Neovim.
     -- SEE: https://github.com/utilyre/barbecue.nvim
     'utilyre/barbecue.nvim',
 
     name = 'barbecue',
     version = '*',
-    event = 'BufEnter',
+    event = 'VeryLazy',
 
     dependencies = {
         'SmiteshP/nvim-navic',
@@ -21,19 +20,31 @@ return {
         local ui = require 'barbecue.ui'
         local commands = require 'utils.commands'
 
-        -- custom update for barbecue to be more performant when moving the cursor around
-        -- SEE: https://github.com/utilyre/barbecue.nvim?tab=readme-ov-file#-recipes
-        vim.api.nvim_create_autocmd({
-            'WinScrolled',
+        local update_timer = vim.uv.new_timer()
+        local update_delay = 500
+
+        local debounced_ui_update = function()
+            update_timer:stop()
+            update_timer:start(update_delay, 0, vim.schedule_wrap(ui.update))
+        end
+
+        commands.auto({
             'BufWinEnter',
+        }, {
+            group = commands.augroup 'BarbecueUpdate',
+            callback = function()
+                ui.update()
+            end,
+        })
+
+        commands.auto({
+            'WinScrolled',
             'CursorHold',
             'InsertLeave',
             'BufModifiedSet',
         }, {
-            group = commands.augroup 'barbecue.updater',
-            callback = function()
-                ui.update()
-            end,
+            group = commands.augroup 'BarbecueUpdate',
+            callback = debounced_ui_update,
         })
 
         plugin.setup {
