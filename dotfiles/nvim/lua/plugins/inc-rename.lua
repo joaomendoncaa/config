@@ -7,10 +7,9 @@ return {
 
     config = function()
         require('inc_rename').setup {
-            cmd_name = 'Rename',
             preview_empty_name = true,
         }
 
-        vim.keymap.set('n', '<leader>rn', ':Rename ', { desc = '[R]e[n]ame.' })
+        vim.keymap.set('n', '<leader>rn', ':IncRename ', { desc = '[R]e[n]ame.' })
     end,
 }
