@@ -16,8 +16,7 @@ return {
 
         local plugin = require 'persisted'
         local commands = require 'utils.commands'
-
-        local key = vim.keymap.set
+        local key = require('utils.functions').key
 
         local handle_persisted_save_pre = function()
             for _, buf in ipairs(vim.api.nvim_list_bufs()) do
@@ -31,16 +30,16 @@ return {
             end
         end
 
-        local function handle_should_save()
+        local handle_should_save = function()
             local bufs = vim.api.nvim_list_bufs()
             if #bufs == 1 and bufs[1] == '1' then
                 return false
             end
         end
 
-        key('n', '<leader>S', '<CMD>SessionLoad<CR>', { desc = '[S]ession [S]elect last.' })
+        key('n', '<leader>S', '<CMD>SessionLoad<CR>', '[S]ession [S]elect last.')
 
-        commands.user('SessionsList', '<CMD>SessionSelect<CR>')
+        commands.user('SessionsList', plugin.select)
 
         commands.auto('User', {
             pattern = 'PersistedSavePre',
