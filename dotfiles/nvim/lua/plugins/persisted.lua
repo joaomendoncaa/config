@@ -32,9 +32,15 @@ return {
 
         local handle_should_save = function()
             local bufs = vim.api.nvim_list_bufs()
-            if #bufs == 1 and bufs[1] == '1' then
-                return false
+
+            if #bufs == 1 then
+                local bufnr = bufs[1]
+                local name = vim.api.nvim_buf_get_name(bufnr)
+
+                return name ~= ''
             end
+
+            return true
         end
 
         key('n', '<leader>S', '<CMD>SessionLoad<CR>', '[S]ession [S]elect last.')
