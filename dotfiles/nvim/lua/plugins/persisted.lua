@@ -9,6 +9,9 @@ return {
         local IGNORE_LIST = {
             'codecompanion',
             'neo-tree',
+            'help',
+            'nofile',
+            'qf',
         }
 
         local plugin = require 'persisted'
@@ -16,7 +19,7 @@ return {
 
         local key = vim.keymap.set
 
-        local cleanup_buf_list = function()
+        local handle_persisted_save_pre = function()
             for _, buf in ipairs(vim.api.nvim_list_bufs()) do
                 local curr = vim.bo[buf].filetype
                 for _, ft in ipairs(IGNORE_LIST) do
@@ -28,16 +31,25 @@ return {
             end
         end
 
-        key('n', '<leader>Ss', '<CMD>SessionSelect<CR>', { desc = '[S]elect from [S]essions list.' })
-        key('n', '<leader>SS', '<CMD>SessionLoad<CR>', { desc = '[S]ession [S]elect last.' })
+        local function handle_should_save()
+            local bufs = vim.api.nvim_list_bufs()
+            if #bufs == 1 and bufs[1] == '1' then
+                return false
+            end
+        end
+
+        key('n', '<leader>S', '<CMD>SessionLoad<CR>', { desc = '[S]ession [S]elect last.' })
+
+        commands.user('SessionsList', '<CMD>SessionSelect<CR>')
 
         commands.auto('User', {
             pattern = 'PersistedSavePre',
-            callback = cleanup_buf_list,
+            callback = handle_persisted_save_pre,
         })
 
         plugin.setup {
             use_git_branch = true,
+            should_save = handle_should_save,
         }
     end,
 }
