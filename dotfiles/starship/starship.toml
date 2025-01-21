@@ -42,6 +42,7 @@ style = 'regular gray'
 
 [git_status]
 format = '($all_status$ahead_behind($style)) '
+stashed = ''
 up_to_date = '[✓](bold green)'
 
 [character]
