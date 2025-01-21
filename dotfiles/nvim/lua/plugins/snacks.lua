@@ -1,11 +1,8 @@
 return {
-    -- 🍿 A collection of small QoL plugins for Neovim.
     -- SEE: https://github.com/folke/snacks.nvim
-
     'folke/snacks.nvim',
 
-    lazy = false,
-    priority = 1000,
+    event = 'VeryLazy',
 
     config = function()
         local plugin = require 'snacks'
