@@ -1,7 +1,5 @@
 return {
     {
-        -- Markdown Vim Mode.
-        -- SEE: https://github.com/ixru/nvim-markdown
         'ixru/nvim-markdown',
 
         ft = { 'markdown' },
@@ -12,8 +10,6 @@ return {
     },
 
     {
-        -- A simple markdown table editor that formats the table as you type.
-        -- SEE: https://github.com/SCJangra/table-nvim
         'SCJangra/table-nvim',
 
         ft = 'markdown',
@@ -36,8 +32,6 @@ return {
     },
 
     {
-        -- Plugin to improve viewing Markdown files in Neovim
-        -- SEE: https://github.com/MeanderingProgrammer/render-markdown.nvim
         'MeanderingProgrammer/render-markdown.nvim',
 
         event = 'VeryLazy',
@@ -57,8 +51,6 @@ return {
     },
 
     {
-        -- Markdown preview plugin for (neo)vim.
-        -- SEE: https://github.com/iamcco/markdown-preview.nvim
         'iamcco/markdown-preview.nvim',
 
         cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },

@@ -1,7 +1,5 @@
 return {
     {
-        -- Neovim file explorer: edit your filesystem like a buffer.
-        -- SEE: https://github.com/stevearc/oil.nvim
         'stevearc/oil.nvim',
 
         event = 'VeryLazy',
@@ -44,8 +42,6 @@ return {
     },
 
     {
-        -- Adds the git status for each file on the buffer.
-        -- SEE: https://github.com/refractalize/oil-git-status.nvim
         'refractalize/oil-git-status.nvim',
 
         event = 'VeryLazy',

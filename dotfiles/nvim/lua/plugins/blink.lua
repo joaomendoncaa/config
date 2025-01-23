@@ -1,6 +1,4 @@
 return {
-    -- Performant, batteries-included completion plugin for Neovim.
-    --SEE: https://github.com/Saghen/blink.cmp
     'saghen/blink.cmp',
 
     event = 'VeryLazy',

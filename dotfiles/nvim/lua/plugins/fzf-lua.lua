@@ -1,7 +1,5 @@
 return {
     {
-        -- Improved fzf.vim written in lua
-        -- SEE: https://github.com/ibhagwan/fzf-lua
         'ibhagwan/fzf-lua',
 
         event = 'VeryLazy',

@@ -1,6 +1,4 @@
 return {
-    -- Effortlessly embed images into any markup language, like LaTeX, Markdown or Typst.
-    -- SEE: https://github.com/HakonHarnes/img-clip.nvim
     'HakonHarnes/img-clip.nvim',
 
     cmd = {

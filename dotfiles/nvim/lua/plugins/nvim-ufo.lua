@@ -1,6 +1,4 @@
 return {
-    -- Not UFO in the sky, but an ultra fold in Neovim.
-    -- SEE: https://github.com/kevinhwang91/nvim-ufo
     'kevinhwang91/nvim-ufo',
 
     event = 'VeryLazy',

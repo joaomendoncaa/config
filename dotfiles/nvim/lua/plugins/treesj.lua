@@ -1,6 +1,4 @@
 return {
-    -- Neovim plugin for splitting/joining blocks of code
-    -- SEE: https://github.com/Wansmer/treesj
     'Wansmer/treesj',
 
     keys = {

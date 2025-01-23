@@ -1,6 +1,4 @@
 return {
-    -- Getting you where you want with the fewest keystrokes.
-    -- SEE: https://github.com/ThePrimeagen/harpoon/tree/harpoon2
     'ThePrimeagen/harpoon',
 
     branch = 'harpoon2',

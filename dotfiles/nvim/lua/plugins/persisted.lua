@@ -1,6 +1,4 @@
 return {
-    -- Simple session management for Neovim with git branching, autoloading and Telescope support.
-    -- SEE: https://github.com/olimorris/persisted.nvim
     'olimorris/persisted.nvim',
 
     lazy = false,

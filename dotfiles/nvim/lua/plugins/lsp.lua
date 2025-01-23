@@ -1,6 +1,4 @@
 return {
-    -- Quickstart configs for Nvim LSP.
-    -- SEE: https://github.com/neovim/nvim-lspconfig
     'neovim/nvim-lspconfig',
 
     event = 'VeryLazy',

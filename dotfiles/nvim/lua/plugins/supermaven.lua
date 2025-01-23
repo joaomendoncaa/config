@@ -1,7 +1,5 @@
 return {
     {
-        -- The official Neovim plugin for Supermaven.
-        -- SEE: https://github.com/supermaven-inc/supermaven-nvim
         'supermaven-inc/supermaven-nvim',
 
         event = 'VeryLazy',

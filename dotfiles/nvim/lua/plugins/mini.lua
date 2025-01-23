@@ -1,5 +1,4 @@
 return {
-    -- SEE: https://github.com/echasnovski/mini.nvim
     'echasnovski/mini.nvim',
 
     event = 'VeryLazy',

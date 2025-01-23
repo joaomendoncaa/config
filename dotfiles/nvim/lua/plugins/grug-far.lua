@@ -1,6 +1,4 @@
 return {
-    -- Find And Replace plugin for neovim.
-    -- SEE: https://github.com/MagicDuck/grug-far.nvim
     'MagicDuck/grug-far.nvim',
 
     event = 'VeryLazy',

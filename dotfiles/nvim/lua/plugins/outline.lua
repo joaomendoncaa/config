@@ -1,6 +1,4 @@
 return {
-    -- Code outline sidebar powered by LSP. Significantly enhanced & refactored fork of symbols-outline.nvim.
-    -- SEE: https://github.com/hedyhli/outline.nvim
     'hedyhli/outline.nvim',
 
     cmd = { 'Outline', 'OutlineOpen' },

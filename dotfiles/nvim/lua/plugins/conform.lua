@@ -1,6 +1,4 @@
 return {
-    -- Lightweight yet powerful formatter plugin for Neovim.
-    -- SEE: https://github.com/stevearc/conform.nvim
     'stevearc/conform.nvim',
 
     lazy = true,

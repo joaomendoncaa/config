@@ -1,5 +1,4 @@
 return {
-    -- SEE: https://github.com/folke/snacks.nvim
     'folke/snacks.nvim',
 
     event = 'VeryLazy',

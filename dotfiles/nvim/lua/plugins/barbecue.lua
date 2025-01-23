@@ -1,5 +1,4 @@
 return {
-    -- SEE: https://github.com/utilyre/barbecue.nvim
     'utilyre/barbecue.nvim',
 
     name = 'barbecue',

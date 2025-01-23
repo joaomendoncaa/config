@@ -1,7 +1,5 @@
 return {
     {
-        -- ✨ AI-powered coding, seamlessly in Neovim. Supports Anthropic, Copilot, Gemini, Ollama, OpenAI and xAI LLMs.
-        -- SEE: https://github.com/olimorris/codecompanion.nvim
         'olimorris/codecompanion.nvim',
 
         enabled = require('utils.flags').isTrue(vim.env.NVIM_AI),
@@ -21,7 +19,6 @@ return {
             local f = require('utils.functions').f
             local key = require('utils.functions').key
             local progress_handle = nil
-
 
             local handle_request_cb = function(request)
                 local is_request_started = request.match == 'CodeCompanionRequestStarted'
