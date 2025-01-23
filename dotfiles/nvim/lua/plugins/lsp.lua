@@ -4,27 +4,11 @@ return {
     event = 'VeryLazy',
 
     dependencies = {
-        {
-            -- Portable package manager for Neovim that runs everywhere Neovim runs. Easily install and manage LSP servers, DAP servers, linters, and formatters.
-            -- SEE: https://github.com/williamboman/mason.nvim
-            'williamboman/mason.nvim',
-        },
+        'williamboman/mason.nvim',
+        'williamboman/mason-lspconfig.nvim',
+        'WhoIsSethDaniel/mason-tool-installer.nvim',
 
         {
-            -- Extension to mason.nvim that makes it easier to use lspconfig with mason.nvim.
-            -- SEE: https://github.com/williamboman/mason-lspconfig.nvim
-            'williamboman/mason-lspconfig.nvim',
-        },
-
-        {
-            -- Install and upgrade third party tools automatically.
-            -- SEE: https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim
-            'WhoIsSethDaniel/mason-tool-installer.nvim',
-        },
-
-        {
-            -- TypeScript integration NeoVim deserves.
-            -- SEE: https://github.com/pmizio/typescript-tools.nvim
             'pmizio/typescript-tools.nvim',
 
             dependencies = {
@@ -44,8 +28,6 @@ return {
         },
 
         {
-            -- Faster LuaLS setup for Neovim.
-            -- SEE: https://github.com/folke/lazydev.nvim
             'folke/lazydev.nvim',
 
             ft = 'lua',
@@ -61,16 +43,12 @@ return {
         },
 
         {
-            -- Meta type definitions for the Lua platform Luvit.
-            -- SEE: https://github.com/Bilal2453/luvit-meta
             'Bilal2453/luvit-meta',
 
             lazy = true,
         },
 
         {
-            -- Extensible UI for Neovim notifications and LSP progress messages.
-            -- SEE: https://github.com/j-hui/fidget.nvim
             'j-hui/fidget.nvim',
 
             config = function()
@@ -245,7 +223,7 @@ return {
                     group = commands.augroup('LspDetach', { clear = true }),
                     callback = function(event2)
                         vim.lsp.buf.clear_references()
-                        vim.api.nvim_clear_autocmds { group = 'lsp-highlight', buffer = event2.buf }
+                        vim.api.nvim_clear_autocmds { group = 'LspHighlight', buffer = event2.buf }
                     end,
                 })
             end
