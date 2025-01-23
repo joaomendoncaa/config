@@ -96,7 +96,7 @@ return {
             key('n', '<leader>sH', fzf.highlights, '[S]earch [H]ighlights')
             key('n', '<leader>sb', fzf.buffers, '[S]earch open [B]uffers')
             key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
-            key('n', '<leader>sS', search_spelling, '[S]earch [S]pelling suggestions')
+            key('n', '<leader>sSs', search_spelling, '[S]earch [S]pelling suggestions')
             key('n', '<leader>sc', search_files_config, '[S]earch [S]elected directory files')
             key('n', '<leader>se', search_enviroment, '[S]earch [E]nvironment Variables')
             key('n', '<leader>st', search_themes, '[S]earch [T]heme')

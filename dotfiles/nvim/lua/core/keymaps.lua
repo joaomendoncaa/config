@@ -1,20 +1,22 @@
 -- most keymaps are directly in their related plugin tables
 -- this file is for "global" keymaps unrelated to any plugin
 
-local key = vim.keymap.set
+local key = require('utils.functions').key
 
-key('n', '<Esc>', '<cmd>nohlsearch<CR>', { desc = '[E]scape from search highlights.' })
+key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
 
-key('n', '<leader>q', vim.diagnostic.open_float, { desc = '[Q]uickly show diagnostic error messages.' })
-key('n', '<leader>Q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list.' })
+key('n', '<leader>q', vim.diagnostic.open_float, '[Q]uickly show diagnostic error messages')
+key('n', '<leader>Q', vim.diagnostic.setloclist, 'Open diagnostic [Q]uickfix list')
 
-key('x', 'p', [["_dP]], { desc = '[P]aste but preserve the clipboard buffer.' })
+key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 
-key('n', 'j', 'gj', { desc = '[J] Move down even in wrapped lines.' })
-key('n', 'k', 'gk', { desc = '[K] Move up even in wrapped lines.' })
+key('n', '<leader>L', '<CMD>Lazy<CR>', '[L]azy menu')
 
-key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', { desc = '[S]ave the current file.' })
-key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wqa<CR>', { desc = 'Save all files and [Q]uit.' })
+key('n', 'j', 'gj', '[J] Move down even in wrapped lines')
+key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
+
+key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
+key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wqa<CR>', 'Save all files and [Q]uit')
 
 key('n', '<C-M-h>', function()
     if vim.fn.winnr '$' > 1 then
