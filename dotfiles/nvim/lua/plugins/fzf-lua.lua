@@ -26,6 +26,36 @@ return {
                 }
             end
 
+            local function search_plugins_config()
+                local core = require 'lazy.core.config'
+                local plugin_list = core.plugins
+                local entries = {}
+
+                for name, plugin in pairs(plugin_list) do
+                    if plugin.url then
+                        table.insert(entries, string.format('%s | %s', name, plugin.url))
+                    end
+                end
+
+                fzf.fzf_exec(entries, {
+                    prompt = ' Plugins> ',
+                    winopts = {
+                        height = 0.5,
+                        width = 0.65,
+                    },
+                    actions = {
+                        ['default'] = function(selected)
+                            local url = selected[1]:match '| (.+)$'
+
+                            if url then
+                                vim.ui.open(url)
+                                vim.notify('Opening ' .. url, vim.log.levels.INFO)
+                            end
+                        end,
+                    },
+                })
+            end
+
             local function search_spelling()
                 fzf.spell_suggest {
                     winopts = {
@@ -97,7 +127,8 @@ return {
             key('n', '<leader>sb', fzf.buffers, '[S]earch open [B]uffers')
             key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
             key('n', '<leader>sSs', search_spelling, '[S]earch [S]pelling suggestions')
-            key('n', '<leader>sc', search_files_config, '[S]earch [S]elected directory files')
+            key('n', '<leader>scf', search_files_config, '[S]earch [C]onfig [F]iles')
+            key('n', '<leader>scp', search_plugins_config, '[S]earch [C]onfig [P]lugins')
             key('n', '<leader>se', search_enviroment, '[S]earch [E]nvironment Variables')
             key('n', '<leader>st', search_themes, '[S]earch [T]heme')
             key('n', 'gr', list_lsp_references, '[G]oto [R]eferences')
