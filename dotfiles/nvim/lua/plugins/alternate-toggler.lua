@@ -8,6 +8,7 @@ return {
             alternates = {
                 ['=='] = '!=',
                 ['false'] = 'true',
+                ['horizontal'] = 'vertical',
             },
         }
 

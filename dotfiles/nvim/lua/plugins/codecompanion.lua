@@ -113,9 +113,10 @@ return {
             end
 
             key('n', 'q', hide_chat_or_macro, { desc = 'AI: Hide chat buffer, or record macro', noremap = true, silent = true })
+            key({ 'n', 'v' }, '<leader>ai', ':CodeCompanion ', 'AI: Inline')
             key({ 'n', 'v' }, '<leader>aa', plugin.toggle, 'AI: Toggle chat buffer')
+            key({ 'n', 'v' }, '<leader>aA', plugin.actions, 'AI: Actions')
             key({ 'n', 'v' }, '<leader>al', f(plugin.prompt, 'lsp'), 'AI: Explain LSP diagnostics')
-            key({ 'n', 'v' }, '<leader>ai', f(plugin.prompt, 'inline'), 'AI: Inline')
             key({ 'v' }, '<leader>ad', f(plugin.prompt, 'docstrings'), 'AI: Add docstrings')
             key({ 'v' }, '<leader>ae', f(plugin.prompt, 'explain'), 'AI: Explain snippet')
             key({ 'v' }, '<leader>af', f(plugin.prompt, 'fix'), 'AI: Fix snippet')
