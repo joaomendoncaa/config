@@ -10,8 +10,6 @@ key('n', '<leader>Q', vim.diagnostic.setloclist, 'Open diagnostic [Q]uickfix lis
 
 key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 
-key('n', '<leader>L', '<CMD>Lazy<CR>', '[L]azy menu')
-
 key('n', 'j', 'gj', '[J] Move down even in wrapped lines')
 key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
 

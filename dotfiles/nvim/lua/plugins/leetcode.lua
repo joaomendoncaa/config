@@ -16,6 +16,11 @@ return {
 
     config = function()
         local plugin = require 'leetcode'
+        local key = require('utils.functions').key
+
+        key('n', '<leader>Ll', '<CMD>Leet<CR>')
+        key('n', '<leader>Lr', '<CMD>Leet run<CR>')
+        key('n', '<leader>Ls', '<CMD>Leet submit<CR>')
 
         plugin.setup {
             arg = SUFIX,
