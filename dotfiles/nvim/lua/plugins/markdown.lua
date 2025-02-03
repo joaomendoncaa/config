@@ -57,9 +57,7 @@ return {
         ft = { 'markdown' },
 
         -- In the case npm is not installed the plugin has an utility to do so.
-        build = function()
-            vim.fn['mkdp#util#install']()
-        end,
+        build = 'cd app && yarn install',
 
         -- Upon initializing the plugin, a temporary CSS file will be created in the
         -- /tmp directory. This file will be hashed from its contents so that it

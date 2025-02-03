@@ -8,6 +8,8 @@ return {
 
     config = function()
         local config = require 'nvim-treesitter.configs'
+        local install = require 'nvim-treesitter.install'
+
         local key = require('utils.functions').key
 
         local function git_plugin()
@@ -47,8 +49,22 @@ return {
 
         key('n', '<leader>gp', git_plugin, '[G]o [G]it [P]lugin')
 
+        vim.opt.runtimepath:append(vim.fn.stdpath 'data' .. '/treesitter-parser')
+        vim.opt.verbose = 0
+
+        install.prefer_git = false
+        install.compilers = { 'gcc', 'cc', 'clang' }
+        install.parser_install_dir = vim.fn.stdpath 'data'
+
         config.setup {
+            sync_install = false,
+            parser_install_dir = nil,
             auto_install = true,
+            quiet_install = true,
+            install = {
+                -- suppress installation failure messages
+                on_failure = function() end,
+            },
             ensure_installed = {
                 'tsx',
                 'typescript',
