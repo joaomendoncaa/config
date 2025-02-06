@@ -216,6 +216,9 @@ Add appropriate documentation to this code:
                 display = {
                     chat = {
                         intro_message = 'Press ? for options',
+                        window = {
+                            width = 0.25,
+                        },
                     },
                 },
 
