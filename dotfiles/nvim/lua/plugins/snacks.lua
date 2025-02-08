@@ -3,7 +3,36 @@ return {
 
     event = 'VeryLazy',
 
-    config = function()
+    opts = {
+        notifier = {
+            enabled = true,
+            timeout = 2500,
+            style = 'fancy',
+        },
+        input = {
+            enabled = true,
+            icon = '',
+            prompt_pos = 'title',
+        },
+        scratch = {
+            filekey = {
+                cwd = true,
+                branch = true,
+                count = false,
+            },
+        },
+        styles = {
+            notification = {
+                wo = { wrap = true },
+            },
+            input = {
+                title_pos = 'left',
+                row = 10,
+            },
+        },
+    },
+
+    init = function()
         local plugin = require 'snacks'
         local key = require('utils.functions').key
         local f = require('utils.functions').f
@@ -33,33 +62,5 @@ return {
         key('n', ']]', f(plugin.words.jump, vim.v.count1), 'Next Reference')
         key('n', '[[', f(plugin.words.jump, -vim.v.count1), 'Prev Reference')
         key('n', '<leader>N', view_news, 'Neovim News')
-
-        plugin.setup {
-            input = {
-                enabled = true,
-                icon = '',
-                prompt_pos = 'title',
-            },
-            notifier = {
-                enabled = true,
-                timeout = 2500,
-            },
-            scratch = {
-                filekey = {
-                    cwd = true,
-                    branch = true,
-                    count = false,
-                },
-            },
-            styles = {
-                notification = {
-                    wo = { wrap = true },
-                },
-                input = {
-                    title_pos = 'left',
-                    row = 10,
-                },
-            },
-        }
     end,
 }
