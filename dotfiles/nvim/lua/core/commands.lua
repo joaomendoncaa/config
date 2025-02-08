@@ -1,6 +1,4 @@
-local strings = require 'utils.strings'
 local commands = require 'utils.commands'
-local flags = require 'utils.flags'
 
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
@@ -64,22 +62,6 @@ local replace_content_with_clipboard = function()
     vim.cmd 'w'
 end
 
-local auto_greeter = function()
-    local greeter = strings.truncateChunks({
-        { '󱐋', 'CursorLineNr' },
-        { ' ' },
-        { vim.fn.getcwd() },
-        { ' ' },
-        { string.format('~ %d ms', require('lazy').stats().startuptime), 'comment' },
-    }, {
-        length = vim.o.columns / 2,
-        separator = '...',
-        separator_hg = '@comment',
-    })
-
-    vim.api.nvim_echo(greeter, true, {})
-end
-
 commands.user('ToggleWrap', toggle_wrap)
 
 commands.user('BufferDelete', buffer_delete)
@@ -89,7 +71,5 @@ commands.user('BufferMessages', buffer_messages)
 commands.user('ReplaceContentWithClipboard', replace_content_with_clipboard)
 
 commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
-
-commands.auto({ 'User' }, { pattern = 'LazyVimStarted', callback = auto_greeter })
 
 commands.user('Touch', touch_command, { nargs = '+', complete = touch_complete })
