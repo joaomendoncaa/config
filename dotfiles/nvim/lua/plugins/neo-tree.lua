@@ -14,11 +14,30 @@ return {
 
     config = function()
         local plugin = require 'neo-tree'
+        local snacks = require 'snacks'
+        local commands = require 'utils.commands'
+        local prev_file_name = { new_name = '', old_name = '' }
+
         local execute = require('neo-tree.command').execute
 
-        local function close()
+        local handle_close = function()
             execute { action = 'close' }
         end
+
+        local subscribe_to_rename_event = function()
+            local events = require('nvim-tree.api').events
+            events.subscribe(events.Event.NodeRenamed, function(data)
+                if prev_file_name.new_name ~= data.new_name or prev_file_name.old_name ~= data.old_name then
+                    data = data
+                    snacks.rename.on_rename_file(data.old_name, data.new_name)
+                end
+            end)
+        end
+
+        commands.auto('User', {
+            pattern = 'NvimTreeSetup',
+            callback = subscribe_to_rename_event,
+        })
 
         plugin.setup {
             close_if_last_window = true,
@@ -32,7 +51,7 @@ return {
             event_handlers = {
                 {
                     event = 'file_opened',
-                    handler = close,
+                    handler = handle_close,
                 },
             },
 

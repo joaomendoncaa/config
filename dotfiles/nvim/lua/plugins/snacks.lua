@@ -29,11 +29,17 @@ return {
         key('n', '<leader>gf', plugin.lazygit.log_file, 'Lazygit Current File History')
         key('n', '<leader>gg', plugin.lazygit.open, 'Lazygit')
         key('n', '<leader>gl', plugin.lazygit.log, 'Lazygit Log (cwd)')
+        key('n', '<leader>rf', plugin.rename.rename_file, '[R]ename [F]ile')
         key('n', ']]', f(plugin.words.jump, vim.v.count1), 'Next Reference')
         key('n', '[[', f(plugin.words.jump, -vim.v.count1), 'Prev Reference')
         key('n', '<leader>N', view_news, 'Neovim News')
 
         plugin.setup {
+            input = {
+                enabled = true,
+                icon = '',
+                prompt_pos = 'title',
+            },
             notifier = {
                 enabled = true,
                 timeout = 2500,
@@ -48,6 +54,10 @@ return {
             styles = {
                 notification = {
                     wo = { wrap = true },
+                },
+                input = {
+                    title_pos = 'left',
+                    row = 10,
                 },
             },
         }

@@ -27,7 +27,7 @@
           fzf
         ];
       };
-      default = self.packages.${system}.desktop; 
+      default = self.packages.${system}.desktop;
     };
   };
 }
