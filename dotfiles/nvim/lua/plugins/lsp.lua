@@ -35,8 +35,8 @@ return {
             config = function()
                 require('lazydev').setup {
                     library = {
-                        -- Load luvit types when the `vim.uv` word is found
-                        { path = 'luvit-meta/library', words = { 'vim%.uv' } },
+                        -- load luvit types when the `vim.uv` word is found
+                        { path = '${3rd}/luv/library', words = { 'vim%.uv' } },
                     },
                 }
             end,
@@ -241,7 +241,9 @@ return {
         commands.user('ClientStop', stop_lsp_by_name, { nargs = '+' })
 
         require('mason').setup()
+
         require('mason-tool-installer').setup { ensure_installed = vim.tbl_keys(servers or {}) }
+
         require('mason-lspconfig').setup {
             handlers = { handle_mason_setup },
         }
