@@ -72,23 +72,6 @@ return {
             },
 
             completion = {
-                auto_brackets = {
-                    enabled = false,
-                    default_brackets = { '(', ')' },
-                    override_brackets_for_filetypes = {},
-                    force_allow_filetypes = {},
-                    blocked_filetypes = {},
-                    kind_resolution = {
-                        enabled = true,
-                        blocked_filetypes = { 'lua' },
-                    },
-                    semantic_token_resolution = {
-                        enabled = true,
-                        blocked_filetypes = { 'java' },
-                        timeout_ms = 400,
-                    },
-                },
-
                 menu = {
                     draw = {
                         columns = { { 'item_idx' }, { 'kind_icon' }, { 'label', 'label_description', gap = 1 } },
