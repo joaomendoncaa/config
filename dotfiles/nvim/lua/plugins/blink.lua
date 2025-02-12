@@ -17,10 +17,6 @@ return {
         ---@type blink.cmp.Config
         plugin.setup {
             appearance = {
-                -- Sets the fallback highlight groups to nvim-cmp's highlight groups
-                -- Useful for when your theme doesn't support blink.cmp
-                -- will be removed in a future release
-                use_nvim_cmp_as_default = true,
                 -- set to 'mono' for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
                 -- adjusts spacing to ensure icons are aligned
                 nerd_font_variant = vim.g.NVIM_NERD_FONT and 'mono' or 'normal',
@@ -76,10 +72,20 @@ return {
             },
 
             completion = {
-                accept = {
-                    -- experimental auto-brackets support
-                    auto_brackets = {
+                auto_brackets = {
+                    enabled = false,
+                    default_brackets = { '(', ')' },
+                    override_brackets_for_filetypes = {},
+                    force_allow_filetypes = {},
+                    blocked_filetypes = {},
+                    kind_resolution = {
                         enabled = true,
+                        blocked_filetypes = { 'lua' },
+                    },
+                    semantic_token_resolution = {
+                        enabled = true,
+                        blocked_filetypes = { 'java' },
+                        timeout_ms = 400,
                     },
                 },
 
