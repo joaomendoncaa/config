@@ -1,6 +1,3 @@
--- most keymaps are directly in their related plugin tables
--- this file is for "global" keymaps unrelated to any plugin
-
 local key = require('utils.functions').key
 
 key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
@@ -12,6 +9,8 @@ key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 
 key('n', 'j', 'gj', '[J] Move down even in wrapped lines')
 key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
+
+key('n', 'YY', 'va{Vy', '[Y]ank function')
 
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
 key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wqa<CR>', 'Save all files and [Q]uit')
