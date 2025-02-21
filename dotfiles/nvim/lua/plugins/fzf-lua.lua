@@ -118,6 +118,7 @@ return {
 
             key({ 'n', 'v' }, '<leader>sp', fzf.complete_path, '[S]earch [P]ath')
             key('n', '<leader>sg', fzf.live_grep, '[S]earch by [G]rep')
+            key('n', '<leader>sm', fzf.marks, '[S]earch [M]arks')
             key('n', '<leader>sf', fzf.builtin, '[S]earch [F]zf Builtins')
             key('n', '<leader>sk', fzf.keymaps, '[S]earch [K]eymaps')
             key('n', '<leader>sh', fzf.helptags, '[S]earch [H]elp')
