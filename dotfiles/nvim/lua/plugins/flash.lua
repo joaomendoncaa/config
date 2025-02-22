@@ -3,7 +3,11 @@ return {
 
     event = 'VeryLazy',
 
-    opts = {},
+    opts = {
+        highlight = {
+            backdrop = false,
+        },
+    },
 
     keys = {
         {
