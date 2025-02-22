@@ -44,13 +44,6 @@ return {
 
         setup('ai', { n_lines = 1000 })
 
-        setup('jump2d', {
-            mappings = {
-                start_jumping = '<CR>',
-            },
-            silent = true,
-        })
-
         setup('hipatterns', {
             highlighters = {
                 fixme = { pattern = '%f[%w]()SEE()%f[%W]', group = 'MiniHipatternsFixme' },
