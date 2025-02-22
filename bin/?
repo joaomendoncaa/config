@@ -1,0 +1,74 @@
+#!/bin/sh
+
+query="$*"
+ERROR_MESSAGE_NO_CMD="couldn't find the wanted command"
+
+spinner() {
+    local pid=$1
+    local delay=0.1
+    local spinstr='|/-\'
+    while ps -p $pid >/dev/null; do
+        local temp=${spinstr#?}
+        printf " [%c]  " "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        printf "\b\b\b\b\b\b"
+        sleep $delay
+    done
+    printf "\r%*s" $(tput cols) ""
+    printf "\r"
+}
+
+call_claude() {
+    local prompt="$1"
+    curl -s https://api.anthropic.com/v1/messages \
+        -H "Content-Type: application/json" \
+        -H "x-api-key: $ANTHROPIC_API_KEY" \
+        -H "anthropic-version: 2023-06-01" \
+        -d "{
+            \"model\": \"claude-3-opus-20240229\",
+            \"max_tokens\": 1000,
+            \"messages\": [{
+                \"role\": \"user\",
+                \"content\": \"$prompt\"
+            }]
+        }"
+}
+
+if [ -z "$query" ]; then
+    echo "Please provide a query"
+    exit 1
+fi
+
+if [ -z "$ANTHROPIC_API_KEY" ]; then
+    echo "Please set ANTHROPIC_API_KEY environment variable"
+    exit 1
+fi
+
+prompt="You are a Linux command expert. Given this question: '$query', respond ONLY with a single Linux command that would solve it. If you can't determine an appropriate command, respond exactly with: '$ERROR_MESSAGE_NO_CMD'. Do not include any explanations or additional text."
+
+printf "Thinking"
+call_claude "$prompt" >response.tmp &
+spinner $!
+response=$(cat response.tmp)
+rm response.tmp
+command_response=$(echo "$response" | jq -r '.content[0].text')
+
+if [ "$command_response" != "$ERROR_MESSAGE_NO_CMD" ]; then
+    echo "command found >> $command_response"
+    printf "Run this command? [Y/n] "
+    stty raw
+    answer=$(dd bs=1 count=1 2>/dev/null)
+    stty -raw
+
+    case "$answer" in
+    [Nn])
+        echo "Command not executed"
+        ;;
+    *)
+        echo
+        eval "$command_response"
+        ;;
+    esac
+else
+    echo "$command_response"
+fi
