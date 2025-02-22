@@ -54,7 +54,7 @@ rm response.tmp
 command_response=$(echo "$response" | jq -r '.content[0].text')
 
 if [ "$command_response" != "$ERROR_MESSAGE_NO_CMD" ]; then
-    echo "command found >> $command_response"
+    echo "Command found -> \`$command_response\`"
     printf "Run this command? [Y/n] "
     stty raw
     answer=$(dd bs=1 count=1 2>/dev/null)
@@ -62,7 +62,7 @@ if [ "$command_response" != "$ERROR_MESSAGE_NO_CMD" ]; then
 
     case "$answer" in
     [Nn])
-        echo "Command not executed"
+        echo "\nCommand not executed"
         ;;
     *)
         echo
