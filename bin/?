@@ -20,18 +20,26 @@ spinner() {
 
 call_claude() {
     local prompt="$1"
+    local json_payload=$(jq -n \
+        --arg model "claude-3-opus-20240229" \
+        --arg prompt "$prompt" \
+        --arg max_tokens "1000" \
+        '{
+            model: $model,
+            max_tokens: $max_tokens | tonumber,
+            messages: [
+                {
+                    role: "user",
+                    content: $prompt
+                }
+            ]
+        }')
+
     curl -s https://api.anthropic.com/v1/messages \
         -H "Content-Type: application/json" \
         -H "x-api-key: $ANTHROPIC_API_KEY" \
         -H "anthropic-version: 2023-06-01" \
-        -d "{
-            \"model\": \"claude-3-opus-20240229\",
-            \"max_tokens\": 1000,
-            \"messages\": [{
-                \"role\": \"user\",
-                \"content\": \"$prompt\"
-            }]
-        }"
+        -d "$json_payload"
 }
 
 if [ -z "$query" ]; then
@@ -49,12 +57,25 @@ prompt="You are a Linux command expert. Given this question: '$query', respond O
 printf "Thinking"
 call_claude "$prompt" >response.tmp &
 spinner $!
-response=$(cat response.tmp)
+
+if ! grep -q "content" response.tmp; then
+    echo "Error: Invalid response format"
+    cat response.tmp
+    rm response.tmp
+    exit 1
+fi
+
+command_response=$(grep -o '"text":"[^"]*"' response.tmp | sed 's/"text":"//;s/"$//')
 rm response.tmp
-command_response=$(echo "$response" | jq -r '.content[0].text')
+
+if [ -z "$command_response" ]; then
+    echo "Error: Empty command response received"
+    echo "Raw response: $response"
+    exit 1
+fi
 
 if [ "$command_response" != "$ERROR_MESSAGE_NO_CMD" ]; then
-    echo "Command found -> \`$command_response\`"
+    echo "Command found -> '$command_response'"
     printf "Run this command? [Y/n] "
     stty raw
     answer=$(dd bs=1 count=1 2>/dev/null)
@@ -66,7 +87,9 @@ if [ "$command_response" != "$ERROR_MESSAGE_NO_CMD" ]; then
         ;;
     *)
         echo
-        eval "$command_response"
+        echo "$command_response" >cmd.tmp
+        sh cmd.tmp
+        rm cmd.tmp
         ;;
     esac
 else
