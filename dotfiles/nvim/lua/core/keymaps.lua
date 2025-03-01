@@ -15,9 +15,6 @@ key('n', 'YY', 'va{Vy', '[Y]ank function')
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
 key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wqa<CR>', 'Save all files and [Q]uit')
 
-key('n', '<C-d>', '<C-d>zz', 'Page down centered')
-key('n', '<C-u>', '<C-u>zz', 'Page up centered')
-
 key('n', '<C-M-h>', function()
     if vim.fn.winnr '$' > 1 then
         return ':vertical resize -3<CR>'
