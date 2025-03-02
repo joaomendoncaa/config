@@ -17,28 +17,28 @@ key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wqa<CR>', 'Save all files and [Q]uit')
 
 key('n', '<C-M-h>', function()
     if vim.fn.winnr '$' > 1 then
-        return ':vertical resize -3<CR>'
+        return ':vertical resize -5<CR>'
     end
-    return vim.fn.system 'tmux resize-pane -L 3'
+    return vim.fn.system 'tmux resize-pane -L 5'
 end, { silent = true, expr = true, desc = 'Smart resize left' })
 
 key('n', '<C-M-l>', function()
     if vim.fn.winnr '$' > 1 then
-        return ':vertical resize +3<CR>'
+        return ':vertical resize +5<CR>'
     end
-    return vim.fn.system 'tmux resize-pane -R 3'
+    return vim.fn.system 'tmux resize-pane -R 5'
 end, { silent = true, expr = true, desc = 'Smart resize right' })
 
 key('n', '<C-M-k>', function()
     if vim.fn.winnr '$' > 1 then
-        return ':resize -3<CR>'
+        return ':resize -5<CR>'
     end
-    return vim.fn.system 'tmux resize-pane -U 3'
+    return vim.fn.system 'tmux resize-pane -U 5'
 end, { silent = true, expr = true, desc = 'Smart resize up' })
 
 key('n', '<C-M-j>', function()
     if vim.fn.winnr '$' > 1 then
-        return ':resize +3<CR>'
+        return ':resize +5<CR>'
     end
-    return vim.fn.system 'tmux resize-pane -D 3'
+    return vim.fn.system 'tmux resize-pane -D 5'
 end, { silent = true, expr = true, desc = 'Smart resize down' })
