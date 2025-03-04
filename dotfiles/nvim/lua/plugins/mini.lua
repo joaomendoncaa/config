@@ -44,6 +44,14 @@ return {
 
         setup('ai', { n_lines = 1000 })
 
+        setup('comment', {
+            options = {
+                custom_commentstring = function()
+                    return require('ts_context_commentstring').calculate_commentstring() or vim.bo.commentstring
+                end,
+            },
+        })
+
         setup('hipatterns', {
             highlighters = {
                 fixme = { pattern = '%f[%w]()SEE()%f[%W]', group = 'MiniHipatternsFixme' },
