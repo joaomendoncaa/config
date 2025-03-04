@@ -16,8 +16,11 @@ return {
             local plugin = require 'codecompanion'
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
+
             local f = require('utils.functions').f
             local key = require('utils.functions').key
+
+            local slash_provider = 'telescope'
             local progress_handle = nil
 
             local handle_request_cb = function(request)
@@ -181,14 +184,14 @@ Add appropriate documentation to this code:
                     chat = {
                         adapter = 'anthropic',
                         slash_commands = {
-                            buffer = {
+                            ['buffer'] = {
                                 callback = 'strategies.chat.slash_commands.buffer',
                                 description = 'Insert open buffers',
-                                opts = { contains_code = true, provider = 'fzf_lua' },
+                                opts = { contains_code = true, provider = slash_provider },
                             },
-                            file = { opts = { provider = 'fzf_lua' } },
-                            help = { opts = { provider = 'fzf_lua' } },
-                            symbols = { opts = { provider = 'fzf_lua' } },
+                            ['file'] = { opts = { provider = slash_provider } },
+                            ['help'] = { opts = { provider = slash_provider } },
+                            ['symbols'] = { opts = { provider = slash_provider } },
                         },
                         keymaps = {
                             stop = {
