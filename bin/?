@@ -1,7 +1,6 @@
 #!/bin/sh
 
 query="$*"
-ERROR_MESSAGE_NO_CMD="couldn't find the wanted command"
 
 spinner() {
     local pid=$1
@@ -52,7 +51,7 @@ if [ -z "$ANTHROPIC_API_KEY" ]; then
     exit 1
 fi
 
-prompt="You are a Linux command expert. Given this question: '$query', respond ONLY with a single Linux command that would solve it. If you can't determine an appropriate command, respond exactly with: '$ERROR_MESSAGE_NO_CMD'. Do not include any explanations or additional text."
+prompt="You are a Linux command expert. Given this question: '$query', provide a list of relevant commands that would help solve it. For each command, include a very brief description of what it does. Format your response as a bullet list with each item formatted as: '- \`command\`: brief description'. Do not include any other text or explanations."
 
 printf "Thinking"
 call_claude "$prompt" >response.tmp &
@@ -65,33 +64,12 @@ if ! grep -q "content" response.tmp; then
     exit 1
 fi
 
-command_response=$(grep -o '"text":"[^"]*"' response.tmp | sed 's/"text":"//;s/"$//')
+command_list=$(grep -o '"text":"[^"]*"' response.tmp | sed 's/"text":"//;s/"$//')
 rm response.tmp
 
-if [ -z "$command_response" ]; then
-    echo "Error: Empty command response received"
-    echo "Raw response: $response"
+if [ -z "$command_list" ]; then
+    echo "Error: Empty response received"
     exit 1
 fi
 
-if [ "$command_response" != "$ERROR_MESSAGE_NO_CMD" ]; then
-    echo "Command found -> '$command_response'"
-    printf "Run this command? [Y/n] "
-    stty raw
-    answer=$(dd bs=1 count=1 2>/dev/null)
-    stty -raw
-
-    case "$answer" in
-    [Nn])
-        echo "\nCommand not executed"
-        ;;
-    *)
-        echo
-        echo "$command_response" >cmd.tmp
-        sh cmd.tmp
-        rm cmd.tmp
-        ;;
-    esac
-else
-    echo "$command_response"
-fi
+echo "$command_list"
