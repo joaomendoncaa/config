@@ -1,4 +1,5 @@
 local commands = require 'utils.commands'
+local clipboard = require 'utils.clipboard'
 
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
@@ -57,18 +58,13 @@ local auto_highlight_yank = function()
     vim.highlight.on_yank()
 end
 
-local replace_content_with_clipboard = function()
-    vim.cmd 'norm! GVggp'
-    vim.cmd 'w'
-end
-
 commands.user('ToggleWrap', toggle_wrap)
 
 commands.user('BufferDelete', buffer_delete)
 
 commands.user('BufferMessages', buffer_messages)
 
-commands.user('ReplaceContentWithClipboard', replace_content_with_clipboard)
+commands.user('ReplaceContentWithClipboard', clipboard.replace_with_yanked_and_write)
 
 commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
 

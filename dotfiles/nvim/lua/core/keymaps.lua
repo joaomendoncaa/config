@@ -1,9 +1,12 @@
+local clipboard = require 'utils.clipboard'
 local key = require('utils.functions').key
 
 key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
 
 key('n', '<leader>q', vim.diagnostic.open_float, '[Q]uickly show diagnostic error messages')
 key('n', '<leader>Q', vim.diagnostic.setloclist, 'Open diagnostic [Q]uickfix list')
+
+key('n', 'gp', clipboard.replace_with_yanked_and_write, "[G]o replace by [P]asting what's yanked")
 
 key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 
