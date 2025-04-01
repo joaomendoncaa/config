@@ -24,6 +24,7 @@ return {
             local progress_handle = nil
 
             local handle_request_cb = function(request)
+                local notification_command = 'silent! !paplay ' .. vim.fn.stdpath 'config' .. '/media/notification.wav'
                 local is_request_started = request.match == 'CodeCompanionRequestStarted'
                 local is_request_finished = request.match == 'CodeCompanionRequestFinished'
 
@@ -51,8 +52,7 @@ return {
 
                     progress_handle:finish()
                     progress_handle = nil
-
-                    vim.schedule_wrap(f(vim.cmd('silent! !paplay ' .. vim.fn.stdpath 'config' .. '/media/notification.wav')))
+                    vim.schedule_wrap(vim.cmd(notification_command))
                     return
                 end
             end
