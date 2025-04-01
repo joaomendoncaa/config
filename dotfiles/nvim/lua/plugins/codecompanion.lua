@@ -51,6 +51,8 @@ return {
 
                     progress_handle:finish()
                     progress_handle = nil
+
+                    vim.schedule_wrap(f(vim.cmd('silent! !paplay ' .. vim.fn.stdpath 'config' .. '/media/notification.wav')))
                     return
                 end
             end
