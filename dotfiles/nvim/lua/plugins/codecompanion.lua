@@ -23,8 +23,22 @@ return {
             local slash_provider = 'telescope'
             local progress_handle = nil
 
+            ---@param event 'started' | 'finished'
+            local handle_stream_sfx = function(event)
+                if event ~= 'started' and event ~= 'finished' then
+                    return
+                end
+
+                local has_started = event == 'started'
+                local path = vim.fn.stdpath 'config' .. '/media/' .. (has_started and 'notification-llm-started.wav' or 'notification-llm-finished.wav')
+
+                vim.uv.spawn('paplay', {
+                    args = { path },
+                    detached = true,
+                }, function() end)
+            end
+
             local handle_request_cb = function(request)
-                local notification_command = 'silent! !paplay ' .. vim.fn.stdpath 'config' .. '/media/notification.wav'
                 local is_request_started = request.match == 'CodeCompanionRequestStarted'
                 local is_request_finished = request.match == 'CodeCompanionRequestFinished'
 
@@ -37,6 +51,7 @@ return {
                 end
 
                 if is_request_started then
+                    handle_stream_sfx 'started'
                     progress_handle = progress.handle.create {
                         title = '🤖',
                         message = "Gennin'",
@@ -50,9 +65,9 @@ return {
                         return
                     end
 
+                    handle_stream_sfx 'finished'
                     progress_handle:finish()
                     progress_handle = nil
-                    vim.schedule_wrap(vim.cmd(notification_command))
                     return
                 end
             end
