@@ -2,7 +2,7 @@ return {
     'utilyre/barbecue.nvim',
 
     name = 'barbecue',
-    version = '*',
+    version = false,
     event = 'VeryLazy',
 
     dependencies = {
