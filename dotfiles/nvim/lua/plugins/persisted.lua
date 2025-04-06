@@ -6,7 +6,7 @@ return {
     config = function()
         local IGNORE_LIST = {
             'codecompanion',
-            'neo-tree',
+            'NvimTree',
             'help',
             'nofile',
             'qf',

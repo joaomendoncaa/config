@@ -1,74 +1,29 @@
 return {
-    'nvim-neo-tree/neo-tree.nvim',
+    'nvim-tree/nvim-tree.lua',
 
+    event = 'VeryLazy',
     dependencies = {
-        'nvim-lua/plenary.nvim',
-        'MunifTanjim/nui.nvim',
         'nvim-tree/nvim-web-devicons',
     },
 
-    cmd = 'Neotree',
-    keys = {
-        { '<leader>e', ':Neotree reveal<CR>', desc = 'NeoTree reveal', silent = true },
-    },
-
     config = function()
-        local plugin = require 'neo-tree'
-        local snacks = require 'snacks'
-        local commands = require 'utils.commands'
-        local prev_file_name = { new_name = '', old_name = '' }
+        local plugin = require 'nvim-tree'
+        local key = require('utils.functions').key
 
-        local execute = require('neo-tree.command').execute
-
-        local handle_close = function()
-            execute { action = 'close' }
-        end
-
-        local subscribe_to_rename_event = function()
-            local events = require('nvim-tree.api').events
-            events.subscribe(events.Event.NodeRenamed, function(data)
-                if prev_file_name.new_name ~= data.new_name or prev_file_name.old_name ~= data.old_name then
-                    data = data
-                    snacks.rename.on_rename_file(data.old_name, data.new_name)
-                end
-            end)
-        end
-
-        commands.auto('User', {
-            pattern = 'NvimTreeSetup',
-            callback = subscribe_to_rename_event,
-        })
+        key('n', '<leader>ee', '<CMD>NvimTreeToggle<CR>', 'Toggle [E]xplorer')
 
         plugin.setup {
-            close_if_last_window = true,
-
-            window = {
-                mappings = {
-                    ['P'] = { 'toggle_preview', config = { title = 'Preview' } },
-                },
+            view = {
+                side = 'right',
+                width = 30,
             },
+            on_attach = function(bufnr)
+                local api = require 'nvim-tree.api'
 
-            event_handlers = {
-                {
-                    event = 'file_opened',
-                    handler = handle_close,
-                },
-            },
-
-            filesystem = {
-                filtered_items = {
-                    hide_dotfiles = false,
-                    hide_gitignored = false,
-                    hide_hidden = false,
-                },
-                window = {
-                    position = 'right',
-                    mappings = {
-                        ['h'] = 'close_node',
-                        ['l'] = 'open',
-                    },
-                },
-            },
+                key('n', 'h', api.node.navigate.parent_close, { buffer = bufnr, desc = 'Close directory' })
+                key('n', 'l', api.node.open.edit, { buffer = bufnr, desc = 'Open file/directory' })
+                key('n', 'q', api.tree.close, { buffer = bufnr, desc = 'Close tree' })
+            end,
         }
     end,
 }

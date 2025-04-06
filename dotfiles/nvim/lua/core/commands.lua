@@ -1,3 +1,6 @@
+local FT_NVIMTREE = 'nvimtree'
+local FT_CODECOMPANION = 'codecompanion'
+
 local commands = require 'utils.commands'
 local clipboard = require 'utils.clipboard'
 
@@ -58,6 +61,32 @@ local auto_highlight_yank = function()
     vim.highlight.on_yank()
 end
 
+local auto_keep_unique_sidebar = function()
+    local buf_l = vim.api.nvim_get_current_buf()
+    local buf_l_ft = string.lower(vim.bo[buf_l].filetype or '')
+
+    if not (buf_l_ft == FT_NVIMTREE or buf_l_ft == FT_CODECOMPANION) then
+        return
+    end
+
+    local windows = vim.api.nvim_list_wins()
+
+    for _, win in ipairs(windows) do
+        local buf_r = vim.api.nvim_win_get_buf(win)
+
+        if buf_r ~= buf_l then
+            local buf_r_ft = string.lower(vim.bo[buf_r].filetype or '')
+
+            local should_close_win = (buf_l_ft == FT_CODECOMPANION and buf_r_ft == FT_NVIMTREE) or (buf_l_ft == FT_NVIMTREE and buf_r_ft == FT_CODECOMPANION)
+
+            if should_close_win then
+                pcall(vim.api.nvim_win_close, win, false)
+                return
+            end
+        end
+    end
+end
+
 commands.user('ToggleWrap', toggle_wrap)
 
 commands.user('BufferDelete', buffer_delete)
@@ -65,6 +94,11 @@ commands.user('BufferDelete', buffer_delete)
 commands.user('BufferMessages', buffer_messages)
 
 commands.user('ReplaceContentWithClipboard', clipboard.replace_with_yanked_and_write)
+
+commands.auto({ 'BufEnter', 'BufWinEnter' }, {
+    callback = auto_keep_unique_sidebar,
+    group = commands.augroup 'KeepUniqueSidebar',
+})
 
 commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
 
