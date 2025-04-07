@@ -70,6 +70,7 @@ local auto_keep_unique_sidebar = function()
     end
 
     local windows = vim.api.nvim_list_wins()
+    local width = vim.api.nvim_win_get_width(vim.api.nvim_get_current_win())
 
     for _, win in ipairs(windows) do
         local buf_r = vim.api.nvim_win_get_buf(win)
@@ -81,6 +82,7 @@ local auto_keep_unique_sidebar = function()
 
             if should_close_win then
                 pcall(vim.api.nvim_win_close, win, false)
+                vim.cmd('vertical resize ' .. width)
                 return
             end
         end
