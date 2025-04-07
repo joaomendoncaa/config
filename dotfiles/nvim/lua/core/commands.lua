@@ -1,5 +1,9 @@
-local FT_NVIMTREE = 'nvimtree'
-local FT_CODECOMPANION = 'codecompanion'
+local CONFLICTING_WINDOWS = {
+    sidebar = {
+        'nvimtree',
+        'codecompanion',
+    },
+}
 
 local commands = require 'utils.commands'
 local clipboard = require 'utils.clipboard'
@@ -60,13 +64,6 @@ end
 local auto_highlight_yank = function()
     vim.highlight.on_yank()
 end
-
-local CONFLICTING_WINDOWS = {
-    sidebar = {
-        'nvimtree',
-        'codecompanion',
-    },
-}
 
 local auto_keep_unique_sidebar = function()
     local current_buf = vim.api.nvim_get_current_buf()
