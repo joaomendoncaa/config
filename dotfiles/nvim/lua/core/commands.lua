@@ -61,28 +61,41 @@ local auto_highlight_yank = function()
     vim.highlight.on_yank()
 end
 
-local auto_keep_unique_sidebar = function()
-    local buf_l = vim.api.nvim_get_current_buf()
-    local buf_l_ft = string.lower(vim.bo[buf_l].filetype or '')
+local CONFLICTING_WINDOWS = {
+    sidebar = {
+        'nvimtree',
+        'codecompanion',
+    },
+}
 
-    if not (buf_l_ft == FT_NVIMTREE or buf_l_ft == FT_CODECOMPANION) then
+local auto_keep_unique_sidebar = function()
+    local current_buf = vim.api.nvim_get_current_buf()
+    local current_ft = string.lower(vim.bo[current_buf].filetype or '')
+    local current_win = vim.api.nvim_get_current_win()
+    local current_group = nil
+
+    for group, filetypes in pairs(CONFLICTING_WINDOWS) do
+        if vim.tbl_contains(filetypes, current_ft) then
+            current_group = group
+            break
+        end
+    end
+
+    if not current_group then
         return
     end
 
     local windows = vim.api.nvim_list_wins()
-    local width = vim.api.nvim_win_get_width(vim.api.nvim_get_current_win())
+    local width_to_restore = vim.api.nvim_win_get_width(current_win)
 
     for _, win in ipairs(windows) do
-        local buf_r = vim.api.nvim_win_get_buf(win)
+        if win ~= current_win then
+            local buf = vim.api.nvim_win_get_buf(win)
+            local ft = string.lower(vim.bo[buf].filetype or '')
 
-        if buf_r ~= buf_l then
-            local buf_r_ft = string.lower(vim.bo[buf_r].filetype or '')
-
-            local should_close_win = (buf_l_ft == FT_CODECOMPANION and buf_r_ft == FT_NVIMTREE) or (buf_l_ft == FT_NVIMTREE and buf_r_ft == FT_CODECOMPANION)
-
-            if should_close_win then
+            if vim.tbl_contains(CONFLICTING_WINDOWS[current_group], ft) then
                 pcall(vim.api.nvim_win_close, win, false)
-                vim.cmd('vertical resize ' .. width)
+                vim.cmd('vertical resize ' .. width_to_restore)
                 return
             end
         end
