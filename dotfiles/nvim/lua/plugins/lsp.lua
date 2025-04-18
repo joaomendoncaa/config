@@ -71,6 +71,25 @@ return {
             stylua = {},
             emmet_language_server = {},
             biome = {},
+            harper_ls = {
+                settings = {
+                    ['harper-ls'] = {
+                        linters = {
+                            SpellCheck = true,
+                            SpelledNumbers = false,
+                            AnA = true,
+                            SentenceCapitalization = false,
+                            UnclosedQuotes = true,
+                            WrongQuotes = false,
+                            LongSentences = true,
+                            RepeatedWords = true,
+                            Spaces = true,
+                            Matcher = true,
+                            CorrectNumberSuffix = true,
+                        },
+                    },
+                },
+            },
             lua_ls = {
                 settings = {
                     Lua = {
