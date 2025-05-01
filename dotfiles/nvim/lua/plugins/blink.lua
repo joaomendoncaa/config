@@ -1,14 +1,11 @@
 return {
     'saghen/blink.cmp',
 
-    event = 'VeryLazy',
-
+    version = '1.*',
     dependencies = {
         'moyiz/blink-emoji.nvim',
         'rafamadriz/friendly-snippets',
     },
-
-    build = 'cargo build --release',
 
     config = function()
         local plugin = require 'blink.cmp'
@@ -21,6 +18,8 @@ return {
                 -- adjusts spacing to ensure icons are aligned
                 nerd_font_variant = vim.g.NVIM_NERD_FONT and 'mono' or 'normal',
             },
+
+            fuzzy = { implementation = 'prefer_rust_with_warning' },
 
             keymap = {
                 preset = 'default',
