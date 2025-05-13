@@ -1,6 +1,3 @@
-local TIMER_HOLDSTER = nil
-local TIMER_DELAY = 1000
-
 return {
     'stevearc/conform.nvim',
 
@@ -16,6 +13,8 @@ return {
         local f = require('utils.functions').f
 
         local has_format_on_save = true
+        local timer_holdster = nil
+        local timer_delay = 500
 
         local keymap = vim.keymap.set
 
@@ -39,8 +38,10 @@ return {
             end
         end
 
-        local auto_blog_save = function()
-            local cwd = vim.fn.getcwd()
+        local sync_if_blog = function()
+            if not string.match(vim.fn.getcwd(), 'blog.jmmm.sh$') then
+                return
+            end
 
             local handle_on_exit = function(_, code)
                 if code ~= 0 then
@@ -48,36 +49,30 @@ return {
                 end
             end
 
-            if not string.match(cwd, 'blog.jmmm.sh$') then
-                return
+            local handle_on_start = vim.schedule_wrap(function()
+                local commit_msg = string.format('sync: %s', os.date '%Y-%m-%d %H:%M:%S')
+                local cmd = {
+                    'sh',
+                    '-c',
+                    "git add . && git commit -m '" .. commit_msg .. "' && git push",
+                }
+
+                vim.fn.jobstart(cmd, {
+                    cwd = vim.fn.getcwd(),
+                    on_exit = handle_on_exit,
+                })
+
+                timer_holdster:close()
+                timer_holdster = nil
+            end)
+
+            if timer_holdster then
+                vim.uv.timer_stop(timer_holdster)
+                timer_holdster:close()
             end
 
-            if TIMER_HOLDSTER then
-                vim.uv.timer_stop(TIMER_HOLDSTER)
-                TIMER_HOLDSTER:close()
-            end
-
-            TIMER_HOLDSTER = vim.uv.new_timer()
-            TIMER_HOLDSTER:start(
-                TIMER_DELAY,
-                0,
-                vim.schedule_wrap(function()
-                    local datetime = os.date '%Y-%m-%d %H:%M:%S'
-                    local commit_msg = string.format('sync: %s', datetime)
-
-                    vim.fn.jobstart({
-                        'sh',
-                        '-c',
-                        "git add . && git commit -m '" .. commit_msg .. "' && git push",
-                    }, {
-                        cwd = cwd,
-                        on_exit = handle_on_exit,
-                    })
-
-                    TIMER_HOLDSTER:close()
-                    TIMER_HOLDSTER = nil
-                end)
-            )
+            timer_holdster = vim.uv.new_timer()
+            timer_holdster:start(timer_delay, 0, handle_on_start)
         end
 
         local function format_async(cb)
@@ -95,7 +90,7 @@ return {
                 write_without_context()
             end
 
-            auto_blog_save()
+            sync_if_blog()
         end
 
         keymap('n', '<leader>ff', format_async, { desc = '[F]ormat buffer.' })
