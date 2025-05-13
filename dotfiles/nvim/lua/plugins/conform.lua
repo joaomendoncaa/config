@@ -1,3 +1,6 @@
+local TIMER_HOLDSTER = nil
+local TIMER_DELAY = 1000
+
 return {
     'stevearc/conform.nvim',
 
@@ -36,6 +39,47 @@ return {
             end
         end
 
+        local auto_blog_save = function()
+            local cwd = vim.fn.getcwd()
+
+            local handle_on_exit = function(_, code)
+                if code ~= 0 then
+                    vim.notify('Failed to auto-save blog changes to git', vim.log.levels.ERROR)
+                end
+            end
+
+            if not string.match(cwd, 'blog.jmmm.sh$') then
+                return
+            end
+
+            if TIMER_HOLDSTER then
+                vim.uv.timer_stop(TIMER_HOLDSTER)
+                TIMER_HOLDSTER:close()
+            end
+
+            TIMER_HOLDSTER = vim.uv.new_timer()
+            TIMER_HOLDSTER:start(
+                TIMER_DELAY,
+                0,
+                vim.schedule_wrap(function()
+                    local datetime = os.date '%Y-%m-%d %H:%M:%S'
+                    local commit_msg = string.format('sync: %s', datetime)
+
+                    vim.fn.jobstart({
+                        'sh',
+                        '-c',
+                        "git add . && git commit -m '" .. commit_msg .. "' && git push",
+                    }, {
+                        cwd = cwd,
+                        on_exit = handle_on_exit,
+                    })
+
+                    TIMER_HOLDSTER:close()
+                    TIMER_HOLDSTER = nil
+                end)
+            )
+        end
+
         local function format_async(cb)
             plugin.format({ async = true }, cb or nil)
         end
@@ -50,6 +94,8 @@ return {
             else
                 write_without_context()
             end
+
+            auto_blog_save()
         end
 
         keymap('n', '<leader>ff', format_async, { desc = '[F]ormat buffer.' })

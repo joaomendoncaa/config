@@ -107,11 +107,11 @@ commands.user('BufferMessages', buffer_messages)
 
 commands.user('ReplaceContentWithClipboard', clipboard.replace_with_yanked_and_write)
 
+commands.user('Touch', touch_command, { nargs = '+', complete = touch_complete })
+
+commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
+
 commands.auto({ 'BufEnter', 'BufWinEnter' }, {
     callback = auto_keep_unique_sidebar,
     group = commands.augroup 'KeepUniqueSidebar',
 })
-
-commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
-
-commands.user('Touch', touch_command, { nargs = '+', complete = touch_complete })
