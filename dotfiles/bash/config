@@ -37,3 +37,4 @@ add_to_path "$HOME/go/bin"
 add_to_path "/home/joao/.local/share/solana/install/active_release/bin"
 add_to_path $PNPM_HOME
 add_to_path "$HOME/.config.jmmm.sh/bin"
+add_to_path "$HOME/.local/bin"
