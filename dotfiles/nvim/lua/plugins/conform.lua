@@ -10,13 +10,12 @@ return {
         local commands = require 'utils.commands'
         local strings = require 'utils.strings'
         local plugin = require 'conform'
-        local f = require('utils.functions').f
+        local git = require 'utils.git'
+        local functions = require 'utils.functions'
+        local f = functions.f
+        local key = functions.key
 
         local has_format_on_save = true
-        local timer_holdster = nil
-        local timer_delay = 500
-
-        local keymap = vim.keymap.set
 
         local function set_format_on_save(value, opts)
             opts = opts or {
@@ -38,43 +37,6 @@ return {
             end
         end
 
-        local sync_if_blog = function()
-            if not string.match(vim.fn.getcwd(), 'blog.jmmm.sh$') then
-                return
-            end
-
-            local handle_on_exit = function(_, code)
-                if code ~= 0 then
-                    vim.notify('Failed to auto-save blog changes to git', vim.log.levels.ERROR)
-                end
-            end
-
-            local handle_on_start = vim.schedule_wrap(function()
-                local commit_msg = string.format('sync: %s', os.date '%Y-%m-%d %H:%M:%S')
-                local cmd = {
-                    'sh',
-                    '-c',
-                    "git add . && git commit -m '" .. commit_msg .. "' && git push",
-                }
-
-                vim.fn.jobstart(cmd, {
-                    cwd = vim.fn.getcwd(),
-                    on_exit = handle_on_exit,
-                })
-
-                timer_holdster:close()
-                timer_holdster = nil
-            end)
-
-            if timer_holdster then
-                vim.uv.timer_stop(timer_holdster)
-                timer_holdster:close()
-            end
-
-            timer_holdster = vim.uv.new_timer()
-            timer_holdster:start(timer_delay, 0, handle_on_start)
-        end
-
         local function format_async(cb)
             plugin.format({ async = true }, cb or nil)
         end
@@ -90,12 +52,12 @@ return {
                 write_without_context()
             end
 
-            sync_if_blog()
+            git.sync_with_remote { paths = 'blog.jmmm.sh', delay = 500 }
         end
 
-        keymap('n', '<leader>ff', format_async, { desc = '[F]ormat buffer.' })
-        keymap('n', '<leader>fk', f(set_format_on_save, true), { desc = '[F]ormat enable.' })
-        keymap('n', '<leader>fj', f(set_format_on_save, false), { desc = '[F]ormat disable.' })
+        key('n', '<leader>ff', format_async, '[F]ormat buffer.')
+        key('n', '<leader>fk', f(set_format_on_save, true), '[F]ormat enable.')
+        key('n', '<leader>fj', f(set_format_on_save, false), '[F]ormat disable.')
 
         commands.user('Format', format_async)
         commands.user('FormatDisable', f(set_format_on_save, false))

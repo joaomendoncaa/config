@@ -7,6 +7,7 @@ local CONFLICTING_WINDOWS = {
 
 local commands = require 'utils.commands'
 local clipboard = require 'utils.clipboard'
+local git = require 'utils.git'
 
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
@@ -114,4 +115,9 @@ commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
 commands.auto({ 'BufEnter', 'BufWinEnter' }, {
     callback = auto_keep_unique_sidebar,
     group = commands.augroup 'KeepUniqueSidebar',
+})
+
+commands.auto({ 'VimLeavePre' }, {
+    callback = git.kill_sync_timers,
+    group = commands.augroup 'CleanupGitSyncTimers',
 })
