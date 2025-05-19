@@ -25,26 +25,30 @@ key('n', '<C-M-h>', function()
     if vim.fn.winnr '$' > 1 then
         return string.format(':vertical resize -%d<CR>', RESIZE_STEP)
     end
-    return vim.fn.system(string.format 'tmux resize-pane -L %d', RESIZE_STEP)
+
+    return vim.fn.system(string.format('tmux resize-pane -L %d', RESIZE_STEP))
 end, { silent = true, expr = true, desc = 'Smart resize left' })
 
 key('n', '<C-M-l>', function()
     if vim.fn.winnr '$' > 1 then
         return string.format(':vertical resize +%d<CR>', RESIZE_STEP)
     end
-    return vim.fn.system(string.format 'tmux resize-pane -R %d', RESIZE_STEP)
+
+    return vim.fn.system(string.format('tmux resize-pane -R %d', RESIZE_STEP))
 end, { silent = true, expr = true, desc = 'Smart resize right' })
 
 key('n', '<C-M-k>', function()
     if vim.fn.winnr '$' > 1 then
         return string.format(':resize -%d<CR>', RESIZE_STEP)
     end
-    return vim.fn.system(string.format 'tmux resize-pane -U %d', RESIZE_STEP)
+
+    return vim.fn.system(string.format('tmux resize-pane -U %d', RESIZE_STEP))
 end, { silent = true, expr = true, desc = 'Smart resize up' })
 
 key('n', '<C-M-j>', function()
     if vim.fn.winnr '$' > 1 then
         return string.format(':resize +%d<CR>', RESIZE_STEP)
     end
-    return vim.fn.system(string.format 'tmux resize-pane -D %d', RESIZE_STEP)
+
+    return vim.fn.system(string.format('tmux resize-pane -D %d', RESIZE_STEP))
 end, { silent = true, expr = true, desc = 'Smart resize down' })
