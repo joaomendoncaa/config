@@ -19,7 +19,7 @@ key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
 key('n', 'YY', 'va{Vy', '[Y]ank function')
 
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
-key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wqa<CR>', 'Save all files and [Q]uit')
+key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wq<CR>', 'Save file and [Q]uit')
 
 key('n', '<C-M-h>', function()
     if vim.fn.winnr '$' > 1 then
