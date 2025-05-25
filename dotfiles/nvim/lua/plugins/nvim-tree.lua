@@ -52,9 +52,9 @@ return {
                 return
             end
 
-            local path = vim.fn.expand '%:p'
+            local path = vim.fn.expand '%'
             if path == '' or vim.fn.filereadable(path) == 0 then
-                vim.notify('No valid file under cursor', vim.log.levels.WARN)
+                api.tree.open()
                 return
             end
 
