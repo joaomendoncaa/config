@@ -14,6 +14,7 @@ source "$BASH_CONFIG_DIR/functions"
 source "$BASH_CONFIG_DIR/extensions/zoxide"
 source "$BASH_CONFIG_DIR/extensions/atuin"
 source "$BASH_CONFIG_DIR/extensions/starship"
+source "$BASH_CONFIG_DIR/extensions/pyenv"
 
 export XDG_CONFIG_HOME="$HOME/.config"
 export BUN_INSTALL="$HOME/.bun"
