@@ -11,7 +11,7 @@ return {
             local commands = require 'utils.commands'
             local strings = require 'utils.strings'
 
-            local key = vim.keymap.set
+            local key = require('utils.functions').key
 
             local function toggle()
                 local is_on = api.is_running()
@@ -28,7 +28,7 @@ return {
             end
 
             commands.user('ToggleAISuggestions', toggle)
-            key('n', '<leader>at', toggle, { desc = 'AI: Toggle inline suggestions' })
+            key('n', '<leader>at', toggle, 'AI: Toggle inline suggestions')
 
             plugin.setup {
                 keymaps = { clear_suggestion = '<C-c>' },

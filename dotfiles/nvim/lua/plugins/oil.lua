@@ -11,9 +11,9 @@ return {
         config = function()
             local plugin = require 'oil'
 
-            local keymap = vim.keymap.set
+            local key = require('utils.functions').key
 
-            keymap('n', '-', '<CMD>Oil<CR>', { desc = 'Open file explorer with oil.nvim in cwd.' })
+            key('n', '-', '<CMD>Oil<CR>', 'Open file explorer with oil.nvim in cwd.')
 
             plugin.setup {
                 default_file_explorer = true,

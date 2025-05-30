@@ -9,10 +9,10 @@ return {
     config = function()
         local plugin = require 'outline'
 
-        local keymap = vim.keymap.set
+        local key = require('utils.functions').key
         local autocmd = vim.api.nvim_create_autocmd
 
-        keymap('n', '<leader>o', '<cmd>OutlineOpen<CR>', { desc = 'Toggle [O]utline.' })
+        key('n', '<leader>o', '<cmd>OutlineOpen<CR>', 'Toggle [O]utline.')
 
         autocmd('BufEnter', {
             pattern = '*',

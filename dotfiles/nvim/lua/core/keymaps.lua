@@ -21,6 +21,10 @@ key('n', 'YY', 'va{Vy', '[Y]ank function')
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
 key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wq<CR>', 'Save file and [Q]uit')
 
+key('n', '<leader>cn', '<cmd>cnext<CR>', '[C]losed item [N]ext in quickfix list')
+key('n', '<leader>cp', '<cmd>cprev<CR>', '[C]losed item [P]revious in quickfix list')
+key('n', '<leader>cc', '<cmd>cclose<CR>', '[C]lose quickfix window')
+
 key('n', '<C-M-h>', function()
     if vim.fn.winnr '$' > 1 then
         return string.format(':vertical resize -%d<CR>', RESIZE_STEP)

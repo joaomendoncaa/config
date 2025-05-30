@@ -102,7 +102,7 @@ return {
             },
         }
 
-        local keymap = vim.keymap.set
+        local key = require('utils.functions').key
 
         local function toggle_inlay_hints()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})
@@ -216,12 +216,12 @@ return {
             local has_highlights = client and client.server_capabilities.documentHighlightProvider
             local has_inlay_hints = client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint)
 
-            keymap({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
-            keymap({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, { desc = '[L]sp [R]estart.' })
-            keymap({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, { desc = '[L]sp Start.' })
-            keymap({ 'n', 'v', 'x' }, '<leader>lj', lsp_stop, { desc = '[L]sp Stop.' })
-            keymap('n', '<leader>ll', lsp_list, { desc = '[L]sp [L]ist servers' })
-            keymap('n', '<leader>la', vim.lsp.buf.code_action, { desc = '[L]sp code [A]ctions.' })
+            key({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, '[L]sp code [A]ctions.')
+            key({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, '[L]sp [R]estart.')
+            key({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, '[L]sp [S]tart.')
+            key({ 'n', 'v', 'x' }, '<leader>lj', lsp_stop, '[L]sp [S]top.')
+            key('n', '<leader>ll', lsp_list, '[L]sp [L]ist servers')
+            key('n', '<leader>la', vim.lsp.buf.code_action, '[L]sp code [A]ctions.')
 
             if has_highlights then
                 local highlight_augroup = commands.augroup('LspHighlight', { clear = false })
