@@ -1,8 +1,8 @@
-local RESIZE_STEP = 15
-
 local clipboard = require 'utils.clipboard'
 
 local key = require('utils.functions').key
+local f = require('utils.functions').f
+local resize_pane = require('utils.functions').resize_pane
 
 key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
 
@@ -25,34 +25,7 @@ key('n', '<leader>cn', '<cmd>cnext<CR>', '[C]losed item [N]ext in quickfix list'
 key('n', '<leader>cp', '<cmd>cprev<CR>', '[C]losed item [P]revious in quickfix list')
 key('n', '<leader>cc', '<cmd>cclose<CR>', '[C]lose quickfix window')
 
-key('n', '<C-M-h>', function()
-    if vim.fn.winnr '$' > 1 then
-        return string.format(':vertical resize -%d<CR>', RESIZE_STEP)
-    end
-
-    return vim.fn.system(string.format('tmux resize-pane -L %d', RESIZE_STEP))
-end, { silent = true, expr = true, desc = 'Smart resize left' })
-
-key('n', '<C-M-l>', function()
-    if vim.fn.winnr '$' > 1 then
-        return string.format(':vertical resize +%d<CR>', RESIZE_STEP)
-    end
-
-    return vim.fn.system(string.format('tmux resize-pane -R %d', RESIZE_STEP))
-end, { silent = true, expr = true, desc = 'Smart resize right' })
-
-key('n', '<C-M-k>', function()
-    if vim.fn.winnr '$' > 1 then
-        return string.format(':resize -%d<CR>', RESIZE_STEP)
-    end
-
-    return vim.fn.system(string.format('tmux resize-pane -U %d', RESIZE_STEP))
-end, { silent = true, expr = true, desc = 'Smart resize up' })
-
-key('n', '<C-M-j>', function()
-    if vim.fn.winnr '$' > 1 then
-        return string.format(':resize +%d<CR>', RESIZE_STEP)
-    end
-
-    return vim.fn.system(string.format('tmux resize-pane -D %d', RESIZE_STEP))
-end, { silent = true, expr = true, desc = 'Smart resize down' })
+key('n', '<C-M-h>', f(resize_pane, 'left', 15), { expr = true, silent = true, desc = 'Smart resize left' })
+key('n', '<C-M-l>', f(resize_pane, 'right', 15), { expr = true, silent = true, desc = 'Smart resize right' })
+key('n', '<C-M-k>', f(resize_pane, 'up', 15), { expr = true, silent = true, desc = 'Smart resize up' })
+key('n', '<C-M-j>', f(resize_pane, 'down', 15), { expr = true, silent = true, desc = 'Smart resize down' })

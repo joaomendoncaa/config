@@ -25,18 +25,18 @@ export VISUAL='nvim'
 export NVIM_AI=true
 export NVIM_THEME=kanagawa-paper
 
+[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-[ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -f "$BASH_CONFIG_DIR/.env" ] && export $(grep -v '^[[:space:]]*#' "$BASH_CONFIG_DIR/.env" | xargs -0)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
-add_to_path "/opt/nvim-linux64/bin"
-add_to_path "/mnt/c/Users/joao/AppData/Local/Programs/cursor/resources/app/bin"
-add_to_path "$BUN_INSTALL/bin"
 add_to_path "$HOME/go/bin"
 add_to_path "$HOME/.local/share/solana/install/active_release/bin"
-add_to_path $PNPM_HOME
 add_to_path "$HOME/.config.jmmm.sh/bin"
 add_to_path "$HOME/.local/bin"
 add_to_path "$HOME/bin"
+add_to_path "$BUN_INSTALL/bin"
+add_to_path $PNPM_HOME
+add_to_path "/opt/nvim-linux64/bin"
+add_to_path "/mnt/c/Users/joao/AppData/Local/Programs/cursor/resources/app/bin"
