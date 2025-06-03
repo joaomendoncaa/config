@@ -1,4 +1,5 @@
 local clipboard = require 'utils.clipboard'
+local buffers = require 'utils.buffers'
 
 local key = require('utils.functions').key
 local f = require('utils.functions').f
@@ -19,7 +20,7 @@ key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
 key('n', 'YY', 'va{Vy', '[Y]ank function')
 
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
-key({ 'n', 'i', 'v' }, '<C-q>', '<CMD>wq<CR>', 'Save file and [Q]uit')
+key({ 'n', 'i', 'v' }, '<C-q>', buffers.handle_save_quit, 'Save file and [Q]uit')
 
 key('n', '<leader>cn', '<cmd>cnext<CR>', '[C]losed item [N]ext in quickfix list')
 key('n', '<leader>cp', '<cmd>cprev<CR>', '[C]losed item [P]revious in quickfix list')

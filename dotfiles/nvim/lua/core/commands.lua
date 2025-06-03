@@ -110,7 +110,10 @@ commands.user('ReplaceContentWithClipboard', clipboard.replace_with_yanked_and_w
 
 commands.user('Touch', touch_command, { nargs = '+', complete = touch_complete })
 
-commands.auto({ 'TextYankPost' }, { callback = auto_highlight_yank })
+commands.auto({ 'TextYankPost' }, {
+    callback = auto_highlight_yank,
+    group = commands.augroup 'AutoHighlightYank',
+})
 
 commands.auto({ 'BufEnter', 'BufWinEnter' }, {
     callback = auto_keep_unique_sidebar,
