@@ -10,7 +10,7 @@ return {
         local commands = require 'utils.commands'
         local plugin = require 'nvim-tree'
         local api = require 'nvim-tree.api'
-        local key = require('utils.functions').key
+        local key = require('utils.misc').key
 
         local auto_focus_on_buf_enter = function()
             if not api.tree.is_visible() then

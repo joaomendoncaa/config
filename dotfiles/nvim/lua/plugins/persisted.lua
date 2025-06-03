@@ -14,7 +14,7 @@ return {
 
         local plugin = require 'persisted'
         local commands = require 'utils.commands'
-        local key = require('utils.functions').key
+        local key = require('utils.misc').key
 
         local handle_persisted_save_pre = function()
             for _, buf in ipairs(vim.api.nvim_list_bufs()) do

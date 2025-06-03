@@ -4,7 +4,7 @@ return {
     event = 'VeryLazy',
 
     config = function()
-        local key = require('utils.functions').key
+        local key = require('utils.misc').key
         local commands = require 'utils.commands'
 
         local function setup(mod, opts)

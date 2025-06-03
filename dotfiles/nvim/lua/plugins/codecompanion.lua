@@ -17,8 +17,8 @@ return {
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
 
-            local f = require('utils.functions').f
-            local key = require('utils.functions').key
+            local f = require('utils.misc').f
+            local key = require('utils.misc').key
 
             local slash_provider = 'telescope'
             local progress_handle = nil

@@ -102,7 +102,7 @@ return {
             },
         }
 
-        local key = require('utils.functions').key
+        local key = require('utils.misc').key
 
         local function toggle_inlay_hints()
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled {})

@@ -10,7 +10,7 @@ return {
         local config = require 'nvim-treesitter.configs'
         local install = require 'nvim-treesitter.install'
 
-        local key = require('utils.functions').key
+        local key = require('utils.misc').key
 
         local function git_plugin()
             if vim.bo.filetype ~= 'lua' then

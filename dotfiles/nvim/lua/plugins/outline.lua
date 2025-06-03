@@ -9,7 +9,7 @@ return {
     config = function()
         local plugin = require 'outline'
 
-        local key = require('utils.functions').key
+        local key = require('utils.misc').key
         local autocmd = vim.api.nvim_create_autocmd
 
         key('n', '<leader>o', '<cmd>OutlineOpen<CR>', 'Toggle [O]utline.')

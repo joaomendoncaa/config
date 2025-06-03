@@ -1,9 +1,9 @@
 local clipboard = require 'utils.clipboard'
 local buffers = require 'utils.buffers'
 
-local key = require('utils.functions').key
-local f = require('utils.functions').f
-local resize_pane = require('utils.functions').resize_pane
+local key = require('utils.misc').key
+local f = require('utils.misc').f
+local resize_pane = require('utils.misc').resize_pane
 
 key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
 

@@ -11,9 +11,9 @@ return {
         local strings = require 'utils.strings'
         local plugin = require 'conform'
         local git = require 'utils.git'
-        local functions = require 'utils.functions'
-        local f = functions.f
-        local key = functions.key
+        local misc = require 'utils.misc'
+        local f = misc.f
+        local key = misc.key
 
         local has_format_on_save = true
 

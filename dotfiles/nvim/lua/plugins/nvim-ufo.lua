@@ -10,7 +10,7 @@ return {
     config = function()
         local plugin = require 'ufo'
 
-        local key = require('utils.functions').key
+        local key = require('utils.misc').key
 
         key('n', 'zR', plugin.openAllFolds, 'Un[R]oll all folds.')
         key('n', 'zM', plugin.closeAllFolds, '[M]aster fold.')

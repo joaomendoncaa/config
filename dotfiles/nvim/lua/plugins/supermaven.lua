@@ -11,7 +11,7 @@ return {
             local commands = require 'utils.commands'
             local strings = require 'utils.strings'
 
-            local key = require('utils.functions').key
+            local key = require('utils.misc').key
 
             local function toggle()
                 local is_on = api.is_running()

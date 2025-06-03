@@ -12,7 +12,7 @@ return {
         config = function()
             ---@module 'fzf-lua'
             local fzf = require 'fzf-lua'
-            local key = require('utils.functions').key
+            local key = require('utils.misc').key
 
             local function search_themes()
                 fzf.colorschemes { winopts = { height = 0.33, width = 0.33 } }

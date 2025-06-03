@@ -11,7 +11,7 @@ return {
         config = function()
             local plugin = require 'oil'
 
-            local key = require('utils.functions').key
+            local key = require('utils.misc').key
 
             key('n', '-', '<CMD>Oil<CR>', 'Open file explorer with oil.nvim in cwd.')
 
