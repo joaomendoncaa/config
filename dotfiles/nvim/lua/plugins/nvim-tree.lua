@@ -73,7 +73,7 @@ return {
             key('n', '<leader>h', api.node.open.horizontal, { buffer = bufnr, desc = 'Open split horizontal' })
         end
 
-        key('n', '<leader>ee', handle_toggle, 'Toggle [E]xplorer')
+        key('n', '<C-e>', handle_toggle, 'Toggle [E]xplorer')
 
         api.events.subscribe(api.events.Event.FileCreated, function(file)
             vim.cmd('edit ' .. vim.fn.fnameescape(file.fname))

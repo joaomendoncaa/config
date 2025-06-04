@@ -17,7 +17,7 @@ return {
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
 
-            local f = require('utils.misc').f
+            local f = require('utils.misc').func
             local key = require('utils.misc').key
 
             local slash_provider = 'telescope'
@@ -134,7 +134,7 @@ return {
 
             key('n', 'q', hide_chat_or_macro, { desc = 'AI: Hide chat buffer, or record macro', noremap = true, silent = true })
             key({ 'n', 'v' }, '<leader>ai', ':CodeCompanion ', 'AI: Inline')
-            key({ 'n', 'v' }, '<leader>aa', plugin.toggle, 'AI: Toggle chat buffer')
+            key({ 'n', 'v' }, '<C-a>', plugin.toggle, 'AI: Toggle chat buffer')
             key({ 'n', 'v' }, '<leader>aA', plugin.actions, 'AI: Actions')
             key({ 'n', 'v' }, '<leader>al', f(plugin.prompt, 'lsp'), 'AI: Explain LSP diagnostics')
             key({ 'v' }, '<leader>ad', f(plugin.prompt, 'docstrings'), 'AI: Add docstrings')

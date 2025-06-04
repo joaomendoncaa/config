@@ -12,7 +12,7 @@ return {
         local plugin = require 'conform'
         local git = require 'utils.git'
         local misc = require 'utils.misc'
-        local f = misc.f
+        local f = misc.func
         local key = misc.key
 
         local has_format_on_save = true

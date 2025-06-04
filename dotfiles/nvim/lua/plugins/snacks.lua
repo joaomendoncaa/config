@@ -6,7 +6,7 @@ return {
     init = function()
         local plugin = require 'snacks'
         local key = require('utils.misc').key
-        local f = require('utils.misc').f
+        local f = require('utils.misc').func
 
         local view_news = function()
             plugin.win {
