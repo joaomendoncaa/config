@@ -96,7 +96,11 @@ return {
             },
             on_attach = handle_attach,
             live_filter = {
+                prefix = '/',
                 always_show_folders = false,
+            },
+            filters = {
+                custom = { '.git' },
             },
         }
     end,

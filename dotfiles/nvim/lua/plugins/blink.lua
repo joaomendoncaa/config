@@ -85,6 +85,11 @@ return {
                 },
             },
 
+            enabled = function()
+                local disabled_filetypes = { 'NvimTree', 'TelescopePrompt' }
+                return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype)
+            end,
+
             sources = {
                 default = function()
                     if vim.bo.filetype == 'codecompanion' then
