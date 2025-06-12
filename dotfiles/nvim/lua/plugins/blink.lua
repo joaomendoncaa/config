@@ -86,7 +86,7 @@ return {
             },
 
             enabled = function()
-                local disabled_filetypes = { 'NvimTree', 'TelescopePrompt' }
+                local disabled_filetypes = { '', 'NvimTree', 'DressingInput', 'SnacksInput', 'TelescopePrompt' }
                 return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype)
             end,
 
