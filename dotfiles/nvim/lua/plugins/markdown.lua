@@ -15,11 +15,14 @@ return {
         ft = 'markdown',
 
         config = function()
-            require('table-nvim').setup {
+            local plugin = require 'table-nvim'
+
+            vim.keymap.del('i', '<TAB>')
+            vim.keymap.del('i', '<S-TAB>')
+
+            plugin.setup {
                 padd_column_separators = true,
                 mappings = {
-                    next = '',
-                    prev = '',
                     insert_row_up = '<space>tk',
                     insert_row_down = '<space>tj',
                     insert_column_left = '<space>th',
