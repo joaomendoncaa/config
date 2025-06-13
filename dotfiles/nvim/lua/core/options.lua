@@ -1,5 +1,3 @@
--- Nvim globals, options and auto commands.
-
 local o = vim.opt
 local g = vim.g
 

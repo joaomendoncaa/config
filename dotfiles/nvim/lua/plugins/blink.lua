@@ -100,6 +100,11 @@ return {
                 end,
 
                 providers = {
+                    cmdline = {
+                        enabled = function()
+                            return vim.fn.getcmdtype() ~= ':' or not vim.fn.getcmdline():match "^[%%0-9,'<>%-]*!"
+                        end,
+                    },
                     markdown = { name = 'RenderMarkdown', module = 'render-markdown.integ.blink' },
                     codecompanion = {
                         name = 'CodeCompanion',

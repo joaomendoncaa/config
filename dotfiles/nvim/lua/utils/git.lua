@@ -34,6 +34,12 @@ function M.sync_with_remote(opts)
     end
 
     local handle_on_start = vim.schedule_wrap(function()
+        local has_changes = #vim.fn.systemlist('git status --porcelain', cwd) > 0
+
+        if not has_changes then
+            return
+        end
+
         local commit_msg = string.format('%s: %s', commit_prefix, os.date '%Y-%m-%d %H:%M:%S')
         local cmd = {
             'sh',
