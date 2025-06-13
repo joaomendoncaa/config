@@ -66,6 +66,8 @@ return {
         local handle_attach = function(bufnr)
             api.config.mappings.default_on_attach(bufnr)
 
+            vim.keymap.del('n', '<C-e>', { buffer = bufnr })
+
             key('n', 'h', api.node.navigate.parent_close, { buffer = bufnr, desc = 'Close directory' })
             key('n', 'l', api.node.open.edit, { buffer = bufnr, desc = 'Open file/directory' })
             key('n', 'q', api.tree.close, { buffer = bufnr, desc = 'Close tree' })
