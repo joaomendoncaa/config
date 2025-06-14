@@ -5,8 +5,10 @@ return {
 
     init = function()
         local plugin = require 'snacks'
-        local key = require('utils.misc').key
-        local f = require('utils.misc').func
+        local misc = require 'utils.misc'
+
+        local f = misc.func
+        local key = misc.key
 
         local view_news = function()
             plugin.win {
@@ -19,7 +21,6 @@ return {
         end
 
         key('n', '<leader>.', f(plugin.scratch), '[S]cratch')
-        key('n', '<leader>sSS', plugin.scratch.select, '[S]cratch [S]elect')
         key('n', '<leader>nn', plugin.notifier.show_history, 'Notification History')
         key('n', '<leader>nd', plugin.notifier.hide, 'Dismiss All Notifications')
         key('n', '<leader>bd', plugin.bufdelete.delete, 'Delete Buffer')
@@ -48,13 +49,6 @@ return {
                 enabled = true,
                 icon = '',
                 prompt_pos = 'title',
-            },
-            scratch = {
-                filekey = {
-                    cwd = true,
-                    branch = true,
-                    count = false,
-                },
             },
             styles = {
                 notification = {

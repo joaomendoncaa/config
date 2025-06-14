@@ -9,6 +9,24 @@ return {
 
     config = function()
         local plugin = require 'blink.cmp'
+        local key = require('utils.misc').key
+        local disabled_filetypes = { '', 'NvimTree', 'DressingInput', 'SnacksInput', 'TelescopePrompt' }
+
+        local handle_enabling = function()
+            return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype) or is_blink_enabled
+        end
+
+        local toggle_blink = function()
+            if vim.b.completion == nil then
+                vim.b.completion = handle_enabling()
+            end
+
+            vim.b.completion = not vim.b.completion
+            local state = vim.b.completion and 'enabled' or 'disabled'
+            vim.notify('Blink is now ' .. state, vim.log.levels.INFO)
+        end
+
+        key('n', '<leader>sS', toggle_blink, '[B]link toggle.')
 
         ---@module 'blink.cmp'
         ---@type blink.cmp.Config
@@ -85,10 +103,7 @@ return {
                 },
             },
 
-            enabled = function()
-                local disabled_filetypes = { '', 'NvimTree', 'DressingInput', 'SnacksInput', 'TelescopePrompt' }
-                return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype)
-            end,
+            enabled = handle_enabling,
 
             sources = {
                 default = function()
