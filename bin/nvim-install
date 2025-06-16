@@ -16,7 +16,7 @@ if [ "$VERSION" = "nightly" ]; then
   DEST_DIR="$DOWNLOADS/nvim-nightly"
   TARBALL_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz"
 
-  echo "🔄 Refreshing nightly version..."
+  echo "Refreshing nightly version..."
   rm -rf "$DEST_DIR"
   mkdir -p "$DEST_DIR"
   cd "$DEST_DIR"

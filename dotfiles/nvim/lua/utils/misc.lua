@@ -58,20 +58,21 @@ function M.handle_save_quit()
         return vim.cmd 'q'
     end
 
-    local bufname = vim.api.nvim_buf_get_name(buf)
-    local is_unnamed = bufname == '' and vim.bo[buf].modified
-
-    if not is_unnamed then
-        return vim.cmd 'wq'
+    if vim.bo.modified then
+        return vim.notify 'Buffer modified, save it first.'
     end
 
-    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    local bufname = vim.api.nvim_buf_get_name(buf) or ''
+    local is_unnamed = bufname == ''
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false) or 0
     local is_empty = #lines == 0 or (#lines == 1 and lines[1] == '')
 
-    if is_empty then
+    if is_unnamed and is_empty then
         vim.bo[buf].modified = false
-        return vim.cmd 'q'
+        return vim.cmd 'q!'
     end
+
+    vim.cmd 'q'
 end
 
 return M
