@@ -22,8 +22,7 @@ return {
             end
 
             vim.b.completion = not vim.b.completion
-            local state = vim.b.completion and 'enabled' or 'disabled'
-            vim.notify('Blink is now ' .. state, vim.log.levels.INFO)
+            vim.notify('Blink is now ' .. vim.b.completion and 'enabled' or 'disabled', vim.log.levels.INFO)
         end
 
         key('n', '<leader>sS', toggle_blink, '[B]link toggle.')

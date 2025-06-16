@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -e
+
+VERSION="$1"
+NVIM_DIR="/opt/nvim/bin"
+DOWNLOADS="$HOME/downloads"
+
+if [ -z "$VERSION" ]; then
+  echo "No version specified."
+  echo "Currently installed:"
+  nvim --version | head -n 1
+  exit 1
+fi
+
+VERSION_DASHED=$(echo "$VERSION" | tr '.' '-')
+DEST_DIR="$DOWNLOADS/nvim-$VERSION_DASHED"
+TARBALL_URL="https://github.com/neovim/neovim/releases/download/v$VERSION/nvim-linux-x86_64.tar.gz"
+
+if [ -x "$DEST_DIR/nvim-linux-x86_64/bin/nvim" ]; then
+  echo "Version already downloaded. Installing..."
+else
+  echo "⬇️ Downloading Neovim v$VERSION..."
+  mkdir -p "$DEST_DIR"
+  cd "$DEST_DIR"
+  wget -O nvim.tar.gz "$TARBALL_URL"
+  tar -xzf nvim.tar.gz
+fi
+
+echo "Installing to $NVIM_DIR..."
+sudo mv "$DEST_DIR/nvim-linux-x86_64/bin/nvim" "$NVIM_DIR/nvim"
+
+echo "Finished. Installed version:"
+nvim --version | head -n 1

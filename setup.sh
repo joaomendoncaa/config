@@ -123,70 +123,8 @@ symlink() {
 	esac
 }
 
-echo "Removing previous nix installation..."
-
-if systemctl is-active --quiet nix-daemon.service; then
-	sudo systemctl stop nix-daemon.service || info "Failed to stop nix-daemon.service, it may not be running"
-fi
-
-if systemctl is-enabled --quiet nix-daemon.socket 2>/dev/null; then
-	sudo systemctl disable nix-daemon.socket || info "Failed to disable nix-daemon.socket"
-fi
-
-if systemctl is-enabled --quiet nix-daemon.service 2>/dev/null; then
-	sudo systemctl disable nix-daemon.service || info "Failed to disable nix-daemon.service"
-fi
-
-sudo systemctl daemon-reload || info "Failed to reload systemd daemon"
-
-sudo rm -rf \
-	/nix \
-	/etc/nix \
-	/var/root/.nix-profile \
-	~root/.nix-profile \
-	~root/.nix-channels \
-	~root/.nix-defexpr \
-	/etc/tmpfiles.d/nix-daemon.conf \
-	/etc/profile.d/nix.sh \
-	/etc/zsh/zshrc.backup-before-nix \
-	/etc/zshrc.backup-before-nix \
-	/etc/bashrc.backup-before-nix \
-	/etc/bash.bashrc.backup-before-nix \
-	/etc/profile.d/nix.sh.backup-before-nix
-
-for i in $(seq 1 32); do
-	if id "nixbld$i" &>/dev/null; then
-		sudo userdel "nixbld$i" 2>/dev/null || info "Could not remove nixbld$i user"
-	fi
-done
-
-if getent group nixbld >/dev/null; then
-	sudo groupdel nixbld 2>/dev/null || info "Could not remove nixbld group"
-fi
-
-echo "Starting Installation..."
-
-sh <(curl -L https://nixos.org/nix/install) --daemon --yes
-
-if [ -e ~/.nix-profile/etc/profile.d/nix.sh ]; then
-	. ~/.nix-profile/etc/profile.d/nix.sh
-elif [ -e /etc/profile.d/nix.sh ]; then
-	. /etc/profile.d/nix.sh
-fi
-
-if ! grep -q "experimental-features.*nix-command" ~/.config/nix/nix.conf 2>/dev/null; then
-	echo "Enabling flakes..."
-	mkdir -p ~/.config/nix
-	echo "experimental-features = nix-command flakes" >>~/.config/nix/nix.conf
-fi
-
-echo "Installing packages..."
-
-nix profile install .#desktop
-
 echo "Creating symlinks for config files..."
 
-symlink "$HOME/.config/nix" "$CONFIG_SOURCE/dotfiles/nix"
 symlink "$HOME/.config/nvim" "$CONFIG_SOURCE/dotfiles/nvim"
 symlink "$HOME/.config/starship.toml" "$CONFIG_SOURCE/dotfiles/starship/starship.toml"
 symlink "$HOME/.config/yazi" "$CONFIG_SOURCE/dotfiles/yazi"
@@ -197,15 +135,5 @@ symlink "$HOME/.gitconfig" "$CONFIG_SOURCE/dotfiles/git/.gitconfig"
 symlink "$HOME/.bashrc" "$CONFIG_SOURCE/dotfiles/bash/.bashrc"
 symlink "$HOME/biome.json" "$CONFIG_SOURCE/dotfiles/biome/config.json"
 symlink "/etc/wsl.conf" "$CONFIG_SOURCE/dotfiles/wsl/wsl.conf"
-
-echo "Creating symlinks for binaries..."
-
-mkdir -p "$HOME/.local/bin"
-
-symlink "$HOME/.local/bin/git-dir-status" "$CONFIG_SOURCE/bin/git-dir-status"
-
-echo "Adding new binaries PATH..."
-
-path "$HOME/.local/bin"
 
 echo "Setup complete! 🥳"
