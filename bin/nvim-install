@@ -12,22 +12,34 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-VERSION_DASHED=$(echo "$VERSION" | tr '.' '-')
-DEST_DIR="$DOWNLOADS/nvim-$VERSION_DASHED"
-TARBALL_URL="https://github.com/neovim/neovim/releases/download/v$VERSION/nvim-linux-x86_64.tar.gz"
+if [ "$VERSION" = "nightly" ]; then
+  DEST_DIR="$DOWNLOADS/nvim-nightly"
+  TARBALL_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz"
 
-if [ -x "$DEST_DIR/nvim-linux-x86_64/bin/nvim" ]; then
-  echo "Version already downloaded. Installing..."
-else
-  echo "⬇️ Downloading Neovim v$VERSION..."
+  echo "🔄 Refreshing nightly version..."
+  rm -rf "$DEST_DIR"
   mkdir -p "$DEST_DIR"
   cd "$DEST_DIR"
   wget -O nvim.tar.gz "$TARBALL_URL"
   tar -xzf nvim.tar.gz
+else
+  VERSION_DASHED=$(echo "$VERSION" | tr '.' '-')
+  DEST_DIR="$DOWNLOADS/nvim-$VERSION_DASHED"
+  TARBALL_URL="https://github.com/neovim/neovim/releases/download/v$VERSION/nvim-linux-x86_64.tar.gz"
+
+  if [ -x "$DEST_DIR/nvim-linux-x86_64/bin/nvim" ]; then
+    echo "Version already downloaded. Installing..."
+  else
+    echo "⬇️ Downloading Neovim v$VERSION..."
+    mkdir -p "$DEST_DIR"
+    cd "$DEST_DIR"
+    wget -O nvim.tar.gz "$TARBALL_URL"
+    tar -xzf nvim.tar.gz
+  fi
 fi
 
 echo "Installing to $NVIM_DIR..."
-sudo mv "$DEST_DIR/nvim-linux-x86_64/bin/nvim" "$NVIM_DIR/nvim"
+sudo cp "$DEST_DIR/nvim-linux-x86_64/bin/nvim" "$NVIM_DIR/nvim"
 
 echo "Finished. Installed version:"
 nvim --version | head -n 1
