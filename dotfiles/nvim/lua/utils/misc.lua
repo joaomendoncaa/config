@@ -52,8 +52,9 @@ function M.handle_save_quit()
     local buf = vim.api.nvim_get_current_buf()
     local ft = string.lower(vim.bo[buf].filetype or '')
     local is_nowrite = vim.tbl_contains(wl_nowrite, ft)
+    local is_readonly = vim.bo[buf].readonly
 
-    if is_nowrite then
+    if is_nowrite or is_readonly then
         return vim.cmd 'q'
     end
 
