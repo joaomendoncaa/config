@@ -1,10 +1,3 @@
-local CONFLICTING_WINDOWS = {
-    sidebar = {
-        'nvimtree',
-        'codecompanion',
-    },
-}
-
 local commands = require 'utils.commands'
 local clipboard = require 'utils.clipboard'
 local git = require 'utils.git'
@@ -71,8 +64,15 @@ local auto_keep_unique_sidebar = function()
     local current_ft = string.lower(vim.bo[current_buf].filetype or '')
     local current_win = vim.api.nvim_get_current_win()
     local current_group = nil
+    local conflicting_wins = {
+        sidebar = {
+            'nvimtree',
+            'codecompanion',
+            'undotree',
+        },
+    }
 
-    for group, filetypes in pairs(CONFLICTING_WINDOWS) do
+    for group, filetypes in pairs(conflicting_wins) do
         if vim.tbl_contains(filetypes, current_ft) then
             current_group = group
             break
@@ -91,7 +91,7 @@ local auto_keep_unique_sidebar = function()
             local buf = vim.api.nvim_win_get_buf(win)
             local ft = string.lower(vim.bo[buf].filetype or '')
 
-            if vim.tbl_contains(CONFLICTING_WINDOWS[current_group], ft) then
+            if vim.tbl_contains(conflicting_wins[current_group], ft) then
                 pcall(vim.api.nvim_win_close, win, false)
                 vim.cmd('vertical resize ' .. width_to_restore)
                 return
