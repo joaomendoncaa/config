@@ -39,7 +39,7 @@ return {
 
         event = 'VeryLazy',
         lazy = true,
-        ft = { 'markdown', 'codecompanion', 'sourcermarkdown' },
+        ft = { 'codecompanion', 'sourcermarkdown' },
         dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' },
 
         config = function()
@@ -118,7 +118,6 @@ return {
                 end
 
                 custom_css_file:write(mkdp_css_file:read '*a' .. '\n' .. custom_css)
-
                 custom_css_file:close()
                 mkdp_css_file:close()
             end
