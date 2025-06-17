@@ -16,20 +16,21 @@ return {
 
         config = function()
             local plugin = require 'table-nvim'
+            local custom_mappings = {
+                insert_row_up = '<space>tk',
+                insert_row_down = '<space>tj',
+                insert_column_left = '<space>th',
+                insert_column_right = '<space>tl',
+                insert_table = '<A-t>',
+                insert_table_alt = '<A-S-t>',
+            }
 
             vim.keymap.del('i', '<TAB>')
             vim.keymap.del('i', '<S-TAB>')
 
             plugin.setup {
                 padd_column_separators = true,
-                mappings = {
-                    insert_row_up = '<space>tk',
-                    insert_row_down = '<space>tj',
-                    insert_column_left = '<space>th',
-                    insert_column_right = '<space>tl',
-                    insert_table = '<A-t>',
-                    insert_table_alt = '<A-S-t>',
-                },
+                mappings = custom_mappings,
             }
         end,
     },
