@@ -2,6 +2,8 @@ return {
     {
         'mbbill/undotree',
 
+        event = 'VeryLazy',
+
         config = function()
             local key = require('utils.misc').key
 

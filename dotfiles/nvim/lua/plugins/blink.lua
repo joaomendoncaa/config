@@ -10,6 +10,7 @@ return {
     config = function()
         local plugin = require 'blink.cmp'
         local key = require('utils.misc').key
+        local commands = require 'utils.commands'
         local disabled_filetypes = { '', 'NvimTree', 'DressingInput', 'SnacksInput', 'TelescopePrompt' }
 
         local handle_enabling = function()
@@ -25,7 +26,9 @@ return {
             vim.notify('Blink is now ' .. vim.b.completion and 'enabled' or 'disabled', vim.log.levels.INFO)
         end
 
-        key('n', '<leader>sS', toggle_blink, '[B]link toggle.')
+        key('n', '<leader>sS', toggle_blink, 'Toggle Blink [S]ugestions')
+
+        commands.user('BlinkToggle', toggle_blink)
 
         ---@module 'blink.cmp'
         ---@type blink.cmp.Config
@@ -108,6 +111,10 @@ return {
                 default = function()
                     if vim.bo.filetype == 'codecompanion' then
                         return { 'codecompanion' }
+                    end
+
+                    if vim.bo.filetype == 'markdown' then
+                        return { 'markdown', 'emoji', 'path' }
                     end
 
                     return { 'lsp', 'path', 'snippets', 'buffer', 'markdown', 'emoji' }
