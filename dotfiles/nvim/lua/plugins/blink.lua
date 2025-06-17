@@ -14,7 +14,7 @@ return {
         local disabled_filetypes = { '', 'NvimTree', 'DressingInput', 'SnacksInput', 'TelescopePrompt' }
 
         local handle_enabling = function()
-            return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype) or is_blink_enabled
+            return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype)
         end
 
         local toggle_blink = function()

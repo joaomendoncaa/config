@@ -124,6 +124,8 @@ return {
             key('n', '<leader>sh', fzf.helptags, '[S]earch [H]elp')
             key('n', '<leader>sH', fzf.highlights, '[S]earch [H]ighlights')
             key('n', '<leader>sb', fzf.buffers, '[S]earch open [B]uffers')
+            key('n', '<leader>sd', fzf.diagnostics_document, '[S]earch [D]iagnostics')
+            key('n', '<leader>sD', fzf.diagnostics_workspace, '[S]earch [D]iagnostics')
             key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
             key('n', '<leader>sSs', search_spelling, '[S]earch [S]pelling suggestions')
             key('n', '<leader>scf', search_files_config, '[S]earch [C]onfig [F]iles')
