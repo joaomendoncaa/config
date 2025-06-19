@@ -21,7 +21,9 @@ return {
         key('n', '<leader>Ll', '<CMD>Leet<CR>')
         key('n', '<leader>Lr', '<CMD>Leet run<CR>')
         key('n', '<leader>Ls', '<CMD>Leet submit<CR>')
+        key('n', '<leader>Lb', '<CMD>Leet open<CR>')
 
+        --- @diagnostic disable-next-line: missing-fields
         plugin.setup {
             arg = SUFIX,
             lang = 'typescript',
