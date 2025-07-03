@@ -52,7 +52,7 @@ return {
                 write_without_context()
             end
 
-            git.sync_with_remote { paths = { 'blog.jmmm.sh', 'journal.jmmm.sh' }, delay = 500 }
+            git.sync_with_remote { paths = { 'blog.jmmm.sh', 'journal.jmmm.sh', 'rustlings' }, delay = 500 }
         end
 
         key('n', '<leader>ff', format_async, '[F]ormat buffer.')
