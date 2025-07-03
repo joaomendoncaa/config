@@ -214,9 +214,13 @@ return {
             local client = vim.lsp.get_client_by_id(event.data.client_id)
             local buffer = event.buf
             local has_highlights = client and client.server_capabilities.documentHighlightProvider
-            local has_inlay_hints = client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint)
+            local has_inlay_hints = client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, buffer)
 
-            vim.diagnostic.config { virtual_text = true }
+            vim.diagnostic.config {
+                virtual_text = {
+                    severity = vim.diagnostic.severity.ERROR,
+                },
+            }
 
             key({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, '[L]sp code [A]ctions.')
             key({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, '[L]sp [R]estart.')
