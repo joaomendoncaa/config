@@ -122,4 +122,22 @@ function M.truncateChunks(chunks, opts)
     return truncated_chunks
 end
 
+function M.dedent(str)
+    local lines = vim.split(str, '\n', { trimempty = true })
+    local indent = math.huge
+
+    for _, line in ipairs(lines) do
+        local leading = line:match '^%s*'
+        if #leading < indent and #line > 0 then
+            indent = #leading
+        end
+    end
+
+    for i, line in ipairs(lines) do
+        lines[i] = line:sub(indent + 1)
+    end
+
+    return table.concat(lines, '\n')
+end
+
 return M
