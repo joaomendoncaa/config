@@ -16,6 +16,7 @@ return {
             local plugin = require 'codecompanion'
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
+            local strings = require 'utils.strings'
 
             local f = require('utils.misc').func
             local key = require('utils.misc').key
@@ -160,6 +161,10 @@ return {
                         opts = {
                             short_name = 'docstrings',
                             auto_submit = true,
+                            adapter = {
+                                name = 'anthropic',
+                                model = 'claude-3-5-haiku-latest',
+                            },
                         },
                         prompts = {
                             {
@@ -175,19 +180,76 @@ return {
                                 content = function(context)
                                     local text = require('codecompanion.helpers.actions').get_code(context.start_line, context.end_line)
                                     return string.format(
-                                        [[
-Add appropriate documentation to this code:
-- For functions: Add proper docstrings following language conventions, including types if present
-- For configuration/script code: Add simple descriptive comments explaining purpose
-- Do NOT modify any of the actual code - only add documentation
-- Keep any existing documentation style
-- Return the complete code with added documentation
+                                        strings.dedent [[
+                                        Add appropriate documentation to this code:
+                                        - For functions: Add proper docstrings following language conventions, including types if present
+                                        - For configuration/script code: Add simple descriptive comments explaining purpose
+                                        - Do NOT modify any of the actual code - only add documentation
+                                        - Keep any existing documentation style
+                                        - Return the complete code with added documentation
 
-```%s
-%s
-```]],
+                                        ```%s
+                                        %s
+                                        ```]],
                                         context.filetype,
                                         text
+                                    )
+                                end,
+                                opts = {
+                                    contains_code = true,
+                                },
+                            },
+                        },
+                    },
+                    ['Help with DSA exercise'] = {
+                        strategy = 'chat',
+                        description = 'Help with DSA exercises.',
+                        opts = {
+                            short_name = 'dsa',
+                            auto_submit = false,
+                            adapter = {
+                                name = 'anthropic',
+                                model = 'claude-3-5-haiku-latest',
+                            },
+                        },
+                        prompts = {
+                            {
+                                role = 'system',
+                                content = function(context)
+                                    return 'You are a senior '
+                                        .. context.filetype
+                                        .. " developer and a wise teacher. You're the best person to help someone with DSA exercises."
+                                end,
+                            },
+                            {
+                                role = 'user',
+                                content = function(context)
+                                    local wins = vim.api.nvim_tabpage_list_wins(0)
+                                    local win_l = vim.api.nvim_win_get_buf(wins[1])
+                                    local win_r = vim.api.nvim_win_get_buf(wins[2])
+                                    local lines_l = vim.api.nvim_buf_get_lines(win_l, 0, -1, false)
+                                    local lines_r = vim.api.nvim_buf_get_lines(win_r, 0, -1, false)
+
+                                    return string.format(
+                                        strings.dedent [[
+                                        Help with this DSA exercise:
+                                        - Do NOT give me any explicit solution
+                                        - Give me hints on how to move forward depending on where I am in the implementation
+                                        - Give me explanations of what I'm doing wrong if I'm not on the right track
+
+                                        Problem:
+                                        ```md
+                                        %s
+                                        ```
+
+                                        Current code:
+                                        ```%s
+                                        %s
+                                        ```
+                                        ]],
+                                        table.concat(lines_l, '\n'),
+                                        context.filetype,
+                                        table.concat(lines_r, '\n')
                                     )
                                 end,
                                 opts = {
