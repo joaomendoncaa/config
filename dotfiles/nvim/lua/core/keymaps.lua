@@ -16,7 +16,8 @@ key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 key('n', 'j', 'gj', '[J] Move down even in wrapped lines')
 key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
 
-key('n', 'YY', 'va{Vy', '[Y]ank function')
+key('n', 'YY', 'GVggy', '[Y]ank whole buffer')
+key('n', 'YP', clipboard.replace_with_yanked_and_write, '[P]aste yanked over buffer')
 
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
 key({ 'n', 'i', 'v' }, '<C-q>', misc.handle_save_quit, 'Save file and [Q]uit')
