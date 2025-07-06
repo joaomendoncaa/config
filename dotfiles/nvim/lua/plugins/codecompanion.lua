@@ -232,17 +232,17 @@ return {
 
                                     return string.format(
                                         strings.dedent [[
-                                        Help with this DSA exercise:
+                                        *Critical: Help with this DSA exercise*
                                         - Do NOT give me any explicit solution
                                         - Give me hints on how to move forward depending on where I am in the implementation
                                         - Give me explanations of what I'm doing wrong if I'm not on the right track
 
-                                        Problem:
+                                        ## Problem
                                         ```md
                                         %s
                                         ```
 
-                                        Current code:
+                                        ## Current code
                                         ```%s
                                         %s
                                         ```

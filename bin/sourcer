@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ $# -ne 1 ]; then
+    tmux display-message "Usage: sourcer owner/repo or https://github.com/owner/repo"
+    exit 1
+fi
+
+INPUT="$1"
+
+if [[ "$INPUT" == *"github.com"* ]]; then
+    INPUT="${INPUT#*://}"
+    INPUT="${INPUT#*github.com/}"
+    INPUT="${INPUT%.git}"
+    INPUT="${INPUT%/}"
+fi
+
+OWNER=$(dirname "$INPUT")
+REPO=$(basename "$INPUT")
+SESSION_NAME="${REPO//./-}"
+
+TARGET_DIR="$HOME/lab/$OWNER/$REPO"
+GIT_URL="https://github.com/$OWNER/$REPO.git"
+
+if [ -d "$TARGET_DIR" ]; then
+    tmux display-message "❌ Directory $TARGET_DIR already exists"
+    exit 1
+fi
+
+if ! git clone "$GIT_URL" "$TARGET_DIR" 2>/dev/null; then
+    tmux display-message "❌ Failed to clone $INPUT"
+    exit 1
+fi
+
+tmux new-session -ds "$SESSION_NAME" -c "$TARGET_DIR"
+tmux display-message "✅ session '$SESSION_NAME' ready"
+tmux switch-client -t "$SESSION_NAME"
