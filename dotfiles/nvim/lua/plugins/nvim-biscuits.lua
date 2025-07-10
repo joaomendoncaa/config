@@ -7,11 +7,19 @@ return {
         local plugin = require 'nvim-biscuits'
 
         plugin.setup {
+            show_on_start = true,
             default_config = {
                 min_distance = 15,
                 prefix_string = '',
             },
-            show_on_start = true,
+            language_config = {
+                markdown = {
+                    disabled = true,
+                },
+                codecompanion = {
+                    disabled = true,
+                },
+            },
         }
     end,
 }
