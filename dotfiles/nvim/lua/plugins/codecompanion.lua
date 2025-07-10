@@ -21,7 +21,7 @@ return {
             local f = require('utils.misc').func
             local key = require('utils.misc').key
 
-            local slash_provider = 'telescope'
+            local slash_provider = 'fzf_lua'
             local progress_handle = nil
 
             ---@param event 'started' | 'finished'
