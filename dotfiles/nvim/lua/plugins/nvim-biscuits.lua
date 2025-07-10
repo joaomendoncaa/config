@@ -1,5 +1,17 @@
 return {
     'code-biscuits/nvim-biscuits',
+
     event = 'VeryLazy',
-    opts = {},
+
+    config = function()
+        local plugin = require 'nvim-biscuits'
+
+        plugin.setup {
+            default_config = {
+                min_distance = 15,
+                prefix_string = '',
+            },
+            show_on_start = true,
+        }
+    end,
 }
