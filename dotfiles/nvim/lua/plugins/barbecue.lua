@@ -5,6 +5,8 @@ return {
     version = false,
     event = 'VeryLazy',
 
+    enabled = false,
+
     dependencies = {
         'SmiteshP/nvim-navic',
         { 'nvim-tree/nvim-web-devicons', enabled = vim.g.NVIM_NERD_FONT },
