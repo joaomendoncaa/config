@@ -220,6 +220,9 @@ return {
                 virtual_text = {
                     severity = vim.diagnostic.severity.ERROR,
                 },
+                underline = {
+                    severity = { min = vim.diagnostic.severity.ERROR },
+                },
             }
 
             key({ 'n', 'v', 'x' }, '<leader>la', vim.lsp.buf.code_action, '[L]sp code [A]ctions.')
