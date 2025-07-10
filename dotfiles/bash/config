@@ -32,6 +32,7 @@ export NVIM_THEME=kanagawa-paper
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 add_to_path "$HOME/go/bin"
+add_to_path "$HOME/joao/.opencode/bin"
 add_to_path "$HOME/.local/share/solana/install/active_release/bin"
 add_to_path "$HOME/.config.jmmm.sh/bin"
 add_to_path "$HOME/.local/bin"
