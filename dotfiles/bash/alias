@@ -17,6 +17,7 @@ alias bfg='java -jar ~/bin/bfg.jar'
 alias nv='nvim'
 alias nvl='nvim leet'
 alias yt-dlp-mp4='yt-dlp -S res,ext:mp4:m4a --recode mp4'
+alias oc='opencode'
 
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
