@@ -42,7 +42,7 @@ return {
         plugin.setup(vim.tbl_extend('force', opts, {
             notifier = {
                 enabled = true,
-                timeout = 2500,
+                timeout = 1500,
                 style = 'fancy',
             },
             input = {
