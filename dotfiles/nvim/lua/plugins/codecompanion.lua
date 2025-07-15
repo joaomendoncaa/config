@@ -13,6 +13,8 @@ return {
         },
 
         config = function()
+            vim.g.codecompanion_auto_tool_mode = true
+
             local plugin = require 'codecompanion'
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
@@ -282,6 +284,24 @@ return {
                                 description = 'Stop Request',
                             },
                         },
+                        tools = {
+                            opts = {
+                                auto_submit_errors = true,
+                                auto_submit_success = true,
+                            },
+                            groups = {
+                                ['full_stack_dev'] = {
+                                    opts = {
+                                        collapse_tools = true,
+                                    },
+                                },
+                                ['files'] = {
+                                    opts = {
+                                        collapse_tools = true,
+                                    },
+                                },
+                            },
+                        },
                     },
                     inline = {
                         adapter = 'anthropic',
@@ -297,6 +317,7 @@ return {
 
                 display = {
                     chat = {
+                        show_settings = false,
                         intro_message = 'Press ? for options',
                         window = {
                             width = 0.25,
