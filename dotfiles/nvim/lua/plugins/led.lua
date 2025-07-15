@@ -1,6 +1,5 @@
 return {
     'joaomendoncaa/led.nvim',
-    -- dir = '~/lab/led.nvim',
 
     event = 'VeryLazy',
 
@@ -10,6 +9,7 @@ return {
         plugin.setup {
             char = '●',
             ignore = { 'terminal', 'quickfix', 'nofile', 'codecompanion', 'NvimTree', 'noice' },
+            gap = 2,
 
             leds = {
                 {
@@ -23,6 +23,7 @@ return {
                         return 'E' .. tostring(errors)
                     end,
                 },
+
                 {
                     position = 'top-right',
                     highlight = { fg = '#ffffff' },
