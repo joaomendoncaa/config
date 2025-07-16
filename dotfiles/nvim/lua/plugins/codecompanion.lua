@@ -238,6 +238,7 @@ return {
                                         - Do NOT give me any explicit solution
                                         - Give me hints on how to move forward depending on where I am in the implementation
                                         - Give me explanations of what I'm doing wrong if I'm not on the right track
+                                        - Always look at my #{buffer} code before reading any of my prompts and answering them
 
                                         *Problem*
                                         ```md
@@ -302,6 +303,13 @@ return {
                                 },
                             },
                         },
+                        variables = {
+                            ['buffer'] = {
+                                opts = {
+                                    default_params = 'pin',
+                                },
+                            },
+                        },
                     },
                     inline = {
                         adapter = 'anthropic',
@@ -317,8 +325,8 @@ return {
 
                 display = {
                     chat = {
-                        show_settings = false,
                         intro_message = 'Press ? for options',
+                        show_token_count = true,
                         window = {
                             width = 0.25,
                         },
