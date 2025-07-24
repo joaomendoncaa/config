@@ -138,9 +138,15 @@ return {
                 end
             end
 
+            local toggle_visual_selection = function()
+                plugin.last_chat():close()
+                plugin.toggle()
+            end
+
             key('n', 'q', hide_chat_or_macro, { desc = 'AI: Hide chat buffer, or record macro', noremap = true, silent = true })
             key({ 'n', 'v' }, '<leader>ai', ':CodeCompanion ', 'AI: Inline')
-            key({ 'n', 'v' }, '<C-a>', plugin.toggle, 'AI: Toggle chat buffer')
+            key({ 'n' }, '<C-a>', plugin.toggle, 'AI: Toggle chat buffer')
+            key({ 'v' }, '<C-a>', toggle_visual_selection, 'AI: Toggle chat buffer with visual selection')
             key({ 'n', 'v' }, '<leader>aA', plugin.actions, 'AI: Actions')
             key({ 'n', 'v' }, '<leader>al', f(plugin.prompt, 'lsp'), 'AI: Explain LSP diagnostics')
             key({ 'v' }, '<leader>ad', f(plugin.prompt, 'docstrings'), 'AI: Add docstrings')
