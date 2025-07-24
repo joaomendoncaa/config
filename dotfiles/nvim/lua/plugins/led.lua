@@ -26,7 +26,7 @@ return {
 
                 {
                     position = 'top-right',
-                    highlight = { fg = '#ffffff' },
+                    highlight = { fg = '#555555' },
                     handler = function(winnr, bufnr)
                         local full_path = vim.api.nvim_buf_get_name(bufnr)
                         if full_path == '' then
