@@ -164,7 +164,7 @@ return {
                 },
             }
 
-            fzf.register_ui_select()
+            -- fzf.register_ui_select()
         end,
     },
 }

@@ -1,6 +1,7 @@
 return {
     {
         'olimorris/codecompanion.nvim',
+        -- dir = '/home/joao/lab/codecompanion.nvim',
 
         enabled = require('utils.flags').isTrue(vim.env.NVIM_AI),
         event = 'VeryLazy',
@@ -10,6 +11,8 @@ return {
             'j-hui/fidget.nvim',
             'nvim-treesitter/nvim-treesitter',
             'saghen/blink.cmp',
+
+            'nvim-telescope/telescope.nvim',
         },
 
         config = function()
@@ -23,7 +26,7 @@ return {
             local f = require('utils.misc').func
             local key = require('utils.misc').key
 
-            local slash_provider = 'fzf_lua'
+            local slash_provider = 'telescope'
             local progress_handle = nil
 
             ---@param event 'started' | 'finished'
@@ -321,6 +324,16 @@ return {
                             env = { api_key = vim.env.ANTHROPIC_API_KEY },
                         })
                     end,
+                    haiku = function()
+                        return require('codecompanion.adapters').extend('anthropic', {
+                            env = { api_key = vim.env.ANTHROPIC_API_KEY },
+                            schema = {
+                                model = {
+                                    default = 'claude-3-5-haiku-latest',
+                                },
+                            },
+                        })
+                    end,
                 },
 
                 display = {
@@ -334,7 +347,7 @@ return {
                 },
 
                 opts = {
-                    log_level = 'INFO',
+                    log_level = 'ERROR',
                 },
             }
         end,
