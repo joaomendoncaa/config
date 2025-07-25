@@ -22,12 +22,17 @@ return {
             local commands = require 'utils.commands'
             local progress = require 'fidget.progress'
             local strings = require 'utils.strings'
+            local errors = require 'utils.errors'
 
             local f = require('utils.misc').func
             local key = require('utils.misc').key
 
             local slash_provider = 'telescope'
             local progress_handle = nil
+
+            errors.ignore {
+                'codecompanion.-Invalid buffer id',
+            }
 
             ---@param event 'started' | 'finished'
             local handle_stream_sfx = function(event)
@@ -284,16 +289,7 @@ return {
                             ['help'] = { opts = { provider = slash_provider } },
                             ['symbols'] = { opts = { provider = slash_provider } },
                         },
-                        keymaps = {
-                            stop = {
-                                modes = {
-                                    n = 'c',
-                                },
-                                index = 5,
-                                callback = 'keymaps.stop',
-                                description = 'Stop Request',
-                            },
-                        },
+                        keymaps = {},
                         tools = {
                             opts = {
                                 auto_submit_errors = true,
