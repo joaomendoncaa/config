@@ -30,3 +30,5 @@ key('n', '<C-M-h>', f(misc.resize_pane, 'left', 15), { expr = true, silent = tru
 key('n', '<C-M-l>', f(misc.resize_pane, 'right', 15), { expr = true, silent = true, desc = 'Smart resize right' })
 key('n', '<C-M-k>', f(misc.resize_pane, 'up', 15), { expr = true, silent = true, desc = 'Smart resize up' })
 key('n', '<C-M-j>', f(misc.resize_pane, 'down', 15), { expr = true, silent = true, desc = 'Smart resize down' })
+
+key('n', 'so', misc.arrange_ordered_list, '[S]ort [O]rdered list numbers')

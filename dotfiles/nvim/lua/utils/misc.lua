@@ -16,6 +16,33 @@ function M.key(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('force', defaults, opts))
 end
 
+function M.arrange_ordered_list()
+    local row = vim.api.nvim_win_get_cursor(0)[1]
+
+    local start_line = row
+    while start_line > 1 and vim.fn.getline(start_line - 1) ~= '' do
+        start_line = start_line - 1
+    end
+
+    local last_line = vim.api.nvim_buf_line_count(0)
+    local end_line = row
+    while end_line < last_line and vim.fn.getline(end_line + 1) ~= '' do
+        end_line = end_line + 1
+    end
+
+    local count = 0
+    for lnum = start_line, end_line do
+        local line = vim.fn.getline(lnum)
+        local replaced = line:gsub('^(%d+)', function()
+            count = count + 1
+            return tostring(count)
+        end)
+        if replaced ~= line then
+            vim.fn.setline(lnum, replaced)
+        end
+    end
+end
+
 function M.resize_pane(direction, amount)
     local has_h_split = vim.fn.winnr 'k' ~= vim.fn.winnr() or vim.fn.winnr 'j' ~= vim.fn.winnr()
     local is_nvim = vim.fn.winnr '$' > 1
