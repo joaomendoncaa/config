@@ -16,30 +16,46 @@ function M.key(mode, lhs, rhs, opts)
     vim.keymap.set(mode, lhs, rhs, vim.tbl_extend('force', defaults, opts))
 end
 
-function M.arrange_ordered_list()
-    local row = vim.api.nvim_win_get_cursor(0)[1]
+function M.resort_md_list()
+    local ts_utils = require 'nvim-treesitter.ts_utils'
 
-    local start_line = row
-    while start_line > 1 and vim.fn.getline(start_line - 1) ~= '' do
-        start_line = start_line - 1
-    end
+    local function renumber_list_items(list_node, depth)
+        depth = depth or 1
+        local count = 1
 
-    local last_line = vim.api.nvim_buf_line_count(0)
-    local end_line = row
-    while end_line < last_line and vim.fn.getline(end_line + 1) ~= '' do
-        end_line = end_line + 1
-    end
+        for item_node in list_node:iter_children() do
+            if item_node:type() == 'list_item' then
+                local marker = item_node:child(0)
+                if marker then
+                    local start_row = marker:range()
+                    local line = vim.api.nvim_buf_get_lines(0, start_row, start_row + 1, false)[1]
 
-    local count = 0
-    for lnum = start_line, end_line do
-        local line = vim.fn.getline(lnum)
-        local replaced = line:gsub('^(%d+)', function()
-            count = count + 1
-            return tostring(count)
-        end)
-        if replaced ~= line then
-            vim.fn.setline(lnum, replaced)
+                    local indent = string.rep('  ', depth - 1)
+                    local new_line = line:gsub('^%s*%d+%s*%.', indent .. count .. '.')
+                    vim.api.nvim_buf_set_lines(0, start_row, start_row + 1, false, { new_line })
+
+                    count = count + 1
+                end
+
+                for i = 0, item_node:named_child_count() - 1 do
+                    local child = item_node:named_child(i)
+                    if child:type() == 'list' then
+                        renumber_list_items(child, depth + 1)
+                    end
+                end
+            end
         end
+    end
+
+    local node = ts_utils.get_node_at_cursor()
+    while node and node:type() ~= 'list' do
+        node = node:parent()
+    end
+
+    if node then
+        renumber_list_items(node)
+    else
+        print 'Not inside a list.'
     end
 end
 

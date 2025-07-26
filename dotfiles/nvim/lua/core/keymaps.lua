@@ -31,4 +31,4 @@ key('n', '<C-M-l>', f(misc.resize_pane, 'right', 15), { expr = true, silent = tr
 key('n', '<C-M-k>', f(misc.resize_pane, 'up', 15), { expr = true, silent = true, desc = 'Smart resize up' })
 key('n', '<C-M-j>', f(misc.resize_pane, 'down', 15), { expr = true, silent = true, desc = 'Smart resize down' })
 
-key('n', 'so', misc.arrange_ordered_list, '[S]ort [O]rdered list numbers')
+key('n', 'so', misc.resort_md_list, 'Re-[S]ort markd[O]wn list')
