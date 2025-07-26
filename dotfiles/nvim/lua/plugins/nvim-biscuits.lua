@@ -5,6 +5,11 @@ return {
 
     config = function()
         local plugin = require 'nvim-biscuits'
+        local errors = require 'utils.errors'
+
+        errors.ignore {
+            "nvim-biscuits.-Invalid 'line': out of range",
+        }
 
         plugin.setup {
             show_on_start = true,
