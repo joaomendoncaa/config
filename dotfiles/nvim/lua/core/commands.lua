@@ -17,9 +17,7 @@ local open_notepad = function()
     local dir_path = vim.fn.getcwd() .. '/' .. year .. '/' .. month
     local file_path = dir_path .. '/' .. day .. '.md'
 
-    if vim.fn.filereadable(file_path) == 0 then
-        vim.fn.system('cd ' .. vim.fn.shellescape(dir_path) .. ' && ./new')
-    end
+    vim.fn.system(string.format('bash %s/new %s', vim.fn.getcwd(), file_path))
 
     vim.cmd('edit ' .. file_path)
 end
