@@ -8,7 +8,7 @@ return {
         local errors = require 'utils.errors'
 
         errors.ignore {
-            "nvim-biscuits.-Invalid 'line': out of range",
+            'nvim-biscuits.-out of range',
         }
 
         plugin.setup {

@@ -9,6 +9,11 @@ return {
     config = function()
         local config = require 'nvim-treesitter.configs'
         local install = require 'nvim-treesitter.install'
+        local errors = require 'utils.errors'
+
+        errors.ignore {
+            'treesitter.-Index out of bounds',
+        }
 
         local key = require('utils.misc').key
 
