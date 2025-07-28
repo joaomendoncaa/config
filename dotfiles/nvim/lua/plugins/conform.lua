@@ -42,6 +42,8 @@ return {
         end
 
         local function handle_buf_write(ctx)
+            vim.cmd 'Trim'
+
             local write_without_context = function()
                 vim.api.nvim_buf_call(ctx.buf, f(vim.cmd, 'noautocmd write!'))
             end

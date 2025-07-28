@@ -32,7 +32,10 @@ return {
         key('n', '<leader>ik', indent_scope_on, 'Toggle indent scope ON')
         key('n', '<leader>ij', indent_scope_off, 'Toggle indent scope OFF')
 
-        commands.user('Trim', require('mini.trailspace').trim)
+        commands.user('Trim', function()
+            vim.cmd 'silent! %s/\r/ /g'
+            require('mini.trailspace').trim()
+        end)
 
         setup 'surround'
         setup 'trailspace'
