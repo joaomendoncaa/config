@@ -126,29 +126,11 @@ return {
                 end
             end
 
-            local hide_chat_or_macro = function()
-                if vim.bo.filetype ~= 'codecompanion' then
-                    vim.api.nvim_feedkeys('q', 'n', false)
-                    return
-                end
-
-                local chat = plugin.last_chat()
-
-                if not chat then
-                    return
-                end
-
-                if chat.ui:is_visible() then
-                    return chat.ui:hide()
-                end
-            end
-
             local toggle_visual_selection = function()
                 plugin.last_chat():close()
                 plugin.toggle()
             end
 
-            key('n', 'q', hide_chat_or_macro, { desc = 'AI: Hide chat buffer, or record macro', noremap = true, silent = true })
             key({ 'n', 'v' }, '<leader>ai', ':CodeCompanion ', 'AI: Inline')
             key({ 'n' }, '<C-a>', plugin.toggle, 'AI: Toggle chat buffer')
             key({ 'v' }, '<C-a>', toggle_visual_selection, 'AI: Toggle chat buffer with visual selection')
