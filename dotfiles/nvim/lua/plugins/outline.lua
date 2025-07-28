@@ -3,7 +3,7 @@ return {
 
     cmd = { 'Outline', 'OutlineOpen' },
     keys = {
-        { '<leader>o' },
+        { '<leader>O' },
     },
 
     config = function()
