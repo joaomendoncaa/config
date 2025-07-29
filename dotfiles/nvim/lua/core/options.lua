@@ -41,3 +41,4 @@ o.foldcolumn = '0'
 o.foldlevel = 99
 o.foldlevelstart = 99
 o.foldenable = true
+o.guicursor = { 'n-v-c-sm:block', 'i-ci-ve:block', 'r-cr-o:block' }
