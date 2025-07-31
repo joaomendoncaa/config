@@ -31,20 +31,20 @@ return {
             {}
         )
 
-        plugin.setup {
-            cmdline = {
-                view = 'cmdline_popup',
-                opts = {
-                    border = {
-                        text = {
-                            top = '',
-                        },
-                    },
-                    position = {
-                        row = 10,
-                    },
-                },
-            },
-        }
+        -- plugin.setup {
+        --     cmdline = {
+        --         view = 'cmdline_popup',
+        --         opts = {
+        --             border = {
+        --                 text = {
+        --                     top = '',
+        --                 },
+        --             },
+        --             position = {
+        --                 row = 10,
+        --             },
+        --         },
+        --     },
+        -- }
     end,
 }

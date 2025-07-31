@@ -46,7 +46,7 @@ return {
                 style = 'fancy',
             },
             input = {
-                enabled = true,
+                enabled = false,
                 icon = '',
                 prompt_pos = 'title',
             },
