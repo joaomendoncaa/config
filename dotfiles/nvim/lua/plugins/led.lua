@@ -1,5 +1,6 @@
 return {
-    'joaomendoncaa/led.nvim',
+    -- 'joaomendoncaa/led.nvim',
+    dir = '~/lab/led.nvim/',
 
     event = 'VeryLazy',
 
@@ -10,6 +11,7 @@ return {
             char = '●',
             ignore = { 'terminal', 'quickfix', 'nofile', 'codecompanion', 'NvimTree', 'noice' },
             gap = 2,
+            debug = false,
 
             leds = {
                 {

@@ -3,7 +3,7 @@ local SUFIX = 'leet'
 return {
     'kawre/leetcode.nvim',
 
-    lazy = SUFIX ~= vim.fn.argv(0, -1),
+    lazy = SUFIX ~= vim.fn.argv(0),
     build = ':TSUpdate html',
     cmd = 'Leet',
 
@@ -16,6 +16,7 @@ return {
 
     config = function()
         local plugin = require 'leetcode'
+
         local key = require('utils.misc').key
 
         key('n', '<leader>Ll', '<CMD>Leet<CR>')
@@ -24,15 +25,14 @@ return {
         key('n', '<leader>Lb', '<CMD>Leet open<CR>')
         key('n', '<leader>Lh', '<CMD>CodeCompanion /dsa<CR>')
 
-        --- @diagnostic disable-next-line: missing-fields
         plugin.setup {
             arg = SUFIX,
-            lang = 'typescript',
+            lang = os.getenv 'LLANG' or 'typescript',
             picker = {
                 provider = 'fzf-lua',
             },
             description = {
-                width = '20%',
+                width = '35%',
             },
         }
     end,
