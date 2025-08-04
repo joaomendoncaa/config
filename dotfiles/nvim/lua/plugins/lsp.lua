@@ -4,8 +4,8 @@ return {
     event = 'VeryLazy',
 
     dependencies = {
-        'williamboman/mason.nvim',
-        'williamboman/mason-lspconfig.nvim',
+        'mason-org/mason.nvim',
+        'mason-org/mason-lspconfig.nvim',
         'WhoIsSethDaniel/mason-tool-installer.nvim',
 
         {
@@ -69,6 +69,7 @@ return {
             rust_analyzer = {},
             tailwindcss = {},
             stylua = {},
+            html_lsp = {},
             emmet_language_server = {},
             biome = {},
             harper_ls = {
@@ -214,14 +215,33 @@ return {
             local client = vim.lsp.get_client_by_id(event.data.client_id)
             local buffer = event.buf
             local has_highlights = client and client.server_capabilities.documentHighlightProvider
-            local has_inlay_hints = client and client.supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, buffer)
+            local has_inlay_hints = client and client:supports_method(vim.lsp.protocol.Methods.textDocument_inlayHint, buffer)
 
             vim.diagnostic.config {
+                severity_sort = true,
+                float = { border = 'rounded', source = 'if_many' },
+                underline = { severity = vim.diagnostic.severity.ERROR },
+                signs = vim.g.have_nerd_font and {
+                    text = {
+                        [vim.diagnostic.severity.ERROR] = '󰅚 ',
+                        [vim.diagnostic.severity.WARN] = '󰀪 ',
+                        [vim.diagnostic.severity.INFO] = '󰋽 ',
+                        [vim.diagnostic.severity.HINT] = '󰌶 ',
+                    },
+                } or {},
                 virtual_text = {
+                    source = 'if_many',
+                    spacing = 2,
                     severity = vim.diagnostic.severity.ERROR,
-                },
-                underline = {
-                    severity = { min = vim.diagnostic.severity.ERROR },
+                    format = function(diagnostic)
+                        local diagnostic_message = {
+                            [vim.diagnostic.severity.ERROR] = diagnostic.message,
+                            [vim.diagnostic.severity.WARN] = diagnostic.message,
+                            [vim.diagnostic.severity.INFO] = diagnostic.message,
+                            [vim.diagnostic.severity.HINT] = diagnostic.message,
+                        }
+                        return diagnostic_message[diagnostic.severity]
+                    end,
                 },
             }
 
@@ -249,9 +269,9 @@ return {
 
                 commands.auto('LspDetach', {
                     group = commands.augroup('LspDetach', { clear = true }),
-                    callback = function(event2)
+                    callback = function(e)
                         vim.lsp.buf.clear_references()
-                        vim.api.nvim_clear_autocmds { group = 'LspHighlight', buffer = event2.buf }
+                        vim.api.nvim_clear_autocmds { group = 'LspHighlight', buffer = e.buf }
                     end,
                 })
             end

@@ -117,6 +117,12 @@ return {
             end
 
             key({ 'n', 'v' }, '<leader>sp', fzf.complete_path, '[S]earch [P]ath')
+            -- key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
+            key('n', 'gr', fzf.lsp_references, '[G]oto [R]eferences')
+            key('n', 'gd', fzf.lsp_definitions, '[G]oto [D]efinition')
+            key('n', 'gD', fzf.lsp_declarations, '[G]oto [D]eclaration')
+            key('n', 'gI', fzf.lsp_implementations, '[G]oto [I]mplementation')
+            key('n', 'gf', fzf.lsp_finder, '[G]oto [F]ind all locations')
             key('n', '<leader>sg', fzf.live_grep, '[S]earch by [G]rep')
             key('n', '<leader>sm', fzf.marks, '[S]earch [M]arks')
             key('n', '<leader>sf', fzf.builtin, '[S]earch [F]zf Builtins')
@@ -126,20 +132,14 @@ return {
             key('n', '<leader>sb', fzf.buffers, '[S]earch open [B]uffers')
             key('n', '<leader>sd', fzf.diagnostics_document, '[S]earch [D]iagnostics')
             key('n', '<leader>sD', fzf.diagnostics_workspace, '[S]earch [D]iagnostics')
-            -- key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
+            key('n', '<leader>D', fzf.lsp_typedefs, 'Type [D]efinition')
+            key('n', '<leader>ds', fzf.lsp_document_symbols, '[D]ocument [S]ymbols')
+            key('n', '<leader>sw', fzf.lsp_workspace_symbols, '[W]orkspace [S]ymbols')
             key('n', '<leader>sSs', search_spelling, '[S]earch [S]pelling suggestions')
             key('n', '<leader>scf', search_files_config, '[S]earch [C]onfig [F]iles')
             key('n', '<leader>scp', search_plugins_config, '[S]earch [C]onfig [P]lugins')
             key('n', '<leader>se', search_enviroment, '[S]earch [E]nvironment Variables')
             key('n', '<leader>st', search_themes, '[S]earch [T]heme')
-            key('n', 'gr', list_lsp_references, '[G]oto [R]eferences')
-            key('n', 'gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
-            key('n', 'gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-            key('n', 'gI', fzf.lsp_implementations, '[G]oto [I]mplementation')
-            key('n', 'gf', fzf.lsp_finder, '[G]oto [F]ind all locations')
-            key('n', '<leader>D', fzf.lsp_typedefs, 'Type [D]efinition')
-            key('n', '<leader>ds', fzf.lsp_document_symbols, '[D]ocument [S]ymbols')
-            key('n', '<leader>sw', fzf.lsp_workspace_symbols, '[W]orkspace [S]ymbols')
 
             fzf.setup {
                 file_ignore_patterns = { 'node_modules' },
