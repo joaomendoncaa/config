@@ -67,6 +67,7 @@ return {
         local servers = {
             gopls = {},
             rust_analyzer = {},
+            glsl_analyzer = {},
             tailwindcss = {},
             stylua = {},
             html_lsp = {},
