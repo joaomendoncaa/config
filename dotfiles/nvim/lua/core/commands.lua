@@ -10,18 +10,6 @@ local buffer_delete = function()
     vim.cmd 'call delete(expand("%")) | bdelete!'
 end
 
-local open_notepad = function()
-    local year = os.date '%Y'
-    local month = os.date '%m'
-    local day = os.date '%d'
-    local dir_path = vim.fn.getcwd() .. '/' .. year .. '/' .. month
-    local file_path = dir_path .. '/' .. day .. '.md'
-
-    vim.fn.system(string.format('bash %s/new %s', vim.fn.getcwd(), file_path))
-
-    vim.cmd('edit ' .. file_path)
-end
-
 local touch_command = function(opts)
     local args = vim.split(opts.args, '%s+')
     local subcommand, path = args[1], args[2]
@@ -111,8 +99,6 @@ local auto_keep_unique_sidebar = function()
         end
     end
 end
-
-commands.user('Notepad', open_notepad)
 
 commands.user('ToggleWrap', toggle_wrap)
 

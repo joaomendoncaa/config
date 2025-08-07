@@ -37,7 +37,6 @@ return {
             require('mini.trailspace').trim()
         end)
 
-        setup 'surround'
         setup 'trailspace'
         setup 'pairs'
         setup 'move'
