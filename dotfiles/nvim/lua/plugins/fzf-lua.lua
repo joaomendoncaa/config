@@ -117,7 +117,7 @@ return {
             end
 
             key({ 'n', 'v' }, '<leader>sp', fzf.complete_path, '[S]earch [P]ath')
-            -- key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
+            key('n', '<leader>ss', fzf.files, '[S]earch [S]elected CWD directory files')
             key('n', 'gr', fzf.lsp_references, '[G]oto [R]eferences')
             key('n', 'gd', fzf.lsp_definitions, '[G]oto [D]efinition')
             key('n', 'gD', fzf.lsp_declarations, '[G]oto [D]eclaration')
