@@ -1,41 +1,24 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-# Use provided path or default to current directory
 search_path="${1:-.}"
-
-echo "Scanning for git repositories in: $search_path"
-echo "----------------------------------------"
-
-# Counter for found repositories
-repo_count=0
-
-# Store initial directory
 initial_dir=$(pwd)
 
-# Find all .git directories and process each one
-find "$search_path" -type d -name .git 2>/dev/null | while read -r git_dir; do
-    # Get the parent directory of .git
-    repo_path=$(dirname "$git_dir")
-    repo_count=$((repo_count + 1))
+echo -e "Scanning for git repositories in: $search_path...\n"
 
-    # Print directory name with separator
+find "$search_path" -type d -name .git 2>/dev/null |
+	xargs -P "$(nproc)" -I {} bash -c '
+    repo_path=$(dirname "{}")
     printf "\n\033[1;34m→ Checking repository: %s\033[0m\n" "$repo_path"
-
-    # Change to repository directory, show status, and return
-    (
-        if cd "$repo_path" 2>/dev/null; then
-            git_status=$(git status -s)
-            if [ -n "$git_status" ]; then
-                printf "\033[1;33mChanges found:\033[0m\n%s\n" "$git_status"
-            else
-                printf "\033[1;32m✓ Clean working directory\033[0m\n"
-            fi
+    if cd "$repo_path" 2>/dev/null; then
+        git_status=$(git status -s)
+        if [ -n "$git_status" ]; then
+            printf "\033[1;33mChanges found:\033[0m\n%s\n" "$git_status"
         else
-            printf "\033[1;31m✗ Error: Could not access directory\033[0m\n"
+            printf "\033[1;32m✓ Clean working directory\033[0m\n"
         fi
-        cd "$initial_dir" 2>/dev/null
-    )
-done
+    else
+        printf "\033[1;31m✗ Error: Could not access directory\033[0m\n"
+    fi
+'
 
-echo "----------------------------------------"
-echo "Scan complete! Checked $repo_count repositories."
+echo -e "\nScan complete!"
