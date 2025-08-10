@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-search_path="${1:-.}"
+search_path="${1:-./}"
 
 echo -e "Scanning for git repositories in \`$search_path\`"
 
