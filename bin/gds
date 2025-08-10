@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
-
 search_path="${1:-.}"
-initial_dir=$(pwd)
 
-echo -e "Scanning for git repositories in: $search_path...\n"
+echo -e "Scanning for git repositories in \`$search_path\`"
 
-find "$search_path" -type d -name .git 2>/dev/null |
-	xargs -P "$(nproc)" -I {} bash -c '
-    repo_path=$(dirname "{}")
-    printf "\n\033[1;34m→ Checking repository: %s\033[0m\n" "$repo_path"
-    if cd "$repo_path" 2>/dev/null; then
-        git_status=$(git status -s)
-        if [ -n "$git_status" ]; then
-            printf "\033[1;33mChanges found:\033[0m\n%s\n" "$git_status"
-        else
-            printf "\033[1;32m✓ Clean working directory\033[0m\n"
-        fi
-    else
-        printf "\033[1;31m✗ Error: Could not access directory\033[0m\n"
-    fi
-'
+repos=($(find "$search_path" -type d -name .git 2>/dev/null | xargs -n1 dirname))
 
-echo -e "\nScan complete!"
+YELLOW="\033[1;33m"
+WHITE="\033[1;37m"
+RESET="\033[0m"
+
+for repo in "${repos[@]}"; do
+	(
+		repo_name=$(basename "$repo")
+		status=$(cd "$repo" && git status -s 2>/dev/null)
+		if [[ -n "$status" ]]; then
+			echo -e "${YELLOW}DIRTY${RESET} ${YELLOW}${repo_name}${RESET}"
+		else
+			echo -e "${WHITE}CLEAN${RESET} ${WHITE}${repo_name}${RESET}"
+		fi
+	) &
+done
+
+wait
