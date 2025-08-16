@@ -1,0 +1,47 @@
+#!/usr/bin/env bun
+
+import { Glob } from "bun";
+import clipboardy from "clipboardy";
+import fs from "fs";
+import path, { extname, basename } from "path";
+
+const MAX_FILES = 25;
+
+const arg =
+  Bun.argv[2] ||
+  (console.error("Missing a glob path: `$ cb <pattern>`"), process.exit(1));
+
+const glob =
+  fs.existsSync(arg) && fs.statSync(arg).isDirectory()
+    ? new Glob(path.join(arg, "*"))
+    : arg === "." || arg === "./" || arg === "./."
+      ? new Glob("*")
+      : new Glob(arg);
+
+let files = [];
+let output = "";
+
+for (const path of glob.scanSync(".")) {
+  if (fs.statSync(path).isDirectory()) continue;
+  files.push(path);
+  if (files.length >= MAX_FILES) break;
+}
+
+files.length > 0 || (console.error("No files matched."), process.exit(1));
+
+for (const path of files) {
+  const ext = extname(path).substring(1) || "";
+  const name = basename(path);
+  const content = await Bun.file(path).text();
+  output += `#### ${name}\n\`\`\`${ext}\n${content}\n\`\`\`\n\n`;
+}
+
+await clipboardy.write(output);
+
+const sizeKB = (Buffer.byteLength(output, "utf8") / 1024).toFixed(1);
+console.log(
+  `Copied ${files.length} file(s) (${sizeKB} KB) to clipboard:\n` +
+    files.map((f) => ` - ${f}`).join("\n"),
+);
+
+// vim: ft=typescript
