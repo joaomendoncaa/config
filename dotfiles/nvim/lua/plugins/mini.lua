@@ -39,7 +39,6 @@ return {
 
         setup 'surround'
         setup 'trailspace'
-        setup 'pairs'
         setup 'move'
         setup 'diff'
         setup 'comment'
