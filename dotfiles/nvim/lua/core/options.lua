@@ -11,8 +11,8 @@ o.confirm = true
 o.swapfile = false
 o.clipboard = 'unnamedplus'
 o.termguicolors = true
-o.laststatus = 0
-o.statusline = '%#StatusLine#' .. string.rep(' ', vim.api.nvim_win_get_width(0)) .. '%#StatusLineNC#'
+o.laststatus = 3
+o.statusline = "%=%{&modified ? '+' : ''} %{expand('%:t')}"
 o.signcolumn = 'yes'
 o.cursorline = true
 o.number = true
