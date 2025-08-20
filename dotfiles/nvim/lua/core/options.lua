@@ -12,7 +12,7 @@ o.swapfile = false
 o.clipboard = 'unnamedplus'
 o.termguicolors = true
 o.laststatus = 3
-o.statusline = "%=%{&modified ? '+' : ''} %{expand('%:t')}"
+o.statusline = "%=%{&modified ? '!' : ''} %{expand('%:t')}:%l:%c"
 o.signcolumn = 'yes'
 o.cursorline = true
 o.number = true
