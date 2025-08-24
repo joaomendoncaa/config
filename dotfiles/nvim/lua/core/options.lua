@@ -37,13 +37,8 @@ o.fillchars:append { eob = ' ' }
 o.whichwrap = 'lh'
 o.wrap = true
 o.conceallevel = 0
-o.sessionoptions = 'buffers,curdir,folds,help,tabpages,winsize,terminal'
+o.sessionoptions = 'buffers,curdir,help,tabpages,winsize,terminal'
 o.foldcolumn = '0'
-o.fillchars = {
-    foldopen = '',
-    foldclose = '',
-    foldsep = ' ',
-}
 o.foldlevel = 99
 o.foldlevelstart = 99
 o.foldenable = true
