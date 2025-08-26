@@ -34,9 +34,13 @@ local function update(arg)
     local cb = function(t)
         vim.opt.background = 'dark'
         vim.cmd.colorscheme(t)
-        vim.cmd 'hi clear MsgArea'
-        vim.cmd 'hi BiscuitColorlua guifg=#423F3D'
-        vim.cmd 'hi WinSeparator guifg=#222222'
+        vim.cmd [[
+		hi clear MsgArea
+		hi BiscuitColorlua guifg=#423F3D
+		hi WinSeparator guifg=#222222
+		hi FloatTitle guibg=none
+		hi FloatBorder guibg=none guifg=#222222
+	]]
 
         highlights {
             SignColumn = { bg = 'none' },

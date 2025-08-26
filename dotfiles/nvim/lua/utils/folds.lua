@@ -119,12 +119,12 @@ function M.statuscol()
 
     local fold_map = fold_ranges_map[bufnr]
     if not fold_map then
-        return ' %l   '
+        return '  %l   '
     end
 
     local this_range = fold_map[lnum]
     if not this_range then
-        return ' %l   '
+        return '  %l   '
     end
 
     local closed = (vim.fn.foldclosed(lnum) == lnum)
@@ -136,7 +136,7 @@ function M.statuscol()
         hl = 'CursorLineNr'
     end
 
-    return ' %l ' .. '%#' .. hl .. '#' .. icon .. '%* '
+    return '  %l ' .. '%#' .. hl .. '#' .. icon .. '%* '
 end
 
 return M
