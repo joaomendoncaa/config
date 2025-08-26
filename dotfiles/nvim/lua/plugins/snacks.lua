@@ -20,7 +20,11 @@ return {
             }
         end
 
+        plugin.toggle.profiler():map '<leader>pp'
+        plugin.toggle.profiler_highlights():map '<leader>ph'
+
         key('n', '<leader>.', f(plugin.scratch), '[S]cratch')
+        key('n', '<leader>ps', f(plugin.profiler.scratch), '[S]cratch')
         key('n', '<leader>nn', plugin.notifier.show_history, 'Notification History')
         key('n', '<leader>nd', plugin.notifier.hide, 'Dismiss All Notifications')
         key('n', '<leader>bd', plugin.bufdelete.delete, 'Delete Buffer')
