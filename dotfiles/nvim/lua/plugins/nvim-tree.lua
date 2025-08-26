@@ -12,6 +12,8 @@ return {
         local api = require 'nvim-tree.api'
         local key = require('utils.misc').key
 
+        local file_rename = { new = '', old = '' }
+
         local auto_focus_on_buf_enter = function()
             if not api.tree.is_visible() then
                 return
@@ -63,6 +65,16 @@ return {
             api.tree.focus()
         end
 
+        local auto_handle_rename = function()
+            local events = require('nvim-tree.api').events
+            events.subscribe(events.Event.NodeRenamed, function(data)
+                if file_rename.new ~= data.new_name or file_rename.old ~= data.old_name then
+                    data = data
+                    Snacks.rename.on_rename_file(data.old_name, data.new_name)
+                end
+            end)
+        end
+
         local handle_attach = function(bufnr)
             api.config.mappings.default_on_attach(bufnr)
 
@@ -80,6 +92,12 @@ return {
         api.events.subscribe(api.events.Event.FileCreated, function(file)
             vim.cmd('edit ' .. vim.fn.fnameescape(file.fname))
         end)
+
+        vim.api.nvim_create_autocmd('User', {
+            pattern = 'NvimTreeSetup',
+            callback = auto_handle_rename,
+            group = commands.augroup 'NvimTreeAutoHandleRename',
+        })
 
         commands.auto('BufEnter', {
             callback = auto_focus_on_buf_enter,
