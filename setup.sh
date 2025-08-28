@@ -24,7 +24,7 @@ fi
 
 while [[ $# -gt 0 ]]; do
 	case "$1" in
-	--force)
+	--force | -f)
 		FORCE_DELETE=true
 		;;
 	*)
@@ -131,6 +131,7 @@ symlink "$HOME/.config/alacritty" "$CONFIG_SOURCE/dotfiles/alacritty"
 symlink "$HOME/.config/yazi" "$CONFIG_SOURCE/dotfiles/yazi"
 symlink "$HOME/.config/tmux" "$CONFIG_SOURCE/dotfiles/tmux"
 symlink "$HOME/.config/hypr" "$CONFIG_SOURCE/dotfiles/hypr"
+symlink "$HOME/.config/waybar" "$CONFIG_SOURCE/dotfiles/waybar"
 symlink "$HOME/.config/lazygit" "$CONFIG_SOURCE/dotfiles/lazygit"
 symlink "$HOME/.config/atuin" "$CONFIG_SOURCE/dotfiles/atuin"
 symlink "$HOME/.config/opencode" "$CONFIG_SOURCE/dotfiles/opencode"
