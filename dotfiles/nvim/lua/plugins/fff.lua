@@ -5,7 +5,7 @@ return {
         opts = {},
         keys = {
             {
-                '<leader>PP',
+                '<leader>ss',
                 function()
                     require('fff').find_files()
                 end,
