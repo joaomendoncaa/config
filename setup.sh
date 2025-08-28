@@ -130,6 +130,7 @@ symlink "$HOME/.config/starship.toml" "$CONFIG_SOURCE/dotfiles/starship/starship
 symlink "$HOME/.config/alacritty" "$CONFIG_SOURCE/dotfiles/alacritty"
 symlink "$HOME/.config/yazi" "$CONFIG_SOURCE/dotfiles/yazi"
 symlink "$HOME/.config/tmux" "$CONFIG_SOURCE/dotfiles/tmux"
+symlink "$HOME/.config/hypr" "$CONFIG_SOURCE/dotfiles/hypr"
 symlink "$HOME/.config/lazygit" "$CONFIG_SOURCE/dotfiles/lazygit"
 symlink "$HOME/.config/atuin" "$CONFIG_SOURCE/dotfiles/atuin"
 symlink "$HOME/.config/opencode" "$CONFIG_SOURCE/dotfiles/opencode"
