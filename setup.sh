@@ -123,7 +123,7 @@ symlink() {
 	esac
 }
 
-echo "Creating symlinks for config files..."
+echo "Creating symlinks for config files...\n"
 
 symlink "$HOME/.config/nvim" "$CONFIG_SOURCE/dotfiles/nvim"
 symlink "$HOME/.config/starship.toml" "$CONFIG_SOURCE/dotfiles/starship/starship.toml"
@@ -132,6 +132,7 @@ symlink "$HOME/.config/yazi" "$CONFIG_SOURCE/dotfiles/yazi"
 symlink "$HOME/.config/tmux" "$CONFIG_SOURCE/dotfiles/tmux"
 symlink "$HOME/.config/hypr" "$CONFIG_SOURCE/dotfiles/hypr"
 symlink "$HOME/.config/waybar" "$CONFIG_SOURCE/dotfiles/waybar"
+symlink "$HOME/.config/walker" "$CONFIG_SOURCE/dotfiles/walker"
 symlink "$HOME/.config/lazygit" "$CONFIG_SOURCE/dotfiles/lazygit"
 symlink "$HOME/.config/atuin" "$CONFIG_SOURCE/dotfiles/atuin"
 symlink "$HOME/.config/opencode" "$CONFIG_SOURCE/dotfiles/opencode"
