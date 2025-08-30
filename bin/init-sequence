@@ -29,17 +29,15 @@ launch_webapp() {
 	done
 }
 
-# hyprctl dispatch exec [workspace 1 silent] uwsm app -- alacritty
-# hyprctl dispatch exec [workspace 1 silent] omarchy-launch-webapp "https://chatgpt.com"
+hyprctl dispatch exec [workspace 1 silent] uwsm app -- alacritty
 
-# hyprctl dispatch exec [workspace 2 silent] zen-browser
+hyprctl dispatch exec [workspace 2 silent] zen-browser
 
-# hyprctl dispatch exec [workspace 3 silent] omarchy-launch-webapp "https://web.whatsapp.com"
+launch_webapp "https://web.whatsapp.com" 3
 launch_webapp "https://mail.proton.me" 3
 launch_webapp "https://messages.google.com/web/conversations" 3
-# hyprctl dispatch exec [workspace 3 silent] Telegram
-# hyprctl dispatch exec [workspace 3 silent] omarchy-launch-webapp "https://messages.google.com/web/conversations"
+hyprctl dispatch exec [workspace 3 silent] Telegram
 
-# hyprctl dispatch exec [workspace 4 silent] omarchy-launch-webapp "https://x.com"
+launch_webapp "http://x.com" 4
 
-# hyprctl dispatch exec [workspace 5 silent] steam
+hyprctl dispatch exec [workspace 5 silent] steam
