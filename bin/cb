@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 
-import { Glob } from "bun";
-import clipboardy from "clipboardy";
+import { Glob, $ } from "bun";
 import fs from "fs";
 import path, { extname, basename } from "path";
 
@@ -33,10 +32,10 @@ for (const path of files) {
   const ext = extname(path).substring(1) || "";
   const name = basename(path);
   const content = await Bun.file(path).text();
-  output += `#### ${name}\n\`\`\`${ext}\n${content}\n\`\`\`\n\n`;
+  output += `#### ${name}\n\`\`\`${ext}\n${content}\`\`\`\n\n`;
 }
 
-await clipboardy.write(output);
+await $`echo "${output}" | wl-copy`;
 
 const sizeKB = (Buffer.byteLength(output, "utf8") / 1024).toFixed(1);
 console.log(
