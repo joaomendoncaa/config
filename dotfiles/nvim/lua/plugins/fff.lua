@@ -4,6 +4,8 @@ return {
         build = 'cargo build --release',
         opts = {
             prompt = '> ',
+            title = '',
+            layout = { prompt_position = 'top' },
         },
         keys = {
             {
