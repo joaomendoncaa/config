@@ -29,9 +29,6 @@ style = "Regular"
 x = 0
 y = -2
 
-[colors.primary]
-background = '#111111'
-
 [scrolling]
 history = 5000
 
