@@ -1,6 +1,5 @@
 local commands = require 'utils.commands'
 local tables = require 'utils.tables'
-
 local function highlights(groups)
     for name, opts in pairs(groups) do
         local prev = vim.api.nvim_get_hl(0, { name = name })
@@ -31,8 +30,9 @@ local function update(arg)
         },
     }
 
+    vim.notify('Updating colorscheme: ' .. vim.inspect(theme), vim.inspect(themes))
+
     local cb = function(t)
-        vim.opt.background = 'dark'
         vim.cmd.colorscheme(t)
         vim.cmd [[
 		hi clear MsgArea
@@ -88,18 +88,32 @@ local function update(arg)
     cb 'default'
 end
 
-local function setup(path, opts, enabled)
+local function setup(path, opts)
+    opts = opts or {}
+    local enabled = opts.enabled or false
+    local setup_opts = opts.setup_opts or {}
+    local theme_name = opts.theme_name
+    local mod_name = opts.mod_name
+    local call_setup = opts.call_setup ~= false
+
     local mod = path:sub(path:find '/' + 1)
     if mod:sub(-5) == '.nvim' then
         mod = mod:sub(1, -6)
     end
 
+    mod = mod_name or mod
+    local theme = theme_name or mod
+
     return {
-        enabled = enabled or false,
-        path,
+        [1] = path,
+        enabled = enabled,
         config = function()
-            require(mod).setup(opts or {})
-            update(mod)
+            if call_setup then
+                require(mod).setup(setup_opts)
+            end
+            if enabled then
+                update(theme)
+            end
         end,
         priority = 1000,
     }
@@ -111,16 +125,24 @@ commands.auto({ 'ColorScheme', 'UIEnter' }, {
 })
 
 return {
-    setup('ellisonleao/gruvbox.nvim', nil, false),
+    setup('ellisonleao/gruvbox.nvim', { enabled = false }),
+
+    setup('projekt0n/github-nvim-theme', { enabled = true, theme_name = 'github_light_high_contrast', mod_name = 'github-theme' }),
 
     setup('olivercederborg/poimandres.nvim', {
-        dim_nc_background = true,
-        disable_background = true,
-        disable_float_background = true,
-    }, false),
+        enabled = false,
+        setup_opts = {
+            dim_nc_background = true,
+            disable_background = true,
+            disable_float_background = true,
+        },
+    }),
 
     setup('sho-87/kanagawa-paper.nvim', {
-        transparent = true,
-        dimInactive = true,
-    }, true),
+        enabled = false,
+        setup_opts = {
+            transparent = true,
+            dimInactive = true,
+        },
+    }),
 }

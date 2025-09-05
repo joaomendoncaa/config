@@ -23,7 +23,7 @@ export PNPM_HOME="$HOME/.local/share/pnpm"
 export EDITOR='nvim'
 export VISUAL='nvim'
 export NVIM_AI=true
-export NVIM_THEME=kanagawa-paper
+export NVIM_THEME=default
 
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
