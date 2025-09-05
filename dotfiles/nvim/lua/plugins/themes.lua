@@ -40,13 +40,25 @@ local function update(arg)
 		hi WinSeparator guifg=#222222
 		hi FloatTitle guibg=none
 		hi FloatBorder guibg=none guifg=#222222
+		hi SignColumn guibg=none
 	]]
 
         highlights {
             SignColumn = { bg = 'none' },
+            NvimTreeNormal = { bg = 'none' },
+            NvimTreeVertSplit = { bg = 'none' },
+            NvimTreeEndOfBuffer = { bg = 'none' },
             StatusLine = { bg = 'none', fg = 'none' },
             StatusLineNC = { bg = 'none', fg = 'none' },
             Normal = { bg = 'none', ctermbg = 'none' },
+            NormalFloat = { bg = 'none' },
+            FloatBorder = { bg = 'none' },
+            Pmenu = { bg = 'none' },
+            Terminal = { bg = 'none' },
+            EndOfBuffer = { bg = 'none' },
+            FoldColumn = { bg = 'none' },
+            Folded = { bg = 'none' },
+            NormalNC = { bg = 'none' },
             CursorLine = { bg = 'none' },
             MsgSeparator = { bg = 'none', ctermbg = 'none' },
             TelescopePreviewNormal = { bg = 'none' },
@@ -57,7 +69,6 @@ local function update(arg)
             TelescopePromptBorder = { bg = 'none' },
             LazyReasonSource = { bg = 'none', fg = '#5de4c7' },
             LazyReasonFt = { bg = 'none', fg = '#5de4c7' },
-            NormalFloat = { bg = 'none' },
             DiagnosticSignOk = { bg = 'none' },
             DiagnosticSignHint = { bg = 'none' },
             DiagnosticSignInfo = { bg = 'none' },
