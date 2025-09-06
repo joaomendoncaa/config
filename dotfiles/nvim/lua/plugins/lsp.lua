@@ -65,6 +65,8 @@ return {
         local commands = require 'utils.commands'
 
         local servers = {
+            bashls = {},
+            cssls = {},
             gopls = {},
             rust_analyzer = {},
             glsl_analyzer = {},

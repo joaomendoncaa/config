@@ -30,8 +30,6 @@ local function update(arg)
         },
     }
 
-    vim.notify('Updating colorscheme: ' .. vim.inspect(theme), vim.inspect(themes))
-
     local cb = function(t)
         vim.cmd.colorscheme(t)
         vim.cmd [[
