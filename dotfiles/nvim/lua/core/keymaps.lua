@@ -9,14 +9,11 @@ key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
 key('n', '<leader>q', vim.diagnostic.open_float, '[Q]uickly show diagnostic error messages')
 key('n', '<leader>Q', vim.diagnostic.setloclist, 'Open diagnostic [Q]uickfix list')
 
-key('n', 'gp', clipboard.replace_with_yanked_and_write, "[G]o replace by [P]asting what's yanked")
-
-key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
-
 key('n', 'j', 'gj', '[J] Move down even in wrapped lines')
 key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
 
-key('n', 'YY', 'GVggy', '[Y]ank whole buffer')
+key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
+key('n', 'YY', clipboard.yank_buffer, '[Y]ank whole buffer')
 key('n', 'YP', clipboard.replace_with_yanked_and_write, '[P]aste yanked over buffer')
 
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
