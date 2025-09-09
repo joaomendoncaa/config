@@ -139,5 +139,6 @@ symlink "$HOME/.config/opencode" "$CONFIG_SOURCE/dotfiles/opencode"
 symlink "$HOME/.gitconfig" "$CONFIG_SOURCE/dotfiles/git/.gitconfig"
 symlink "$HOME/.bashrc" "$CONFIG_SOURCE/dotfiles/bash/.bashrc"
 symlink "$HOME/biome.json" "$CONFIG_SOURCE/dotfiles/biome/config.json"
+symlink "$HOME/.local/bin/toggle-sink" "$CONFIG_SOURCE/bin/toggle-sink"
 
 echo "Setup complete! 🥳"
