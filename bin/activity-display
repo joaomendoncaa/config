@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [ ! -f ~/.activity.tracker ]; then
+	echo ""
+	exit 0
+fi
+
+read -r start_time activity <~/.activity.tracker
+
+activity=$(echo "$activity" | tr -d '"')
+current_time=$(date +%s)
+elapsed=$((current_time - start_time))
+hours=$((elapsed / 3600))
+minutes=$(((elapsed % 3600) / 60))
+seconds=$((elapsed % 60))
+
+printf "%02d:%02d:%02d > %s\n" "$hours" "$minutes" "$seconds" "$activity"

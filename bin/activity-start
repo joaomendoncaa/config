@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+if [ -z "$1" ]; then
+	echo "Error: No activity provided"
+	exit 1
+fi
+
+echo "$(date +%s) \"$1\"" >~/.activity.tracker
