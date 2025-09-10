@@ -30,8 +30,9 @@ local function update(arg)
         },
     }
 
-    local cb = function(t)
-        vim.cmd.colorscheme(t)
+    local cb = function(theme_name)
+        vim.cmd.colorscheme(theme_name)
+
         vim.cmd [[
 		hi clear MsgArea
 		hi BiscuitColorlua guifg=#423F3D
@@ -39,43 +40,45 @@ local function update(arg)
 		hi FloatTitle guibg=none
 		hi FloatBorder guibg=none guifg=#222222
 		hi SignColumn guibg=none
+		hi SignColumn guibg=none
+		hi NvimTreeNormal guibg=none
+		hi NvimTreeVertSplit guibg=none
+		hi NvimTreeEndOfBuffer guibg=none
+		hi StatusLine guibg=none guifg=none
+		hi StatusLineNC guibg=none guifg=none
+		hi Normal guibg=none ctermbg=none
+		hi NormalFloat guibg=none
+		hi FloatBorder guibg=none
+		hi Pmenu guibg=none
+		hi Terminal guibg=none
+		hi EndOfBuffer guibg=none
+		hi FoldColumn guibg=none
+		hi Folded guibg=none
+		hi NormalNC guibg=none
+		hi CursorLine guibg=none
+		hi MsgSeparator guibg=none ctermbg=none
+		hi LspReferenceText guibg=none
+		hi LspReferenceRead guibg=none
+		hi LspReferenceWrite guibg=none
+		hi MiniCursorword guibg=none
+		hi MiniCursorwordCurrent guibg=none
+		hi TelescopePreviewNormal guibg=none
+		hi TelescopePreviewBorder guibg=none
+		hi TelescopeResultsNormal guibg=none
+		hi TelescopeResultsBorder guibg=none
+		hi TelescopePromptNormal guibg=none
+		hi TelescopePromptBorder guibg=none
+		hi LazyReasonSource guibg=none guifg=#5de4c7
+		hi LazyReasonFt guibg=none guifg=#5de4c7
+		hi DiagnosticSignOk guibg=none
+		hi DiagnosticSignHint guibg=none
+		hi DiagnosticSignInfo guibg=none
+		hi DiagnosticSignWarn guibg=none
+		hi DiagnosticSignError guibg=none
 	]]
 
-        highlights {
-            SignColumn = { bg = 'none' },
-            NvimTreeNormal = { bg = 'none' },
-            NvimTreeVertSplit = { bg = 'none' },
-            NvimTreeEndOfBuffer = { bg = 'none' },
-            StatusLine = { bg = 'none', fg = 'none' },
-            StatusLineNC = { bg = 'none', fg = 'none' },
-            Normal = { bg = 'none', ctermbg = 'none' },
-            NormalFloat = { bg = 'none' },
-            FloatBorder = { bg = 'none' },
-            Pmenu = { bg = 'none' },
-            Terminal = { bg = 'none' },
-            EndOfBuffer = { bg = 'none' },
-            FoldColumn = { bg = 'none' },
-            Folded = { bg = 'none' },
-            NormalNC = { bg = 'none' },
-            CursorLine = { bg = 'none' },
-            MsgSeparator = { bg = 'none', ctermbg = 'none' },
-            TelescopePreviewNormal = { bg = 'none' },
-            TelescopePreviewBorder = { bg = 'none' },
-            TelescopeResultsNormal = { bg = 'none' },
-            TelescopeResultsBorder = { bg = 'none' },
-            TelescopePromptNormal = { bg = 'none' },
-            TelescopePromptBorder = { bg = 'none' },
-            LazyReasonSource = { bg = 'none', fg = '#5de4c7' },
-            LazyReasonFt = { bg = 'none', fg = '#5de4c7' },
-            DiagnosticSignOk = { bg = 'none' },
-            DiagnosticSignHint = { bg = 'none' },
-            DiagnosticSignInfo = { bg = 'none' },
-            DiagnosticSignWarn = { bg = 'none' },
-            DiagnosticSignError = { bg = 'none' },
-        }
-
-        if adjustments[t] then
-            highlights(adjustments[t])
+        if adjustments[theme_name] then
+            highlights(adjustments[theme_name])
         end
     end
 
