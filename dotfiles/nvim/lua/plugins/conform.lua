@@ -79,6 +79,7 @@ return {
                 javascript = { 'biome', 'prettier' },
                 javascriptreact = { 'biome', 'prettier' },
                 typescript = { 'biome', 'prettier' },
+                glsl = { 'clang_format' },
                 typescriptreact = { 'biome', 'prettier' },
                 json = { 'biome', 'prettier' },
                 jsonc = { 'biome', 'prettier' },
