@@ -72,6 +72,7 @@ return {
             glsl_analyzer = {},
             tailwindcss = {},
             stylua = {},
+            glsl_analyzer = {},
             html_lsp = {},
             emmet_language_server = {},
             biome = {},
