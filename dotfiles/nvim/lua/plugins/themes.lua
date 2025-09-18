@@ -1,5 +1,53 @@
 local commands = require 'utils.commands'
 local tables = require 'utils.tables'
+local key = require('utils.misc').key
+local uv = vim.uv
+
+local current_theme_path = vim.fn.expand '$HOME/.config/omarchy/current/theme/neovim.lua'
+
+local function read_theme()
+    local ok, themes = pcall(dofile, current_theme_path)
+    if ok and type(themes) == 'table' and themes[1] and themes[1].name then
+        return themes[1].name
+    end
+    return nil
+end
+
+local function watch_theme_change()
+    local handle = uv.new_fs_event()
+
+    local dir_path = vim.fn.fnamemodify(current_theme_path, ':h')
+    local theme_basename = vim.fn.fnamemodify(current_theme_path, ':t')
+
+    local unwatch_cb = function()
+        if handle then
+            uv.fs_event_stop(handle)
+        end
+    end
+
+    local event_cb = function(err, filename, events)
+        if err then
+            error 'Theme file watcher failed'
+            unwatch_cb()
+        elseif filename == theme_basename then
+            local theme = read_theme(current_theme_path)
+            if theme == 'snow' then
+                set_light_mode()
+            else
+                set_dark_mode()
+            end
+        end
+    end
+
+    uv.fs_event_start(handle, dir_path, {
+        watch_entry = false,
+        stat = false,
+        recursive = false,
+    }, vim.schedule_wrap(event_cb))
+
+    return handle
+end
+
 local function highlights(groups)
     for name, opts in pairs(groups) do
         local prev = vim.api.nvim_get_hl(0, { name = name })
@@ -112,6 +160,7 @@ local function setup(path, opts)
             if call_setup then
                 require(mod).setup(setup_opts)
             end
+
             if enabled then
                 update(theme)
             end
@@ -120,10 +169,61 @@ local function setup(path, opts)
     }
 end
 
+function set_light_mode()
+    update 'github_light_high_contrast'
+    vim.api.nvim_set_option_value('background', 'light', {})
+end
+
+function set_dark_mode()
+    update 'github_dark_high_contrast'
+    vim.api.nvim_set_option_value('background', 'dark', {})
+end
+
+key('n', '<leader>tt', function()
+    if vim.g.colors_name == 'github_light_high_contrast' then
+        update 'github_dark_high_contrast'
+    else
+        update 'github_light_high_contrast'
+    end
+end)
+
+key('n', '<leader>tT', function()
+    if vim.env.NVIM_THEME ~= nil or vim.env.NVIM_THEME ~= '' then
+        update(vim.env.NVIM_THEME)
+    else
+        update 'default'
+    end
+end)
+
 commands.auto({ 'ColorScheme', 'UIEnter' }, {
     group = commands.augroup 'ColorSchemeUpdate',
     callback = update,
 })
+
+function set_theme()
+    local theme = read_theme()
+
+    if theme == nil then
+        if vim.env.NVIM_THEME ~= nil or vim.env.NVIM_THEME ~= '' then
+            update(vim.env.NVIM_THEME)
+            return
+        end
+
+        update 'default'
+        vim.api.nvim_set_option_value('background', 'dark', {})
+        return
+    end
+
+    if theme == 'snow' then
+        set_light_mode()
+    else
+        set_dark_mode()
+    end
+
+    watch_theme_change()
+end
+
+set_theme()
 
 return {
     setup('ellisonleao/gruvbox.nvim', { enabled = false }),
@@ -140,7 +240,7 @@ return {
     }),
 
     setup('sho-87/kanagawa-paper.nvim', {
-        enabled = false,
+        enabled = true,
         setup_opts = {
             transparent = true,
             dimInactive = true,
