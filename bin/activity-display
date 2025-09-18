@@ -5,13 +5,26 @@ if [ ! -f ~/.activity.tracker ]; then
 	exit 0
 fi
 
-read -r start_time activity <~/.activity.tracker
+IFS=';' read -r start_time activity eta_seconds <~/.activity.tracker
 
 activity=$(echo "$activity" | tr -d '"')
 current_time=$(date +%s)
-elapsed=$((current_time - start_time))
-hours=$((elapsed / 3600))
-minutes=$(((elapsed % 3600) / 60))
-seconds=$((elapsed % 60))
+expected_end=$((start_time + eta_seconds))
+diff=$((expected_end - current_time))
 
-printf "%02d:%02d:%02d > %s\n" "$hours" "$minutes" "$seconds" "$activity"
+if [ "$diff" -gt 0 ]; then
+	sign=""
+	remaining=$diff
+elif [ "$diff" -lt 0 ]; then
+	sign="!"
+	remaining=$((-diff))
+else
+	sign=""
+	remaining=0
+fi
+
+hours=$((remaining / 3600))
+minutes=$(((remaining % 3600) / 60))
+seconds=$((remaining % 60))
+
+printf "%s%02d:%02d:%02d %s\n" "$sign" "$hours" "$minutes" "$seconds" "$activity"

@@ -5,4 +5,11 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-echo "$(date +%s) \"$1\"" >~/.activity.tracker
+if [ -z "$2" ]; then
+	echo "Error: No ETA provided"
+	exit 1
+fi
+
+seconds=$(echo "$2 * 3600" | bc -l | cut -d. -f1)
+
+echo "$(date +%s);$1;$seconds" >~/.activity.tracker
