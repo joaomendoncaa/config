@@ -6,7 +6,12 @@
   "height": 30,
   "margin-top": 5,
   "modules-left": ["hyprland/workspaces"],
-  "modules-center": ["clock", "custom/activity", "custom/update"],
+  "modules-center": [
+    "custom/screenrecording-indicator",
+    "clock",
+    "custom/activity",
+    "custom/update",
+  ],
   "modules-right": [
     "group/tray-expander",
     "network",
@@ -56,13 +61,14 @@
     "exec": "omarchy-update-available",
     "on-click": "omarchy-launch-floating-terminal-with-presentation omarchy-update",
     "tooltip-format": "Omarchy update available",
+    "signal": 7,
     "interval": 3600,
   },
 
   "cpu": {
     "interval": 5,
     "format": "󰍛",
-    "on-click": "alacritty -e btop",
+    "on-click": "$TERMINAL -e btop",
   },
   "clock": {
     "format": "{:L%d %b %A %H:%M}",
@@ -74,13 +80,13 @@
     "format": "{icon}",
     "format-wifi": "{icon}",
     "format-ethernet": "󰀂",
-    "format-disconnected": "󰖪",
+    "format-disconnected": "󰤮",
     "tooltip-format-wifi": "{essid} ({frequency} GHz)\n⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
     "tooltip-format-ethernet": "⇣{bandwidthDownBytes}  ⇡{bandwidthUpBytes}",
     "tooltip-format-disconnected": "Disconnected",
     "interval": 3,
     "spacing": 1,
-    "on-click": "alacritty --class=Impala -e impala",
+    "on-click": "omarchy-launch-wifi",
   },
   "battery": {
     "format": "{capacity}% {icon}",
@@ -101,13 +107,20 @@
       "critical": 10,
     },
   },
+  "bluetooth": {
+    "format": "",
+    "format-disabled": "󰂲",
+    "format-connected": "",
+    "tooltip-format": "Devices connected: {num_connections}",
+    "on-click": "blueberry",
+  },
   "pulseaudio": {
     "format": "{icon}",
-    "on-click": "alacritty --class=Wiremix -e wiremix",
+    "on-click": "$TERMINAL --class=Wiremix -e wiremix",
     "on-click-right": "pamixer -t",
     "tooltip-format": "Playing at {volume}%",
     "scroll-step": 5,
-    "format-muted": "󰝟",
+    "format-muted": "",
     "format-icons": {
       "default": ["", "", ""],
     },
@@ -123,6 +136,12 @@
   "custom/expand-icon": {
     "format": " ",
     "tooltip": false,
+  },
+  "custom/screenrecording-indicator": {
+    "on-click": "omarchy-cmd-screenrecord",
+    "exec": "$OMARCHY_PATH/default/waybar/indicators/screen-recording.sh",
+    "signal": 8,
+    "return-type": "json",
   },
   "tray": {
     "icon-size": 12,
