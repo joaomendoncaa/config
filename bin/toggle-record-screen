@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+[[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
+OUTPUT_DIR="${OMARCHY_SCREENRECORD_DIR:-${XDG_VIDEOS_DIR:-$HOME/Videos/screen-recordings/}}"
+
+if [[ ! -d "$OUTPUT_DIR" ]]; then
+	notify-send "Screen recording directory does not exist: $OUTPUT_DIR" -u critical -t 3000
+	exit 1
+fi
+
+toggle_screenrecording_indicator() {
+	pkill -RTMIN+8 waybar
+}
+
+if pgrep -f "gpu-screen-recorder " >/dev/null; then
+	pkill -f "gpu-screen-recorder "
+	notify-send "Screen recording stopped" -u normal -t 3000
+	last_file=$(ls -t "$OUTPUT_DIR"/*.mp4 | head -n 1)
+	wl-copy --type text/uri-list "file://$last_file"
+	toggle_screenrecording_indicator
+else
+	REGION_SELECTION=$(slurp -f "%wx%h+%x+%y")
+	if [[ -z "$REGION_SELECTION" ]]; then
+		exit 0
+	fi
+	filename=$(date +%Y-%m-%d_%H-%M-%S).mp4
+	gpu-screen-recorder -w region -region "$REGION_SELECTION" -c mp4 -k h264 -ac aac -f 60 -fm vfr -cursor yes -restore-portal-session yes -cr full -encoder gpu -o "$OUTPUT_DIR/$filename" -q very_high -a device:default_output &
+	if pgrep -f "gpu-screen-recorder " >/dev/null; then
+		notify-send "Screen recording started!" -u normal -t 3000
+	fi
+	toggle_screenrecording_indicator
+fi

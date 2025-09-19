@@ -139,7 +139,7 @@
   },
   "custom/screenrecording-indicator": {
     "on-click": "omarchy-cmd-screenrecord",
-    "exec": "$OMARCHY_PATH/default/waybar/indicators/screen-recording.sh",
+    "exec": "$HOME/.config.jmmm.sh/bin/toggle-record-icon",
     "signal": 8,
     "return-type": "json",
   },
