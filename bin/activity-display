@@ -16,7 +16,7 @@ if [ "$diff" -gt 0 ]; then
 	sign=""
 	remaining=$diff
 elif [ "$diff" -lt 0 ]; then
-	sign="!"
+	sign="-"
 	remaining=$((-diff))
 else
 	sign=""
