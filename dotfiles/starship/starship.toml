@@ -12,6 +12,7 @@ $directory\
 $vcsh\
 $git_branch\
 $git_status\
+$git_commit\
 $hg_branch\
 $pijul_channel\
 $fennel\
@@ -41,9 +42,16 @@ format = '[$branch(:$remote_branch)]($style) '
 style = 'regular gray'
 
 [git_status]
-format = '($all_status$ahead_behind($style)) '
+format = '($all_status$ahead_behind($style))'
 stashed = ''
 up_to_date = '[✓](bold green)'
+
+[git_commit]
+commit_hash_length = 4
+tag_disabled = false
+tag_symbol = ''
+format= '$symbol$tag $style'
+style = 'bold'
 
 [character]
 success_symbol = '[>](bold white)'
