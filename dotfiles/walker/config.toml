@@ -31,16 +31,14 @@ cycle = true
 
 [providers]
 default = [
-  "desktopapplications",
-  "calc",
-  "runner",
-  "menus",
-  "websearch",
+	"desktopapplications",
+	"menus",
+	"websearch",
 ]
 empty = ["desktopapplications"]
 
 [[providers.prefixes]]
-prefix = ";"
+prefix = "/"
 provider = "providerlist"
 
 [[providers.prefixes]]
