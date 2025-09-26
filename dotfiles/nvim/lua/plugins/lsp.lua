@@ -186,7 +186,6 @@ return {
                 end
             end
 
-            -- Collect names that weren't found
             for name, _ in pairs(name_set) do
                 not_found[#not_found + 1] = name
             end

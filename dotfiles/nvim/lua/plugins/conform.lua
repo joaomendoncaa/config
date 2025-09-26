@@ -45,7 +45,9 @@ return {
             vim.cmd 'Trim'
 
             local write_without_context = function()
-                vim.api.nvim_buf_call(ctx.buf, f(vim.cmd, 'noautocmd write!'))
+                vim.api.nvim_buf_call(ctx.buf, function()
+                    vim.cmd 'noautocmd write!'
+                end)
             end
 
             if has_format_on_save then
@@ -57,11 +59,11 @@ return {
             git.sync_with_remote { paths = { 'blog.jmmm.sh', 'journal.jmmm.sh', 'rustlings' }, delay = 500 }
         end
 
-        key('n', '<leader>ff', format_async, '[F]ormat buffer.')
+        key('n', '<leader>ff', f(format_async), '[F]ormat buffer.')
         key('n', '<leader>fk', f(set_format_on_save, true), '[F]ormat enable.')
         key('n', '<leader>fj', f(set_format_on_save, false), '[F]ormat disable.')
 
-        commands.user('Format', format_async)
+        commands.user('Format', f(format_async))
         commands.user('FormatDisable', f(set_format_on_save, false))
         commands.user('FormatEnable', f(set_format_on_save, true))
 
@@ -75,6 +77,7 @@ return {
                 html = { 'biome', 'prettier' },
                 toml = { 'biome' },
                 templ = { 'templ' },
+                rust = { 'rustfmt' },
                 css = { 'biome', 'prettier' },
                 javascript = { 'biome', 'prettier' },
                 javascriptreact = { 'biome', 'prettier' },
@@ -89,6 +92,11 @@ return {
                 lua = { 'stylua' },
             },
             formatters = {
+                rustfmt = {
+                    command = 'sh',
+                    args = { '-c', 'rustfmt --edition 2024 --emit stdout | dx fmt -f -' },
+                    stdin = true,
+                },
                 stylua = {
                     condition = function()
                         return vim.bo.filetype == 'lua'
