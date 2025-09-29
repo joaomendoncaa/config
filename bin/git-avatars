@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+size=90
+output_dir=".git/avatar"
+
+if [ ! -d ".git" ]; then
+	echo "no .git/ directory found in current path" >&2
+	exit 1
+fi
+
+mkdir -p "$output_dir"
+
+declare -A processed_authors
+
+while IFS='|' read -r email author; do
+	if [ "${processed_authors[$author]}" ]; then
+		continue
+	fi
+	processed_authors[$author]=1
+
+	author_image_file="$output_dir/${author// /_}.png"
+
+	if [ -e "$author_image_file" ]; then
+		continue
+	fi
+
+	email_lower=$(echo "$email" | tr 'A-Z' 'a-z')
+	md5=$(echo -n "$email_lower" | md5sum | cut -d ' ' -f 1)
+	grav_url="http://www.gravatar.com/avatar/$md5?d=404&size=$size"
+
+	echo "fetching image for '$author' $email ($grav_url)..." >&2
+
+	if curl -f -s -o "$author_image_file" "$grav_url"; then
+		:
+	else
+		rm -f "$author_image_file"
+	fi
+
+	sleep 1
+done < <(git log --pretty=format:"%ae|%an")
