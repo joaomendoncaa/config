@@ -4,9 +4,9 @@ selection_wrap = false
 global_argument_delimiter = "#" # query: firefox#https://benz.dev => part after delimiter will be ignored when querying. this should be the same as in the elephant config
 keep_open_modifier = "shift" # won't close on activation, but rather select the next item in the list
 exact_search_prefix = "'" # disable fuzzy searching
-theme = "omarchy-default" # theme to use
-disable_mouse = false # disable mouse (on input and list only)
-additional_theme_location = "~/.local/share/omarchy/default/walker/themes/"
+theme = "joao"
+disable_mouse = false
+additional_theme_location = "~/.config.jmmm.sh/dotfiles/walker/themes/"
 
 [shell]
 anchor_top = true
