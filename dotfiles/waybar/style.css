@@ -16,7 +16,7 @@
 }
 
 .modules-right {
-  margin-right: 10px;
+  margin-right: 14px;
 }
 
 #workspaces button {
@@ -32,15 +32,26 @@
 
 #tray,
 #cpu,
+#memory,
 #battery,
 #network,
 #bluetooth,
 #pulseaudio,
 #custom-omarchy,
+#custom-perf,
 #custom-screenrecording-indicator,
 #custom-update {
-  min-width: 12px;
-  margin: 0 10px;
+  margin-right: 5px;
+  min-width: 20px;
+}
+
+#custom-perfmon {
+  font-size: 20px;
+  background-color: red;
+  background-image: url("/home/joao/.config.jmmm.sh/dotfiles/waybar/perf.png");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
 }
 
 #custom-activity {
@@ -56,6 +67,8 @@
 
 tooltip {
   padding: 2px;
+  border: 1px solid @border;
+  background-color: @background;
 }
 
 #custom-update {

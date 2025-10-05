@@ -16,6 +16,8 @@
     "group/tray-expander",
     "network",
     "cpu",
+    "memory",
+    "custom/monitoring",
     "pulseaudio",
     "battery",
   ],
@@ -43,6 +45,11 @@
       "5": [],
     },
   },
+  "custom/monitoring": {
+    "format": "     ",
+    "tooltip": false,
+    "on-click": "exec nwg-drawer -c 7 -is 70 -spacing 23",
+  },
   "custom/activity": {
     "format": "{}",
     "exec": "~/.config.jmmm.sh/bin/activity-display",
@@ -64,11 +71,18 @@
     "signal": 7,
     "interval": 3600,
   },
-
+  "memory": {
+    "interval": 1,
+    "format": "{icon}",
+    "format-icons": ["󰝦", "󰪞", "󰪟", "󰪠", "󰪡", "󰪢", "󰪣", "󰪤", "󰪥"],
+    "max-length": 10,
+    "on-click": "",
+  },
   "cpu": {
-    "interval": 5,
-    "format": "󰍛",
-    "on-click": "$TERMINAL -e btop",
+    "interval": 1,
+    "format": "{icon}",
+    "format-icons": ["󰝦", "󰪞", "󰪟", "󰪠", "󰪡", "󰪢", "󰪣", "󰪤", "󰪥"],
+    "on-click": "",
   },
   "clock": {
     "format": "{:L%d %b %A %H:%M}",
