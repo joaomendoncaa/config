@@ -1,4 +1,4 @@
-@import url("file://~/.config/omarchy/current/theme/walker.css");
+@import "../../../../../.config/omarchy/current/theme/walker.css";
 
 * {
   all: unset;
@@ -80,13 +80,12 @@ child:selected .item-box * {
 }
 
 .item-box {
-  padding: 0 8px;
+  padding-left: 14px;
 }
 
 .item-text-box {
   all: unset;
   padding: 14px 0;
-  margin-right: 20px;
 }
 
 .item-text {
@@ -100,29 +99,20 @@ child:selected .item-box * {
 }
 
 .item-image {
-  margin-right: 10px;
-  -gtk-icon-transform: scale(0.7);
+  margin-right: 14px;
+  -gtk-icon-transform: scale(0.9);
 }
 
 .item-box.calc .item-image {
   -gtk-icon-source: url("file:///home/ryan/Downloads/gitlab.svg");
 }
 
-.item-quick-activation {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.9rem;
-  border: 1px solid @border;
-  text-transform: capitalize;
-  color: @selected-text;
-  opacity: 0.5;
-}
-
 .current {
   font-style: italic;
 }
 
-.elephant-hint {
-  background: red;
+.keybind-hints {
+  background: @background;
   padding: 10px;
   margin-top: 10px;
 }
