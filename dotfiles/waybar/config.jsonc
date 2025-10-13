@@ -17,7 +17,6 @@
     "network",
     "cpu",
     "memory",
-    "custom/monitoring",
     "pulseaudio",
     "battery",
   ],
@@ -45,11 +44,6 @@
       "5": [],
     },
   },
-  "custom/monitoring": {
-    "format": "     ",
-    "tooltip": false,
-    "on-click": "exec nwg-drawer -c 7 -is 70 -spacing 23",
-  },
   "custom/activity": {
     "format": "{}",
     "exec": "~/.config.jmmm.sh/bin/activity-display",
@@ -73,14 +67,14 @@
   },
   "memory": {
     "interval": 1,
-    "format": "{icon}",
+    "format": "{icon} RAM",
     "format-icons": ["󰝦", "󰪞", "󰪟", "󰪠", "󰪡", "󰪢", "󰪣", "󰪤", "󰪥"],
     "max-length": 10,
     "on-click": "",
   },
   "cpu": {
     "interval": 1,
-    "format": "{icon}",
+    "format": "{icon} CPU",
     "format-icons": ["󰝦", "󰪞", "󰪟", "󰪠", "󰪡", "󰪢", "󰪣", "󰪤", "󰪥"],
     "on-click": "",
   },
