@@ -15,10 +15,9 @@
   "modules-right": [
     "group/tray-expander",
     "network",
-    "cpu",
-    "memory",
     "pulseaudio",
     "battery",
+    "custom/power",
   ],
   "hyprland/workspaces": {
     "on-click": "activate",
@@ -154,5 +153,9 @@
   "tray": {
     "icon-size": 12,
     "spacing": 12,
+  },
+  "custom/power": {
+    "format": "",
+    "on-click": "omarchy-menu system",
   },
 }
