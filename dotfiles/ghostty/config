@@ -1,5 +1,4 @@
-background = #1c1c1c
-foreground = #c0c0c0
+theme = dark:dark, light:light
 
 keybind = ctrl+v=paste_from_clipboard
 font-size = 12
