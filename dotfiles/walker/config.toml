@@ -4,7 +4,7 @@ selection_wrap = true                                                       # wr
 click_to_close = true                                                       # closes walker if clicking outside of the main content area
 global_argument_delimiter = "#"                                             # query: firefox#https://benz.dev => part after delimiter will be ignored when querying. this should be the same as in the elephant config
 exact_search_prefix = "'"                                                   # disable fuzzy searching
-theme = "joao"                                                   # theme to use
+theme = "joao"                                                              # theme to use
 disable_mouse = false                                                       # disable mouse (on input and list only)
 additional_theme_location = "~/.config.jmmm.sh/dotfiles/walker/themes/"
 
@@ -30,8 +30,12 @@ default = [
   "desktopapplications",
   "menus",
   "websearch",
-] # providers to be queried by default
-empty = ["desktopapplications"] # providers to be queried when query is empty
+]
+empty = ["desktopapplications"]
+max_results = 50
+
+[providers.sets]
+[providers.max_results_provider]
 
 [[providers.prefixes]]
 prefix = "/"
@@ -57,7 +61,7 @@ provider = "websearch"
 prefix = "$"
 provider = "clipboard"
 
-[providers.actions]
+[providers.actions] # This will be MERGED/OVEWRITTEN with what the user specifies
 dmenu = [{ action = "select", default = true, bind = "Return" }]
 
 providerlist = [
@@ -74,6 +78,11 @@ bluetooth = [
   { action = "disconnect", bind = "Return", after = "AsyncReload" },
 ]
 
+archlinuxpkgs = [
+  { action = "install", bind = "Return", default = true },
+  { action = "remove", bind = "Return" },
+]
+
 calc = [
   { action = "copy", default = true, bind = "Return" },
   { action = "delete", bind = "ctrl d", after = "AsyncReload" },
@@ -83,6 +92,16 @@ calc = [
 websearch = [
   { action = "search", default = true, bind = "Return" },
   { action = "erase_history", label = "clear hist", bind = "ctrl h", after = "Reload" },
+]
+
+desktopapplications = [
+  { action = "start", default = true, bind = "Return" },
+  { action = "start:keep", label = "open+next", bind = "shift Return", after = "KeepOpen" },
+  { action = "erase_history", label = "clear hist", bind = "ctrl h", after = "AsyncReload" },
+  { action = "pin", bind = "ctrl p", after = "AsyncReload" },
+  { action = "unpin", bind = "ctrl p", after = "AsyncReload" },
+  { action = "pinup", bind = "ctrl n", after = "AsyncReload" },
+  { action = "pindown", bind = "ctrl m", after = "AsyncReload" },
 ]
 
 files = [
