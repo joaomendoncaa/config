@@ -1,6 +1,7 @@
 theme = dark:dark, light:light
 
 keybind = ctrl+v=paste_from_clipboard
+cursor-style = block
 font-size = 12
 window-decoration = none
 window-padding-x = 12
