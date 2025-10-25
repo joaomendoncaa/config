@@ -1,4 +1,5 @@
 require 'core.options'
+require 'core.remote'
 require 'core.keymaps'
 require 'core.commands'
 require 'core.lazy'

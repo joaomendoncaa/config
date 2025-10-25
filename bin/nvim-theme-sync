@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+sys_theme="$(omarchy-theme-current 2>/dev/null | tr -d '\n')"
+theme="default"
+bg="dark"
+
+case "$sys_theme" in
+Snow) theme="github_light_high_contrast" bg="light" ;;
+Mars) theme="github_dark_high_contrast" bg="dark" ;;
+*) theme="default" bg="dark" ;;
+esac
+
+for sock in "$runtime_dir"/nvim*.sock; do
+	[ -S "$sock" ] || continue
+	nvim --server "$sock" \
+		--remote-expr "v:lua.ThemeRemoteUpdate('${theme}')" >/dev/null 2>&1 &
+	nvim --server "$sock" \
+		--remote-expr "vim.api.nvim_set_option_value(\"background\", \"${bg}\", {})')" >/dev/null 2>&1 &
+done
+disown
