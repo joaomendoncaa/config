@@ -5,3 +5,4 @@ cursor-style = block
 font-size = 12
 window-decoration = none
 window-padding-x = 12
+confirm-close-surface = false
