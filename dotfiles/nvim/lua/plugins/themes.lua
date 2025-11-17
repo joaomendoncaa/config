@@ -125,11 +125,7 @@ local function setup(path, opts)
 end
 
 key('n', '<leader>tt', function()
-    if vim.env.NVIM_THEME ~= nil or vim.env.NVIM_THEME ~= '' then
-        update(vim.env.NVIM_THEME)
-    else
-        update 'default'
-    end
+    update 'default'
 end)
 
 commands.auto({ 'ColorScheme', 'UIEnter' }, {
@@ -140,6 +136,8 @@ commands.auto({ 'ColorScheme', 'UIEnter' }, {
 function _G.ThemeRemoteUpdate(theme_name)
     update(theme_name)
 end
+
+vim.fn.system '~/.config.jmmm.sh/bin/nvim-theme-sync'
 
 return {
     setup('ellisonleao/gruvbox.nvim', { enabled = false }),
