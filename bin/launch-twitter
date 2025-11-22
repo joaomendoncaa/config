@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+
+omarchy-launch-webapp "https://x.com"
+omarchy-launch-webapp "https://pro.x.com"

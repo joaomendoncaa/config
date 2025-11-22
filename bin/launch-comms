@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -e
+
+omarchy-launch-webapp "https://discord.com/channels/"
+omarchy-launch-webapp "https://web.whatsapp.com/"
+Telegram
+omarchy-launch-webapp "https://messages.google.com/web/conversations"
+omarchy-launch-webapp "https://mail.proton.me/u/0/inbox"
