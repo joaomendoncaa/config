@@ -4,9 +4,9 @@ selection_wrap = true                                                       # wr
 click_to_close = true                                                       # closes walker if clicking outside of the main content area
 global_argument_delimiter = "#"                                             # query: firefox#https://benz.dev => part after delimiter will be ignored when querying. this should be the same as in the elephant config
 exact_search_prefix = "'"                                                   # disable fuzzy searching
-theme = "joao"                                                              # theme to use
+theme = "omarchy-default"                                                   # theme to use
+additional_theme_location = "~/.local/share/omarchy/default/walker/themes/"
 disable_mouse = false                                                       # disable mouse (on input and list only)
-additional_theme_location = "~/.config.jmmm.sh/dotfiles/walker/themes/"
 
 [shell]
 anchor_top = true
@@ -143,3 +143,7 @@ clipboard = [
   { action = "toggle_images", global = true, label = "toggle images", bind = "ctrl i", after = "ClearReload" },
   { action = "edit", bind = "ctrl o" },
 ]
+
+[[emergencies]]
+text = "Restart Walker"
+command = "omarchy-restart-walker"
