@@ -2,4 +2,5 @@
 set -e
 
 omarchy-launch-webapp "https://x.com"
+sleep 0.2
 omarchy-launch-webapp "https://pro.x.com"
