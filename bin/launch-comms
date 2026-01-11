@@ -1,12 +1,87 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-omarchy-launch-webapp "https://discord.com/channels/"
-sleep 0.2
-omarchy-launch-webapp "https://web.whatsapp.com/"
-sleep 0.2
-Telegram
-sleep 0.2
-omarchy-launch-webapp "https://messages.google.com/web/conversations"
-sleep 0.2
-omarchy-launch-webapp "https://mail.proton.me/u/0/inbox"
+notify() {
+	notify-send -i "applications-internet" -a "launch-comms" "$@"
+}
+
+wait_for_window() {
+	local class_pattern="$1"
+	local max_wait=30
+	local count=0
+
+	while [ $count -lt $max_wait ]; do
+		if hyprctl clients | grep -i "class:" | grep -i "$class_pattern" >/dev/null 2>&1; then
+			return 0
+		fi
+		sleep 0.2
+		count=$((count + 1))
+	done
+	return 1
+}
+
+launch_discord() {
+	notify "Discord: Launching..."
+	omarchy-launch-webapp "https://discord.com/channels/" &>/dev/null &
+
+	if wait_for_window 'discord'; then
+		notify "Discord: Launched successfully"
+	else
+		notify "Discord: Failed to launch"
+		return 1
+	fi
+}
+
+launch_whatsapp() {
+	notify "WhatsApp: Launching..."
+	omarchy-launch-webapp "https://web.whatsapp.com/" &>/dev/null &
+
+	if wait_for_window 'whatsapp'; then
+		notify "WhatsApp: Launched successfully"
+	else
+		notify "WhatsApp: Failed to launch"
+		return 1
+	fi
+}
+
+launch_telegram() {
+	notify "Telegram: Launching..."
+	Telegram &>/dev/null &
+
+	if wait_for_window 'org.telegram.desktop'; then
+		notify "Telegram: Launched successfully"
+	else
+		notify "Telegram: Failed to launch"
+		return 1
+	fi
+}
+
+launch_messages() {
+	notify "Messages: Launching..."
+	omarchy-launch-webapp "https://messages.google.com/web/conversations" &>/dev/null &
+
+	if wait_for_window 'messages.google'; then
+		notify "Messages: Launched successfully"
+	else
+		notify "Messages: Failed to launch"
+		return 1
+	fi
+}
+
+launch_proton() {
+	notify "Proton Mail: Launching..."
+	omarchy-launch-webapp "https://mail.proton.me/u/0/inbox" &>/dev/null &
+
+	if wait_for_window 'proton'; then
+		notify "Proton Mail: Launched successfully"
+	else
+		notify "Proton Mail: Failed to launch"
+		return 1
+	fi
+}
+
+launch_discord
+launch_whatsapp
+launch_telegram
+launch_messages
+launch_proton
