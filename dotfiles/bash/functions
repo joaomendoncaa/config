@@ -17,3 +17,45 @@ function t() {
         tmux new-session -s lab -c ~/lab
     fi
 }
+
+function notify() {
+    notify-send -i "applications-internet" -a "${2:-script}" "$1"
+}
+
+function wait_for_window() {
+    local class_pattern="$1"
+    local max_wait=30
+    local count=0
+
+    while [ $count -lt $max_wait ]; do
+        if hyprctl clients | grep -i "class:" | grep -i "$class_pattern" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 0.2
+        count=$((count + 1))
+    done
+    return 1
+}
+
+function launch_app() {
+    local name="$1"
+    local url_or_cmd="$2"
+    local class_pattern="$3"
+    local app_name="${4:-launcher}"
+
+    notify "Launching $name..." "$app_name"
+
+    if [[ "$class_pattern" == "cmd:"* ]]; then
+        class_pattern="${class_pattern#cmd:}"
+        "$url_or_cmd" &>/dev/null &
+    else
+        omarchy-launch-webapp "$url_or_cmd" &>/dev/null &
+    fi
+
+    if wait_for_window "$class_pattern"; then
+        notify "$name: Launched successfully" "$app_name"
+    else
+        notify "$name: Failed to launch" "$app_name"
+        return 1
+    fi
+}

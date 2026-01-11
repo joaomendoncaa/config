@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-omarchy-launch-webapp "https://x.com"
-sleep 0.2
-omarchy-launch-webapp "https://pro.x.com"
+source ~/.config.jmmm.sh/dotfiles/bash/functions
+
+launch_app "X (Twitter)" "https://x.com" "x.com" "launch-twitter"
+launch_app "X Pro" "https://pro.x.com" "pro.x.com" "launch-twitter"
