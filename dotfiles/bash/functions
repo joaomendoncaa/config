@@ -9,3 +9,11 @@ function add_to_path() {
         export PATH="$1:$PATH"
     fi
 }
+
+function t() {
+    if tmux has-session 2>/dev/null; then
+        tmux attach
+    else
+        tmux new-session -s lab -c ~/lab
+    fi
+}

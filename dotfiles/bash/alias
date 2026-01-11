@@ -2,7 +2,6 @@
 
 alias ls='ls -CtUAp --color=auto'
 alias c='clear'
-alias t='tmux'
 alias r='reset'
 alias fd='fdfind'
 alias gg='lazygit'
