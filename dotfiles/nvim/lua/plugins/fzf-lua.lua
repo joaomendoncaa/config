@@ -122,7 +122,6 @@ return {
             key('n', 'gD', fzf.lsp_declarations, '[G]oto [D]eclaration')
             key('n', 'gI', fzf.lsp_implementations, '[G]oto [I]mplementation')
             key('n', 'gf', fzf.lsp_finder, '[G]oto [F]ind all locations')
-            key('n', '<leader>sg', fzf.live_grep, '[S]earch by [G]rep')
             key('n', '<leader>sm', fzf.marks, '[S]earch [M]arks')
             key('n', '<leader>sf', fzf.builtin, '[S]earch [F]zf Builtins')
             key('n', '<leader>sk', fzf.keymaps, '[S]earch [K]eymaps')
