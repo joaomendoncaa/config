@@ -5,6 +5,10 @@
   "permission": {
     "question": "allow"
   },
+  "keybinds": {
+    "messages_line_up": "ctrl+alt+p",
+    "messages_line_down": "ctrl+alt+n"
+  },
   "mcp": {
     "context7": {
       "type": "remote",
