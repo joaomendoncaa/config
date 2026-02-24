@@ -54,6 +54,9 @@ return {
                 icon = '',
                 prompt_pos = 'title',
             },
+            picker = {
+                ui_select = true,
+            },
             styles = {
                 notification = {
                     wo = { wrap = true },

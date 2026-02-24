@@ -1,5 +1,6 @@
 local clipboard = require 'utils.clipboard'
 local misc = require 'utils.misc'
+local snippets = require 'core.snippets'
 
 local key = require('utils.misc').key
 local f = require('utils.misc').func
@@ -29,3 +30,5 @@ key('n', '<C-M-k>', f(misc.resize_pane, 'up', 15), { expr = true, silent = true,
 key('n', '<C-M-j>', f(misc.resize_pane, 'down', 15), { expr = true, silent = true, desc = 'Smart resize down' })
 
 key('n', 'so', misc.resort_md_list, 'Re-[S]ort markd[O]wn list')
+
+key('n', '<leader>is', snippets.pick, '[S]nippet pick')
