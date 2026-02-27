@@ -87,11 +87,32 @@ return {
             key('n', '<leader>h', api.node.open.horizontal, { buffer = bufnr, desc = 'Open split horizontal' })
         end
 
+        local handle_file_remove = function()
+            vim.schedule(function()
+                local target_win = nil
+                for _, win in ipairs(vim.api.nvim_list_wins()) do
+                    local buf = vim.api.nvim_win_get_buf(win)
+                    if vim.bo[buf].filetype ~= 'NvimTree' then
+                        target_win = win
+                        break
+                    end
+                end
+
+                if target_win then
+                    vim.api.nvim_set_current_win(target_win)
+                end
+            end)
+        end
+
+        local handle_file_created = function(file)
+            vim.cmd('edit ' .. vim.fn.fnameescape(file.fname))
+        end
+
         key('n', '<C-e>', handle_toggle, 'Toggle [E]xplorer')
 
-        api.events.subscribe(api.events.Event.FileCreated, function(file)
-            vim.cmd('edit ' .. vim.fn.fnameescape(file.fname))
-        end)
+        api.events.subscribe(api.events.Event.FileCreated, handle_file_created)
+
+        api.events.subscribe(api.events.Event.WillRemoveFile, handle_file_remove)
 
         vim.api.nvim_create_autocmd('User', {
             pattern = 'NvimTreeSetup',
@@ -121,6 +142,11 @@ return {
             },
             filters = {
                 custom = { '.git' },
+            },
+            actions = {
+                remove_file = {
+                    close_window = false,
+                },
             },
         }
     end,
