@@ -3,8 +3,7 @@ return {
         'dmtrKovalenko/fff.nvim',
         opts = {
             prompt = '> ',
-            title = '',
-            layout = { prompt_position = 'top' },
+            layout = { prompt_position = 'top', max_threads = 11, height = 0.7, width = 0.7 },
         },
         keys = {
             {
