@@ -3,6 +3,9 @@ return {
 
     event = 'VeryLazy',
     opts = {
+        foldKeymaps = {
+            setup = false,
+        },
         foldtext = {
             lineCount = {
                 template = ' %d',
