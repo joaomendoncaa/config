@@ -3,8 +3,7 @@ local commands = require 'utils.commands'
 local M = {}
 
 local snippets = {
-    { name = 'thought', text = '```thought\n<Cursor>\n```', desc = 'Markdown thought block' },
-    { name = 'todo', text = '- [ ] <Cursor>', desc = 'TODO item' },
+    { name = 'Code block', text = '```<Cursor>\n```', desc = 'Markdown code block' },
 }
 
 function M.pick()
@@ -15,7 +14,7 @@ function M.pick()
     vim.ui.select(items, {
         prompt = 'Snippets',
         format_item = function(item)
-            return item.name .. ' - ' .. item.desc
+            return item.name .. ' | ' .. item.desc
         end,
     }, function(item)
         if not item then

@@ -6,29 +6,21 @@ local key = require('utils.misc').key
 local f = require('utils.misc').func
 
 key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
-
 key('n', '<leader>q', vim.diagnostic.open_float, '[Q]uickly show diagnostic error messages')
 key('n', '<leader>Q', vim.diagnostic.setloclist, 'Open diagnostic [Q]uickfix list')
-
 key('n', 'j', 'gj', '[J] Move down even in wrapped lines')
 key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
-
 key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 key('n', 'YY', clipboard.yank_buffer, '[Y]ank whole buffer')
 key('n', 'YP', clipboard.replace_with_yanked_and_write, '[P]aste yanked over buffer')
-
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
 key({ 'n', 'i', 'v' }, '<C-q>', misc.handle_save_quit, 'Save file and [Q]uit')
-
 key('n', '<leader>cn', '<cmd>cnext<CR>', '[C]losed item [N]ext in quickfix list')
 key('n', '<leader>cp', '<cmd>cprev<CR>', '[C]losed item [P]revious in quickfix list')
 key('n', '<leader>cc', '<cmd>cclose<CR>', '[C]lose quickfix window')
-
-key('n', '<C-M-h>', f(misc.resize_pane, 'left', 15), { expr = true, silent = true, desc = 'Smart resize left' })
-key('n', '<C-M-l>', f(misc.resize_pane, 'right', 15), { expr = true, silent = true, desc = 'Smart resize right' })
-key('n', '<C-M-k>', f(misc.resize_pane, 'up', 15), { expr = true, silent = true, desc = 'Smart resize up' })
-key('n', '<C-M-j>', f(misc.resize_pane, 'down', 15), { expr = true, silent = true, desc = 'Smart resize down' })
-
+key({ 'n', 't' }, '<C-M-h>', f(misc.resize_pane, 'left', 15), { expr = true, silent = true, desc = 'Smart resize left' })
+key({ 'n', 't' }, '<C-M-l>', f(misc.resize_pane, 'right', 15), { expr = true, silent = true, desc = 'Smart resize right' })
+key({ 'n', 't' }, '<C-M-k>', f(misc.resize_pane, 'up', 15), { expr = true, silent = true, desc = 'Smart resize up' })
+key({ 'n', 't' }, '<C-M-j>', f(misc.resize_pane, 'down', 15), { expr = true, silent = true, desc = 'Smart resize down' })
 key('n', 'so', misc.resort_md_list, 'Re-[S]ort markd[O]wn list')
-
 key('n', '<leader>is', snippets.pick, '[S]nippet pick')
