@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+session_name=$(tmux display-message -p '#{session_name}')
+pane_current_path=$(tmux display-message -p '#{pane_current_path}')
+
+stored_pane_id=$(tmux showenv -t "$session_name" @opencode_pane 2>/dev/null | sed 's/^@opencode_pane=//' || true)
+
+if [ -n "$stored_pane_id" ] && [ "$stored_pane_id" != "-" ]; then
+	tmux kill-pane -t "$stored_pane_id" 2>/dev/null || true
+	tmux setenv -t "$session_name" -u @opencode_pane 2>/dev/null || true
+else
+	tmux split-window -h -b -l 30% -c "$pane_current_path" "opencode --continue"
+	new_pane_id=$(tmux display-message -p '#{pane_id}')
+	tmux setenv -t "$session_name" @opencode_pane "$new_pane_id"
+fi
