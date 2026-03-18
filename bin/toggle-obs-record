@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+if obs-cmd recording status-active >/dev/null 2>&1; then
+	obs-cmd recording stop
+	notify-send "OBS Recording stopped" -u normal -t 3000
+else
+	obs-cmd recording start
+	notify-send "OBS Recording started" -u normal -t 3000
+fi
+
