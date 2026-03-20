@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if ! obs-cmd info >/dev/null 2>&1; then
+	notify-send "OBS not running" -u normal -t 3000
+	exit 0
+fi
+
 if obs-cmd recording status-active >/dev/null 2>&1; then
 	obs-cmd recording stop
 	notify-send "OBS Recording stopped" -u normal -t 3000
@@ -8,3 +13,4 @@ else
 	notify-send "OBS Recording started" -u normal -t 3000
 fi
 
+pkill -RTMIN+5 waybar
