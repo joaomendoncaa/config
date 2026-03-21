@@ -13,4 +13,5 @@ else
 	notify-send "OBS Recording started" -u normal -t 3000
 fi
 
-pkill -RTMIN+5 waybar
+sleep 1
+pkill -RTMIN+8 waybar
