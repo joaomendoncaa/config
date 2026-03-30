@@ -2,6 +2,10 @@ return {
     {
         'kokusenz/deltaview.nvim',
 
+        dependencies = {
+            'kokusenz/delta.lua',
+        },
+
         config = function()
             require('deltaview').setup {
                 keyconfig = {

@@ -2,44 +2,48 @@
 set -e
 
 VERSION="$1"
-NVIM_DIR="/opt/nvim/bin"
+BIN_DIR="/opt/nvim-linux64/bin"
+RUNTIME_DIR="/opt/nvim-linux64/share/nvim"
 DOWNLOADS="$HOME/downloads"
 
 if [ -z "$VERSION" ]; then
-  echo "No version specified."
-  echo "Currently installed:"
-  nvim --version | head -n 1
-  exit 1
+	echo "No version specified."
+	echo "Currently installed:"
+	nvim --version | head -n 1
+	exit 1
 fi
 
-if [ "$VERSION" = "nightly" ]; then
-  DEST_DIR="$DOWNLOADS/nvim-nightly"
-  TARBALL_URL="https://github.com/neovim/neovim/releases/download/nightly/nvim-linux-x86_64.tar.gz"
+if [ "$VERSION" = "nightly" ] || [ "$VERSION" = "stable" ]; then
+	DEST_DIR="$DOWNLOADS/nvim-$VERSION"
+	TARBALL_URL="https://github.com/neovim/neovim/releases/download/$VERSION/nvim-linux-x86_64.tar.gz"
 
-  echo "Refreshing nightly version..."
-  rm -rf "$DEST_DIR"
-  mkdir -p "$DEST_DIR"
-  cd "$DEST_DIR"
-  wget -O nvim.tar.gz "$TARBALL_URL"
-  tar -xzf nvim.tar.gz
+	echo "Refreshing $VERSION version..."
+	rm -rf "$DEST_DIR"
+	mkdir -p "$DEST_DIR"
+	cd "$DEST_DIR"
+	wget -O nvim.tar.gz "$TARBALL_URL"
+	tar -xzf nvim.tar.gz
 else
-  VERSION_DASHED=$(echo "$VERSION" | tr '.' '-')
-  DEST_DIR="$DOWNLOADS/nvim-$VERSION_DASHED"
-  TARBALL_URL="https://github.com/neovim/neovim/releases/download/v$VERSION/nvim-linux-x86_64.tar.gz"
+	VERSION_DASHED=$(echo "$VERSION" | tr '.' '-')
+	DEST_DIR="$DOWNLOADS/nvim-$VERSION_DASHED"
+	TARBALL_URL="https://github.com/neovim/neovim/releases/download/v$VERSION/nvim-linux-x86_64.tar.gz"
 
-  if [ -x "$DEST_DIR/nvim-linux-x86_64/bin/nvim" ]; then
-    echo "Version already downloaded. Installing..."
-  else
-    echo "⬇️ Downloading Neovim v$VERSION..."
-    mkdir -p "$DEST_DIR"
-    cd "$DEST_DIR"
-    wget -O nvim.tar.gz "$TARBALL_URL"
-    tar -xzf nvim.tar.gz
-  fi
+	if [ -x "$DEST_DIR/nvim-linux-x86_64/bin/nvim" ]; then
+		echo "Version already downloaded. Installing..."
+	else
+		echo "⬇️ Downloading Neovim v$VERSION..."
+		mkdir -p "$DEST_DIR"
+		cd "$DEST_DIR"
+		wget -O nvim.tar.gz "$TARBALL_URL"
+		tar -xzf nvim.tar.gz
+	fi
 fi
 
 echo "Installing to $NVIM_DIR..."
-sudo cp "$DEST_DIR/nvim-linux-x86_64/bin/nvim" "$NVIM_DIR/nvim"
+sudo mkdir -p "$BIN_DIR"
+sudo mkdir -p "$RUNTIME_DIR"
+sudo cp "$DEST_DIR/nvim-linux-x86_64/bin/nvim" "$BIN_DIR/nvim"
+sudo cp -r "$DEST_DIR/nvim-linux-x86_64/share/" /opt/nvim-linux64/
 
 echo "Finished. Installed version:"
 nvim --version | head -n 1
