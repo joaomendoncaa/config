@@ -40,6 +40,14 @@ else
 fi
 
 echo "Installing to $NVIM_DIR..."
+
+if pgrep -x nvim >/dev/null; then
+	echo "Closing running Neovim instances..."
+	pkill nvim || true
+fi
+
+rm -rf ~/.local/share/nvim/lazy/nvim-treesitter
+
 sudo mkdir -p "$BIN_DIR"
 sudo mkdir -p "$RUNTIME_DIR"
 sudo cp "$DEST_DIR/nvim-linux-x86_64/bin/nvim" "$BIN_DIR/nvim"
@@ -47,8 +55,3 @@ sudo cp -r "$DEST_DIR/nvim-linux-x86_64/share/" /opt/nvim-linux64/
 
 echo "Finished. Installed version:"
 nvim --version | head -n 1
-
-echo "Updating tree-sitter parsers for new Neovim version..."
-rm -rf ~/.local/share/nvim/lazy/nvim-treesitter/parser/*.so
-nvim --headless "+TSUpdate" +q 2>/dev/null || true
-echo "Tree-sitter parsers updated."
