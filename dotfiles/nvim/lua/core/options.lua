@@ -1,6 +1,8 @@
 local o = vim.opt
 local g = vim.g
 
+local version = require('utils.misc').version
+
 -- flag plugins that there's a nerd font installed
 g.NVIM_NERD_FONT = true
 
@@ -45,4 +47,6 @@ o.foldenable = true
 o.guicursor = { 'n-v-c-sm:block', 'i-ci-ve:block', 'r-cr-o:block' }
 o.virtualedit = 'all'
 
-require('vim._core.ui2').enable { enable = true }
+version('>=0.12.0', function()
+    require('vim._core.ui2').enable { enable = true }
+end)

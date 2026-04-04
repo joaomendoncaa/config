@@ -118,4 +118,41 @@ function M.handle_save_quit()
     vim.cmd 'q'
 end
 
+---@param requirement string Version requirement like ">=0.12.0", ">0.11.0", "==0.12.0"
+---@param callback fun()? Optional callback to run if version satisfies requirement
+---@return boolean satisfied True if version satisfies requirement
+function M.version(requirement, callback)
+    local ops = {
+        ['>='] = function(a, b)
+            return a >= b
+        end,
+        ['<='] = function(a, b)
+            return a <= b
+        end,
+        ['>'] = function(a, b)
+            return a > b
+        end,
+        ['<'] = function(a, b)
+            return a < b
+        end,
+        ['=='] = function(a, b)
+            return a == b
+        end,
+    }
+
+    local op = requirement:match '^([><=]+)'
+    local version_str = op and requirement:sub(#op + 1) or requirement
+    op = op or '=='
+
+    local current = vim.version()
+    local target = vim.version.parse(version_str)
+    local ok = ops[op](current, target)
+
+    if callback and ok then
+        callback()
+    end
+
+    return ok
+end
+
 return M
