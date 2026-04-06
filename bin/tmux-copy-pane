@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+tmp_file="$(mktemp -t tmux-pane.XXXXXX)"
+
+cleanup() {
+	rm -f "$tmp_file"
+}
+trap cleanup EXIT
+
+clean_pane() {
+	sed -E 's/\x1b\[[0-9;?]*[ -/]*[@-~]//g; s/\r$//; s/[[:space:]]+$//; s/^[[:space:]]+$//; /^[[:space:]]*$/!s/^/  /'
+}
+
+{
+	echo '---'
+	echo 'Tmux pane content'
+	echo "Pane: #{pane_id} (#{pane_current_command})"
+	echo "Path: #{pane_current_path}"
+	echo '---'
+	echo '```'
+	tmux capture-pane -p -S - | clean_pane
+	echo '```'
+} >>"$tmp_file"
+
+if [[ ! -s "$tmp_file" ]]; then
+	tmux display 'Pane empty'
+	exit 0
+fi
+
+if command -v wl-copy >/dev/null 2>&1; then
+	wl-copy <"$tmp_file"
+elif command -v xclip >/dev/null 2>&1; then
+	xclip -selection clipboard <"$tmp_file"
+elif command -v pbcopy >/dev/null 2>&1; then
+	pbcopy <"$tmp_file"
+else
+	tmux display 'No clipboard tool found'
+	exit 1
+fi
+
+tmux display 'Pane content copied'
