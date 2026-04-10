@@ -137,6 +137,7 @@ PanelWindow {
 
             property real volumeRatio: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio.volume : 0
             property bool isHeadphones: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.name === "alsa_output.usb-Razer_Razer_Barracuda_X-00.analog-stereo" : false
+            property bool isMuted: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio.muted : false
 
             Layout.preferredWidth: config.buttonSize
             Layout.preferredHeight: config.buttonSize
@@ -153,14 +154,14 @@ PanelWindow {
                 onPaint: {
                     var ctx = getContext('2d');
                     ctx.clearRect(0, 0, width, height);
-                    var iconText = audioSinkButton.isHeadphones ? "" : "󰓃";
+                    var iconText = audioSinkButton.isMuted ? audioSinkButton.isHeadphones ? "󰟎" : "󰓄" : iconText = audioSinkButton.isHeadphones ? "" : "󰓃";
                     var x = audioSinkButton.isHeadphones ? width / 2 - 3 : width / 2;
                     var y = audioSinkButton.isHeadphones ? height / 2 + 2 : height / 2 + 2;
                     var volStop = audioSinkButton.volumeRatio.toFixed(2);
                     console.log(volStop);
                     var gradient = ctx.createLinearGradient(0, height, 0, 0);
                     gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
-                    gradient.addColorStop(volStop - 0.01, "rgba(255, 255, 255, 1.0)");
+                    gradient.addColorStop(Math.max(0, volStop - 0.01), "rgba(255, 255, 255, 1.0)");
                     gradient.addColorStop(volStop, "rgba(255, 255, 255, 0.5)");
                     gradient.addColorStop(1, "rgba(255, 255, 255, 0.5)");
                     ctx.font = config.fontSize + "px '" + config.fontFamily + "'";
@@ -176,6 +177,10 @@ PanelWindow {
                     }
 
                     function onIsHeadphonesChanged() {
+                        audioIcon.requestPaint();
+                    }
+
+                    function onIsMutedChanged() {
                         audioIcon.requestPaint();
                     }
 
