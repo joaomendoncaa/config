@@ -2,6 +2,10 @@
 
 This is a personal dotfiles repository containing configuration files for various tools (Neovim, Hyprland, Tmux, etc.).
 
+## Critical Rules
+
+- **DO NOT** run any test commands without my explicit request or permission
+
 ## Build/Test Commands
 
 This repository contains configuration files only, so there are no traditional build/test commands.
