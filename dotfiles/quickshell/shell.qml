@@ -115,13 +115,35 @@ PanelWindow {
     RowLayout {
         anchors.centerIn: parent
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 8
+        spacing: config.gapInner
 
-        Text {
-            text: Qt.formatDateTime(clock.date, "dd MMM dddd hh:mm:ss")
-            color: config.foreground
-            font.pixelSize: config.fontSize
-            font.family: config.fontFamily
+        Rectangle {
+            id: clockRectangle
+
+            Layout.preferredWidth: clockText.implicitWidth + config.gapInner * 4
+            Layout.preferredHeight: config.buttonSize
+            radius: config.buttonBorderRadius
+            color: clockMouseArea.containsMouse ? config.backgroundHovered : "transparent"
+
+            Text {
+                id: clockText
+
+                anchors.centerIn: parent
+                text: Qt.formatDateTime(clock.date, "dd MMM dddd hh:mm:ss")
+                color: config.foreground
+                font.pixelSize: config.fontSize
+                font.family: config.fontFamily
+            }
+
+            MouseArea {
+                id: clockMouseArea
+
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: Quickshell.execDetached(["notify-send", "TODO: integrate calendar"])
+            }
+
         }
 
     }
