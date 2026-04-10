@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+pkill quickshell 2>/dev/null
+latest=$(ls -td /run/user/1000/hypr/*/ 2>/dev/null | head -1)
+HYPRLAND_INSTANCE_SIGNATURE=$(basename "$latest") quickshell &

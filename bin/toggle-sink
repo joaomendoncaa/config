@@ -6,10 +6,8 @@ headphones="alsa_output.usb-Razer_Razer_Barracuda_X-00.analog-stereo"
 
 if [[ "$current_sink" == "$speakers" ]]; then
 	pactl set-default-sink "$headphones"
-	notify-send "Audio output" "Switched to Headphones 🎧"
 else
 	pactl set-default-sink "$speakers"
-	notify-send "Audio output" "Switched to Speakers 🔊"
 fi
 
 for input in $(pactl list short sink-inputs | awk '{print $1}'); do
