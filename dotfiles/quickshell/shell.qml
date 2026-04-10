@@ -34,7 +34,7 @@ PanelWindow {
         readonly property string foreground: "white"
         readonly property string foregroundSelected: "black"
         readonly property string background: "transparent"
-        readonly property string backgroundHovered: "#50FFFFFF"
+        readonly property string backgroundHovered: "#40FFFFFF"
         readonly property int shellPadding: 10
     }
 
@@ -180,7 +180,6 @@ PanelWindow {
                     var x = audioSinkButton.isHeadphones ? width / 2 - 3 : width / 2;
                     var y = audioSinkButton.isHeadphones ? height / 2 + 2 : height / 2 + 2;
                     var volStop = audioSinkButton.volumeRatio.toFixed(2);
-                    console.log(volStop);
                     var gradient = ctx.createLinearGradient(0, height, 0, 0);
                     gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
                     gradient.addColorStop(Math.max(0, volStop - 0.01), "rgba(255, 255, 255, 1.0)");
@@ -216,8 +215,21 @@ PanelWindow {
 
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: Quickshell.execDetached(["/home/joao/.config.jmmm.sh/bin/toggle-sink"])
                 hoverEnabled: true
+                onClicked: Quickshell.execDetached(["/home/joao/.config.jmmm.sh/bin/toggle-sink"])
+                onWheel: function(wheel) {
+                    if (!Pipewire.defaultAudioSink || !Pipewire.defaultAudioSink.audio)
+                        return ;
+
+                    var step = 0.05;
+                    var currentVol = Pipewire.defaultAudioSink.audio.volume;
+                    var newVol;
+                    if (wheel.angleDelta.y > 0)
+                        newVol = Math.min(1, currentVol + step);
+                    else
+                        newVol = Math.max(0, currentVol - step);
+                    Pipewire.defaultAudioSink.audio.volume = newVol;
+                }
             }
 
         }
