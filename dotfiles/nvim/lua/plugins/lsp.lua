@@ -66,6 +66,7 @@ return {
 
         local servers = {
             bashls = {},
+            qmlls = {},
             cssls = {},
             gopls = {},
             rust_analyzer = {},
@@ -211,7 +212,7 @@ return {
                 },
             }, vim.lsp.protocol.make_client_capabilities(), server.capabilities or {})
 
-            require('lspconfig')[server_name].setup(server)
+            vim.lsp.config[server_name].setup(server)
         end
 
         local function on_attach(event)

@@ -76,6 +76,7 @@ return {
                 yaml = { 'yamlfmt' },
                 html = { 'biome', 'prettier' },
                 toml = { 'biome' },
+                qml = { 'qmlformat' },
                 templ = { 'templ' },
                 rust = { 'rustfmt' },
                 css = { 'biome', 'prettier' },
@@ -92,6 +93,11 @@ return {
                 lua = { 'stylua' },
             },
             formatters = {
+                qmlformat = {
+                    prepend_args = {
+                        '-i',
+                    },
+                },
                 rustfmt = {
                     command = 'sh',
                     args = { '-c', 'rustfmt --edition 2024 --emit stdout | dx fmt -f -' },
