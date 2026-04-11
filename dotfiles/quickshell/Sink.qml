@@ -71,7 +71,15 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
-        onClicked: Quickshell.execDetached(["/home/joao/.config.jmmm.sh/bin/toggle-sink"])
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
+        onClicked: function(mouse) {
+            if (mouse.button === Qt.MiddleButton)
+                Quickshell.execDetached(["pamixer", "-t"]);
+            else if (mouse.button === Qt.RightButton)
+                Quickshell.execDetached(["omarchy-launch-audio"]);
+            else
+                Quickshell.execDetached(["/home/joao/.config.jmmm.sh/bin/toggle-sink"]);
+        }
         onWheel: function(wheel) {
             if (!Pipewire.defaultAudioSink || !Pipewire.defaultAudioSink.audio)
                 return ;
