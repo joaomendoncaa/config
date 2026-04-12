@@ -1,3 +1,4 @@
+import "."
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -5,18 +6,10 @@ import Quickshell
 Rectangle {
     id: root
 
-    property color foreground: "white"
-    property color backgroundHovered: "#40FFFFFF"
-    property int buttonSize: 26
-    property int buttonBorderRadius: 4
-    property int fontSize: 16
-    property int gapInner: 4
-    property string fontFamily: "JetBrainsMonoNL Nerd Font"
-
-    Layout.preferredWidth: clockText.implicitWidth + gapInner * 4
-    Layout.preferredHeight: buttonSize
-    radius: buttonBorderRadius
-    color: mouseArea.containsMouse ? backgroundHovered : "transparent"
+    Layout.preferredWidth: clockText.implicitWidth + Config.gapInner * 4
+    Layout.preferredHeight: Config.buttonSize
+    radius: Config.buttonBorderRadius
+    color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
 
     SystemClock {
         id: clock
@@ -29,9 +22,9 @@ Rectangle {
 
         anchors.centerIn: parent
         text: Qt.formatDateTime(clock.date, "dd MMM dddd hh:mm:ss")
-        color: foreground
-        font.pixelSize: fontSize
-        font.family: fontFamily
+        color: Config.foreground
+        font.pixelSize: Config.fontSize
+        font.family: Config.fontFamily
     }
 
     MouseArea {

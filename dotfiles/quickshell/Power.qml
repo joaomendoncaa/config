@@ -1,3 +1,4 @@
+import "."
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -5,22 +6,16 @@ import Quickshell
 Rectangle {
     id: root
 
-    property color foreground: "white"
-    property color backgroundHovered: "#40FFFFFF"
-    property int buttonSize: 26
-    property int buttonBorderRadius: 4
-    property int fontSize: 16
-
-    Layout.preferredWidth: buttonSize
-    Layout.preferredHeight: buttonSize
-    radius: buttonBorderRadius
-    color: mouseArea.containsMouse ? backgroundHovered : "transparent"
+    Layout.preferredWidth: Config.buttonSize
+    Layout.preferredHeight: Config.buttonSize
+    radius: Config.buttonBorderRadius
+    color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
 
     Text {
         anchors.centerIn: parent
-        text: ""
-        color: foreground
-        font.pixelSize: fontSize
+        text: "\uF011"
+        color: Config.foreground
+        font.pixelSize: Config.fontSize
     }
 
     MouseArea {

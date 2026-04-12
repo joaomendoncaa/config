@@ -1,3 +1,4 @@
+import "."
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -6,27 +7,25 @@ import Quickshell.Services.Pipewire
 Rectangle {
     id: root
 
-    property color foreground: "white"
-    property color backgroundHovered: "#40FFFFFF"
-    property int buttonSize: 26
-    property int buttonBorderRadius: 4
-    property int fontSize: 16
-    property string fontFamily: "JetBrainsMonoNL Nerd Font"
     property real volumeRatio: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio.volume : 0
     property bool isHeadphones: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.name === "alsa_output.usb-Razer_Razer_Barracuda_X-00.analog-stereo" : false
     property bool isMuted: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio.muted : false
 
-    Layout.preferredWidth: buttonSize
-    Layout.preferredHeight: buttonSize
-    radius: buttonBorderRadius
-    color: mouseArea.containsMouse ? backgroundHovered : "transparent"
+    Layout.preferredWidth: Config.buttonSize
+    Layout.preferredHeight: Config.buttonSize
+    radius: Config.buttonBorderRadius
+    color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
+
+    PwObjectTracker {
+        objects: [Pipewire.defaultAudioSink]
+    }
 
     Canvas {
         id: audioIcon
 
         anchors.centerIn: parent
-        width: buttonSize
-        height: buttonSize
+        width: Config.buttonSize
+        height: Config.buttonSize
         visible: Pipewire.defaultAudioSink !== null
         onPaint: {
             var ctx = getContext('2d');
@@ -40,7 +39,7 @@ Rectangle {
             gradient.addColorStop(Math.max(0, volStop - 0.01), "rgba(255, 255, 255, 1.0)");
             gradient.addColorStop(volStop, "rgba(255, 255, 255, 0.5)");
             gradient.addColorStop(1, "rgba(255, 255, 255, 0.5)");
-            ctx.font = fontSize + "px '" + fontFamily + "'";
+            ctx.font = Config.fontSize + "px '" + Config.fontFamily + "'";
             ctx.fillStyle = gradient;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";

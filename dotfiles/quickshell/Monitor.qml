@@ -1,3 +1,4 @@
+import "."
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -5,15 +6,10 @@ import Quickshell.Io
 Rectangle {
     id: root
 
-    property color foreground: "white"
-    property color backgroundHovered: "#40FFFFFF"
-    property int buttonSize: 26
-    property int buttonBorderRadius: 4
-
-    width: buttonSize
-    height: buttonSize
-    radius: buttonBorderRadius
-    color: mouseArea.containsMouse ? backgroundHovered : "transparent"
+    width: Config.buttonSize
+    height: Config.buttonSize
+    radius: Config.buttonBorderRadius
+    color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
     Component.onCompleted: {
         if (statFile.loaded && meminfoFile.loaded) {
             var cpu = internal.parseCpuUsage();
@@ -77,7 +73,6 @@ Rectangle {
         }
 
         function pushSample(cpu, ram) {
-            // Quantize to 10% intervals for cleaner visualization
             cpuHistory[writeIndex] = Math.round(cpu * 10) / 10;
             ramHistory[writeIndex] = Math.round(ram * 10) / 10;
             writeIndex = (writeIndex + 1) % historySize;
@@ -126,8 +121,8 @@ Rectangle {
         id: canvas
 
         anchors.centerIn: parent
-        width: buttonSize
-        height: buttonSize
+        width: Config.buttonSize
+        height: Config.buttonSize
         onPaint: {
             var ctx = getContext('2d');
             var w = width;
@@ -137,9 +132,16 @@ Rectangle {
             var historySize = internal.historySize;
             var writeIdx = internal.writeIndex;
             ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = foreground;
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = Config.foregroundSecondary;
+            ctx.lineWidth = 2;
             ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(0, pad);
+            ctx.lineTo(w, pad);
+            ctx.moveTo(0, h - pad);
+            ctx.lineTo(w, h - pad);
+            ctx.stroke();
+            ctx.strokeStyle = Config.foreground;
             ctx.beginPath();
             for (var i = 0; i < historySize; i++) {
                 var dataIdx = (writeIdx + i) % historySize;
@@ -167,7 +169,7 @@ Rectangle {
     }
 
     MouseArea {
-        // TODO: btop panel
+        // TODO: btop panel onClicked
 
         id: mouseArea
 

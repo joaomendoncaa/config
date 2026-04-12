@@ -1,3 +1,4 @@
+import "."
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
@@ -6,20 +7,18 @@ import Quickshell
 Canvas {
     id: root
 
-    property color foreground: "white"
-    property int buttonSize: 26
     property real rotationAngle: 0
 
-    Layout.leftMargin: 12
-    Layout.preferredWidth: buttonSize
-    Layout.preferredHeight: buttonSize
+    Layout.leftMargin: Config.gapOuter
+    Layout.preferredWidth: Config.buttonSize
+    Layout.preferredHeight: Config.buttonSize
     onPaint: {
         var ctx = getContext('2d');
         ctx.clearRect(0, 0, width, height);
         ctx.save();
         ctx.translate(width / 2, height / 2);
         ctx.rotate(rotationAngle * Math.PI / 180);
-        ctx.strokeStyle = foreground;
+        ctx.strokeStyle = Config.foreground;
         ctx.lineWidth = 3;
         ctx.setLineDash([0.5, 0.5]);
         ctx.beginPath();
