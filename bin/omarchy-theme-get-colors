@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Extract colors from current Omarchy theme for Quickshell
+# Outputs JSON with the colors needed by Config.qml
+
+THEME_DIR="$HOME/.config/omarchy/current/theme"
+COLORS_TOML="$THEME_DIR/colors.toml"
+ALACRITTY_TOML="$THEME_DIR/alacritty.toml"
+
+parse_toml_value() {
+	local file="$1"
+	local key="$2"
+	grep -E "^${key}\s*=\s*\"" "$file" 2>/dev/null | head -1 | sed -E 's/.*=\s*"([^"]+)".*/\1/'
+}
+
+parse_alacritty_primary() {
+	local file="$1"
+	local key="$2"
+	# Extract from [colors.primary] section
+	sed -n '/\[colors\.primary\]/,/^\[/p' "$file" 2>/dev/null | grep -E "^${key}\s*=\s*\"" | head -1 | sed -E 's/.*=\s*"([^"]+)".*/\1/'
+}
+
+parse_alacritty_selection() {
+	local file="$1"
+	# Extract from alacritty [colors.selection] text
+	sed -n '/\[colors\.selection\]/,/^\[/p' "$file" 2>/dev/null | grep -E "^text\s*=\s*\"" | head -1 | sed -E 's/.*=\s*"([^"]+)".*/\1/'
+}
+
+FOREGROUND=""
+BACKGROUND=""
+SELECTION_FOREGROUND=""
+
+if [[ -f "$COLORS_TOML" ]]; then
+	FOREGROUND=$(parse_toml_value "$COLORS_TOML" "foreground")
+	BACKGROUND=$(parse_toml_value "$COLORS_TOML" "background")
+	SELECTION_FOREGROUND=$(parse_toml_value "$COLORS_TOML" "selection_foreground")
+elif [[ -f "$ALACRITTY_TOML" ]]; then
+	FOREGROUND=$(parse_alacritty_primary "$ALACRITTY_TOML" "foreground")
+	BACKGROUND=$(parse_alacritty_primary "$ALACRITTY_TOML" "background")
+	SELECTION_FOREGROUND=$(parse_alacritty_selection "$ALACRITTY_TOML")
+fi
+
+[[ -z "$FOREGROUND" ]] && FOREGROUND="#FFFFFF"
+[[ -z "$BACKGROUND" ]] && BACKGROUND="#000000"
+[[ -z "$SELECTION_FOREGROUND" ]] && SELECTION_FOREGROUND="#000000"
+
+cat <<EOF
+{"foreground":"$FOREGROUND","background":"$BACKGROUND","selection_foreground":"$SELECTION_FOREGROUND"}
+EOF

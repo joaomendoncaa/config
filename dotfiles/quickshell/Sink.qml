@@ -35,10 +35,10 @@ Rectangle {
             var y = root.isHeadphones ? height / 2 + 2 : height / 2 + 2;
             var volStop = root.volumeRatio.toFixed(2);
             var gradient = ctx.createLinearGradient(0, height, 0, 0);
-            gradient.addColorStop(0, "rgba(255, 255, 255, 1.0)");
-            gradient.addColorStop(Math.max(0, volStop - 0.01), "rgba(255, 255, 255, 1.0)");
-            gradient.addColorStop(volStop, "rgba(255, 255, 255, 0.5)");
-            gradient.addColorStop(1, "rgba(255, 255, 255, 0.5)");
+            gradient.addColorStop(0, Config.foreground);
+            gradient.addColorStop(Math.max(0, volStop - 0.01), Config.foreground);
+            gradient.addColorStop(volStop, Config.foregroundSecondary);
+            gradient.addColorStop(1, Config.foregroundSecondary);
             ctx.font = Config.fontSize + "px '" + Config.fontFamily + "'";
             ctx.fillStyle = gradient;
             ctx.textAlign = "center";

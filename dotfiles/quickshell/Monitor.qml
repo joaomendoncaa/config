@@ -95,7 +95,7 @@ Rectangle {
     }
 
     Timer {
-        interval: 1000
+        interval: 250
         running: true
         repeat: true
         onTriggered: {
@@ -153,7 +153,7 @@ Rectangle {
                     ctx.lineTo(x, y);
             }
             ctx.stroke();
-            ctx.setLineDash([4, 4]);
+            ctx.setLineDash([2, 2]);
             ctx.beginPath();
             for (var j = 0; j < historySize; j++) {
                 var ramIdx = (writeIdx + j) % historySize;
