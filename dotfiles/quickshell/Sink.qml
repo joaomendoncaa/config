@@ -32,7 +32,7 @@ Rectangle {
             var ctx = getContext('2d');
             ctx.clearRect(0, 0, width, height);
             var iconText = root.isMuted ? root.isHeadphones ? "󰟎" : "󰓄" : root.isHeadphones ? "" : "󰓃";
-            var x = root.isHeadphones ? width / 2 - 3 : width / 2;
+            var x = root.isHeadphones ? width / 2 - 2.5 : width / 2;
             var y = root.isHeadphones ? height / 2 + 2 : height / 2 + 2;
             var volStop = root.volumeRatio.toFixed(2);
             var gradient = ctx.createLinearGradient(0, height, 0, 0);
@@ -74,9 +74,9 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         onClicked: function(mouse) {
             if (mouse.button === Qt.MiddleButton)
-                Quickshell.execDetached(["pamixer", "-t"]);
-            else if (mouse.button === Qt.RightButton)
                 Quickshell.execDetached(["omarchy-launch-audio"]);
+            else if (mouse.button === Qt.RightButton)
+                Quickshell.execDetached(["pamixer", "-t"]);
             else
                 Quickshell.execDetached(["/home/joao/.config.jmmm.sh/bin/toggle-sink"]);
         }
