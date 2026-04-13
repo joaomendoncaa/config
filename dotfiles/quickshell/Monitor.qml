@@ -6,15 +6,20 @@ import Quickshell.Io
 Rectangle {
     id: root
 
+    property bool hasCPU: true
+    property bool hasRAM: true
+    property bool hasGPU: true
+
     width: Config.buttonSize
     height: Config.buttonSize
     radius: Config.buttonBorderRadius
     color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
     Component.onCompleted: {
+        console.log("[Monitor] Component loaded, statFile.loaded:", statFile.loaded, "meminfoFile.loaded:", meminfoFile.loaded, "gpuFile.loaded:", gpuFile.loaded);
         if (statFile.loaded && meminfoFile.loaded) {
             var cpu = internal.parseCpuUsage();
             var ram = internal.parseRamUsage();
-            internal.pushSample(cpu, ram);
+            internal.pushSample(cpu, ram, null);
             canvas.requestPaint();
         }
     }
@@ -26,8 +31,12 @@ Rectangle {
         readonly property int padding: 6
         property var cpuHistory: new Array(historySize).fill(0.5)
         property var ramHistory: new Array(historySize).fill(0.5)
+        property var gpuHistory: new Array(historySize).fill(0.5)
         property int writeIndex: 0
         property var prevCpuStats: null
+        property bool gpuAvailable: true
+        property real pendingCpu: 0
+        property real pendingRam: 0
 
         function parseCpuUsage() {
             var lines = statFile.text().split('\n');
@@ -72,9 +81,24 @@ Rectangle {
             return (total - available) / total;
         }
 
-        function pushSample(cpu, ram) {
+        function parseGpuUsage(output) {
+            if (!output || output.length === 0)
+                return null;
+
+            var trimmed = output.trim();
+            var value = parseInt(trimmed, 10);
+            if (isNaN(value) || value < 0 || value > 100)
+                return null;
+
+            return value / 100;
+        }
+
+        function pushSample(cpu, ram, gpu) {
             cpuHistory[writeIndex] = Math.round(cpu * 10) / 10;
             ramHistory[writeIndex] = Math.round(ram * 10) / 10;
+            if (gpu !== null)
+                gpuHistory[writeIndex] = Math.round(gpu * 10) / 10;
+
             writeIndex = (writeIndex + 1) % historySize;
         }
 
@@ -94,6 +118,47 @@ Rectangle {
         path: "file:///proc/meminfo"
     }
 
+    FileView {
+        id: gpuFile
+
+        blockLoading: true
+        path: "file:///tmp/quickshell_gpu_usage"
+    }
+
+    Process {
+        id: nvidiaSmiProc
+
+        running: false
+        command: ["sh", "-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits > /tmp/quickshell_gpu_usage"]
+        onExited: (exitCode, exitStatus) => {
+            if (exitCode !== 0) {
+                console.log("[GPU] Process failed, disabling GPU");
+                internal.gpuAvailable = false;
+                return ;
+            }
+            gpuFile.reload();
+        }
+    }
+
+    Connections {
+        function onTextChanged() {
+            var text = gpuFile.text();
+            if (!text || text.length === 0)
+                return ;
+
+            var gpu = internal.parseGpuUsage(text);
+            if (gpu === null) {
+                console.log("[GPU] Parse failed, disabling GPU");
+                internal.gpuAvailable = false;
+                return ;
+            }
+            internal.pushSample(internal.pendingCpu, internal.pendingRam, gpu);
+            canvas.requestPaint();
+        }
+
+        target: gpuFile
+    }
+
     Timer {
         interval: 250
         running: true
@@ -101,6 +166,9 @@ Rectangle {
         onTriggered: {
             statFile.reload();
             meminfoFile.reload();
+            if (internal.gpuAvailable && !nvidiaSmiProc.running)
+                nvidiaSmiProc.running = true;
+
         }
     }
 
@@ -109,8 +177,12 @@ Rectangle {
             if (statFile.loaded && meminfoFile.loaded) {
                 var cpu = internal.parseCpuUsage();
                 var ram = internal.parseRamUsage();
-                internal.pushSample(cpu, ram);
-                canvas.requestPaint();
+                internal.pendingCpu = cpu;
+                internal.pendingRam = ram;
+                if (!internal.gpuAvailable) {
+                    internal.pushSample(cpu, ram, null);
+                    canvas.requestPaint();
+                }
             }
         }
 
@@ -142,35 +214,52 @@ Rectangle {
             ctx.lineTo(w, h - pad);
             ctx.stroke();
             ctx.strokeStyle = Config.foreground;
-            ctx.beginPath();
-            for (var i = 0; i < historySize; i++) {
-                var dataIdx = (writeIdx + i) % historySize;
-                var x = i;
-                var y = pad + (1 - internal.cpuHistory[dataIdx]) * graphH;
-                if (i === 0)
-                    ctx.moveTo(x, y);
-                else
-                    ctx.lineTo(x, y);
+            if (root.hasCPU) {
+                ctx.setLineDash([]);
+                ctx.beginPath();
+                for (var i = 0; i < historySize; i++) {
+                    var dataIdx = (writeIdx + i) % historySize;
+                    var x = i;
+                    var y = pad + (1 - internal.cpuHistory[dataIdx]) * graphH;
+                    if (i === 0)
+                        ctx.moveTo(x, y);
+                    else
+                        ctx.lineTo(x, y);
+                }
+                ctx.stroke();
             }
-            ctx.stroke();
-            ctx.setLineDash([2, 2]);
-            ctx.beginPath();
-            for (var j = 0; j < historySize; j++) {
-                var ramIdx = (writeIdx + j) % historySize;
-                var rx = j;
-                var ry = pad + (1 - internal.ramHistory[ramIdx]) * graphH;
-                if (j === 0)
-                    ctx.moveTo(rx, ry);
-                else
-                    ctx.lineTo(rx, ry);
+            if (root.hasRAM) {
+                ctx.setLineDash([2, 2]);
+                ctx.beginPath();
+                for (var j = 0; j < historySize; j++) {
+                    var ramIdx = (writeIdx + j) % historySize;
+                    var rx = j;
+                    var ry = pad + (1 - internal.ramHistory[ramIdx]) * graphH;
+                    if (j === 0)
+                        ctx.moveTo(rx, ry);
+                    else
+                        ctx.lineTo(rx, ry);
+                }
+                ctx.stroke();
             }
-            ctx.stroke();
+            if (root.hasGPU && internal.gpuAvailable) {
+                ctx.setLineDash([1, 1]);
+                ctx.beginPath();
+                for (var k = 0; k < historySize; k++) {
+                    var gpuIdx = (writeIdx + k) % historySize;
+                    var gx = k;
+                    var gy = pad + (1 - internal.gpuHistory[gpuIdx]) * graphH;
+                    if (k === 0)
+                        ctx.moveTo(gx, gy);
+                    else
+                        ctx.lineTo(gx, gy);
+                }
+                ctx.stroke();
+            }
         }
     }
 
     MouseArea {
-        // TODO: btop panel onClicked
-
         id: mouseArea
 
         anchors.fill: parent
@@ -181,3 +270,4 @@ Rectangle {
     }
 
 }
+
