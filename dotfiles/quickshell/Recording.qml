@@ -29,43 +29,14 @@ Rectangle {
             NumberAnimation {
                 duration: 150
             }
-
-        }
-
-    }
-
-    StdioCollector {
-        id: stdoutCollector
-
-        onStreamFinished: {
-            var output = text.trim();
-            console.log("[Recording] Script output:", output);
-            try {
-                var result = JSON.parse(output);
-                root.isRecording = result.text && result.text.length > 0;
-                console.log("[Recording] Parsed isRecording:", root.isRecording);
-            } catch (e) {
-                console.warn("[Recording] Failed to parse JSON:", e);
-                root.isRecording = false;
-            }
         }
     }
 
-    Process {
-        id: checkScriptProcess
+    IpcHandler {
+        target: "recording"
 
-        command: [Quickshell.env("HOME") + "/.config.jmmm.sh/bin/toggle-record-icon"]
-        stdout: stdoutCollector
-    }
-
-    Timer {
-        id: checkTimer
-
-        interval: 100
-        running: true
-        repeat: true
-        onTriggered: {
-            checkScriptProcess.running = true;
+        function setRecording(active: bool): void {
+            root.isRecording = active;
         }
     }
 
@@ -75,7 +46,6 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: Quickshell.execDetached(["omarchy-cmd-screenrecord"])
+        onClicked: Quickshell.execDetached(["toggle-record-screen"])
     }
-
 }
