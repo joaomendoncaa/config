@@ -22,12 +22,38 @@ Rectangle {
         color: Config.foreground
         font.pixelSize: Config.fontSize
         font.family: Config.fontFamily
-        opacity: root.isRecording ? 1 : 0
+        opacity: root.isRecording ? pulseOpacity : 0
         visible: true
 
+        property real pulseOpacity: 1.0
+
         Behavior on opacity {
+            enabled: !root.isRecording
             NumberAnimation {
                 duration: 150
+            }
+        }
+
+        SequentialAnimation {
+            running: root.isRecording
+            loops: Animation.Infinite
+
+            NumberAnimation {
+                target: recordingText
+                property: "pulseOpacity"
+                from: 1.0
+                to: 0.5
+                duration: 800
+                easing.type: Easing.InOutSine
+            }
+
+            NumberAnimation {
+                target: recordingText
+                property: "pulseOpacity"
+                from: 0.5
+                to: 1.0
+                duration: 800
+                easing.type: Easing.InOutSine
             }
         }
     }
@@ -44,8 +70,9 @@ Rectangle {
         id: mouseArea
 
         anchors.fill: parent
+        enabled: root.isRecording
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: root.isRecording ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: Quickshell.execDetached(["toggle-record-screen"])
     }
 }
