@@ -62,6 +62,14 @@ Rectangle {
             target: root
         }
 
+        Connections {
+            function onForegroundChanged() {
+                audioIcon.requestPaint();
+            }
+
+            target: Config
+        }
+
     }
 
     MouseArea {
