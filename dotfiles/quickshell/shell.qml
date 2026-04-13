@@ -31,6 +31,9 @@ PanelWindow {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Config.gapInner
 
+        Recording {
+        }
+
         Clock {
         }
 
