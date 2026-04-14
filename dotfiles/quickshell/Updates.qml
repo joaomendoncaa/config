@@ -22,7 +22,7 @@ Rectangle {
         anchors.centerIn: parent
         text: "\uF409"
         color: Config.foreground
-        font.pixelSize: Config.fontSize
+        font.pixelSize: Config.fontSize * 1.25
         font.family: Config.fontFamily
     }
 
@@ -44,7 +44,7 @@ Rectangle {
             anchors.centerIn: parent
             text: root.updateCount
             color: Config.foregroundSelected
-            font.pixelSize: 8
+            font.pixelSize: 9
             font.family: Config.fontFamily
             font.bold: true
         }
