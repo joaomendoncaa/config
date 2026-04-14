@@ -37,6 +37,9 @@ PanelWindow {
         Clock {
         }
 
+        Updates {
+        }
+
     }
 
     RowLayout {
