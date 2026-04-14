@@ -13,8 +13,8 @@ Rectangle {
     Layout.preferredWidth: Config.buttonSize
     Layout.preferredHeight: Config.buttonSize
     radius: Config.buttonBorderRadius
-    color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
-    visible: root.updateCount > 0
+    color: mouseArea.containsMouse && root.updateCount > 0 ? Config.backgroundHovered : "transparent"
+    opacity: root.updateCount > 0 ? 1 : 0
 
     Text {
         id: downloadIcon
@@ -65,8 +65,9 @@ Rectangle {
         id: mouseArea
 
         anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        hoverEnabled: true
+        cursorShape: root.updateCount > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+        hoverEnabled: root.updateCount > 0
+        enabled: root.updateCount > 0
         onClicked: Quickshell.execDetached(["omarchy-launch-floating-terminal-with-presentation", "omarchy-update"])
     }
 
