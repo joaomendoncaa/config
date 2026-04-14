@@ -48,6 +48,9 @@ PanelWindow {
         Monitor {
         }
 
+        Batteries {
+        }
+
         Sink {
         }
 

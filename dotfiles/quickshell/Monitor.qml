@@ -193,7 +193,7 @@ Rectangle {
         id: canvas
 
         anchors.centerIn: parent
-        width: Config.buttonSize
+        width: Config.buttonSize - 8
         height: Config.buttonSize
         onPaint: {
             var ctx = getContext('2d');
