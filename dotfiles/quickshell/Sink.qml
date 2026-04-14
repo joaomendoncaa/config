@@ -33,11 +33,20 @@ Rectangle {
             var iconText = root.isMuted ? root.isHeadphones ? "󰟎" : "󰓄" : root.isHeadphones ? "" : "󰓃";
             var x = root.isHeadphones ? width / 2 - 2.5 : width / 2;
             var y = root.isHeadphones ? height / 2 + 2 : height / 2 + 2;
-            var volStop = root.volumeRatio.toFixed(2);
+            var volRatio = Math.max(0, Math.min(1, root.volumeRatio));
+            // Use a minimum visible threshold so low volumes still show some foreground
+            // Only at literal 0% do we show no foreground
+            var volStop = volRatio <= 0 ? 0 : Math.max(0.25, volRatio);
             var gradient = ctx.createLinearGradient(0, height, 0, 0);
             gradient.addColorStop(0, Config.foreground);
-            gradient.addColorStop(Math.max(0, volStop - 0.01), Config.foreground);
-            gradient.addColorStop(volStop, Config.foregroundSecondary);
+            if (volStop > 0) {
+                // Ensure the transition point is slightly before volStop to avoid same-offset issue
+                var transitionPoint = Math.max(0, volStop - 0.01);
+                if (transitionPoint > 0) {
+                    gradient.addColorStop(transitionPoint, Config.foreground);
+                }
+                gradient.addColorStop(volStop, Config.foregroundSecondary);
+            }
             gradient.addColorStop(1, Config.foregroundSecondary);
             ctx.font = Config.fontSize + "px '" + Config.fontFamily + "'";
             ctx.fillStyle = gradient;

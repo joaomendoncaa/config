@@ -205,7 +205,7 @@ Rectangle {
             var writeIdx = internal.writeIndex;
             ctx.clearRect(0, 0, w, h);
             ctx.strokeStyle = Config.foregroundSecondary;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1;
             ctx.setLineDash([]);
             ctx.beginPath();
             ctx.moveTo(0, pad);
@@ -229,7 +229,7 @@ Rectangle {
                 ctx.stroke();
             }
             if (root.hasRAM) {
-                ctx.setLineDash([2, 2]);
+                ctx.setLineDash([4, 2]);
                 ctx.beginPath();
                 for (var j = 0; j < historySize; j++) {
                     var ramIdx = (writeIdx + j) % historySize;
@@ -270,4 +270,3 @@ Rectangle {
     }
 
 }
-

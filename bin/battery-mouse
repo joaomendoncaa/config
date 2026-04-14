@@ -1,0 +1,291 @@
+#!/usr/bin/env python3
+"""
+Standalone Logitech G Pro X Superlight battery reader.
+
+Based on Solaar's implementation of Logitech HID++.
+https://github.com/pwr-Solaar/Solaar
+"""
+
+import os
+import sys
+import struct
+import fcntl
+import glob
+import errno
+import time
+import select
+
+# === Constants from Solaar ===
+HIDPP_SHORT_MESSAGE_ID = 0x10
+HIDPP_LONG_MESSAGE_ID = 0x11
+SHORT_MESSAGE_SIZE = 7
+LONG_MESSAGE_SIZE = 20
+MAX_READ_SIZE = 32
+
+# HID++ Features
+FEATURE_ROOT = 0x0000
+FEATURE_BATTERY_VOLTAGE = 0x1001
+FEATURE_UNIFIED_BATTERY = 0x1004
+
+# Timeout in seconds
+DEFAULT_TIMEOUT = 4
+
+# Cache file
+CACHE_FILE = os.path.expanduser('~/.cache/battery-mouse.cache')
+
+# === Voltage to Percentage Lookup (from Solaar) ===
+BATTERY_VOLTAGE_TABLE = [
+    (4186, 100), (4067, 90), (3989, 80), (3922, 70),
+    (3859, 60), (3811, 50), (3778, 40), (3751, 30),
+    (3717, 20), (3671, 10), (3646, 5), (3579, 2),
+    (3500, 0),
+]
+
+
+def voltage_to_percentage(voltage):
+    if voltage >= BATTERY_VOLTAGE_TABLE[0][0]:
+        return BATTERY_VOLTAGE_TABLE[0][1]
+    if voltage <= BATTERY_VOLTAGE_TABLE[-1][0]:
+        return BATTERY_VOLTAGE_TABLE[-1][1]
+    for i in range(len(BATTERY_VOLTAGE_TABLE) - 1):
+        v_high, p_high = BATTERY_VOLTAGE_TABLE[i]
+        v_low, p_low = BATTERY_VOLTAGE_TABLE[i + 1]
+        if v_low <= voltage <= v_high:
+            percent = p_low + (p_high - p_low) * (voltage - v_low) / (v_high - v_low)
+            return round(percent)
+    return 0
+
+
+def find_receiver():
+    for hidraw_path in glob.glob('/dev/hidraw*'):
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['udevadm', 'info', '--query=property', '--name=' + hidraw_path],
+                capture_output=True, text=True, timeout=1
+            )
+            if result.returncode == 0:
+                output = result.stdout
+                if (f'ID_VENDOR_ID=046d' in output or f'ID_VENDOR_ID=046D' in output):
+                    if (f'ID_MODEL_ID=c547' in output or f'ID_MODEL_ID=C547' in output):
+                        return hidraw_path
+        except:
+            continue
+    return None
+
+
+def open_hidraw(path):
+    try:
+        fd = os.open(path, os.O_RDWR | os.O_NONBLOCK)
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, flags & ~os.O_NONBLOCK)
+        return fd
+    except OSError as e:
+        if e.errno == errno.EACCES:
+            print(f"Error: Permission denied accessing {path}", file=sys.stderr)
+            print(f"Fix: sudo chmod 666 {path}", file=sys.stderr)
+        raise
+
+
+def send_request(fd, device_number, request_id, params=b'', long_message=False):
+    if long_message or len(params) > SHORT_MESSAGE_SIZE - 2:
+        msg_id = HIDPP_LONG_MESSAGE_ID
+        data = struct.pack('!BB', msg_id, device_number)
+        data += struct.pack('!H', request_id)
+        data += params
+        data += b'\x00' * (LONG_MESSAGE_SIZE - len(data))
+    else:
+        msg_id = HIDPP_SHORT_MESSAGE_ID
+        data = struct.pack('!BB', msg_id, device_number)
+        data += struct.pack('!H', request_id)
+        data += params
+        data += b'\x00' * (SHORT_MESSAGE_SIZE - len(data))
+    os.write(fd, data)
+
+
+def read_response(fd, timeout=DEFAULT_TIMEOUT):
+    ready, _, _ = select.select([fd], [], [], timeout)
+    if not ready:
+        return None
+    data = os.read(fd, MAX_READ_SIZE)
+    if len(data) < 2:
+        return None
+    report_id = data[0]
+    if report_id == HIDPP_SHORT_MESSAGE_ID:
+        if len(data) < SHORT_MESSAGE_SIZE:
+            return None
+        return (report_id, data[1], data[2], data[3], data[4:7])
+    elif report_id == HIDPP_LONG_MESSAGE_ID:
+        if len(data) < LONG_MESSAGE_SIZE:
+            return None
+        return (report_id, data[1], data[2], data[3], data[4:20])
+    return None
+
+
+def make_request(fd, device_number, request_id, params=b'', timeout=DEFAULT_TIMEOUT, long_message=True):
+    send_request(fd, device_number, request_id, params, long_message)
+    start = time.time()
+    while time.time() - start < timeout:
+        response = read_response(fd, timeout=0.1)
+        if response is None:
+            continue
+        report_id, dev_number, sub_id, address, data = response
+        if dev_number == device_number or dev_number == (device_number ^ 0xFF):
+            response_request_id = (sub_id << 8) | address
+            if response_request_id == request_id:
+                return data
+            if sub_id == 0xFF and (address << 8 | data[0]) == request_id:
+                raise RuntimeError(f"Device error: {data[1]}")
+    raise TimeoutError(f"No response within {timeout}s")
+
+
+def ping_device(fd, device_number, long_message=True):
+    request_id = 0x0018
+    params = struct.pack('!BB', 0, 0) + os.urandom(1)
+    send_request(fd, device_number, request_id, params, long_message)
+    start = time.time()
+    while time.time() - start < DEFAULT_TIMEOUT:
+        response = read_response(fd, timeout=0.1)
+        if response is None:
+            continue
+        report_id, dev_number, sub_id, address, data = response
+        if dev_number == device_number or dev_number == (device_number ^ 0xFF):
+            response_id = (sub_id << 8) | address
+            if response_id == request_id:
+                if len(data) >= 2:
+                    major = data[0]
+                    minor = data[1]
+                    return major + minor / 10.0
+            if report_id == HIDPP_SHORT_MESSAGE_ID and sub_id == 0x8F:
+                if (address << 8 | data[0]) == request_id:
+                    error = data[1]
+                    if error == 2:
+                        return 1.0
+    return None
+
+
+def get_feature_index(fd, device_number, feature_id):
+    params = struct.pack('!H', feature_id)
+    try:
+        response = make_request(fd, device_number, 0x0000, params)
+        if response and len(response) >= 1:
+            feature_index = response[0]
+            if feature_index == 0:
+                return None
+            return feature_index
+    except TimeoutError:
+        pass
+    return None
+
+
+def get_battery_voltage(fd, device_number, feature_index):
+    request_id = (feature_index << 8) | 0x00
+    try:
+        response = make_request(fd, device_number, request_id)
+        if response and len(response) >= 3:
+            voltage = struct.unpack('>H', response[:2])[0]
+            return voltage_to_percentage(voltage)
+    except TimeoutError:
+        pass
+    return None
+
+
+def get_unified_battery(fd, device_number, feature_index):
+    request_id = (feature_index << 8) | 0x10
+    try:
+        response = make_request(fd, device_number, request_id)
+        if response and len(response) >= 3:
+            discharge = response[0]
+            if discharge != 0:
+                return discharge
+    except TimeoutError:
+        pass
+    return None
+
+
+def try_device_number(fd, device_number):
+    protocol = ping_device(fd, device_number)
+    if protocol is None:
+        return None, None, None
+    feature_index = get_feature_index(fd, device_number, FEATURE_BATTERY_VOLTAGE)
+    if feature_index is not None:
+        return device_number, feature_index, 'voltage'
+    feature_index = get_feature_index(fd, device_number, FEATURE_UNIFIED_BATTERY)
+    if feature_index is not None:
+        return device_number, feature_index, 'unified'
+    return None, None, None
+
+
+def load_cache():
+    """Load cache: returns (device_number, feature_index, battery_type) or None"""
+    try:
+        if os.path.exists(CACHE_FILE):
+            with open(CACHE_FILE, 'r') as f:
+                parts = f.read().strip().split(',')
+                if len(parts) == 3:
+                    return int(parts[0]), int(parts[1]), parts[2]
+    except:
+        pass
+    return None
+
+
+def save_cache(device_number, feature_index, battery_type):
+    """Save cache: just three values separated by commas"""
+    try:
+        os.makedirs(os.path.dirname(CACHE_FILE), exist_ok=True)
+        with open(CACHE_FILE, 'w') as f:
+            f.write(f"{device_number},{feature_index},{battery_type}")
+    except:
+        pass
+
+
+def main():
+    receiver_path = find_receiver()
+    if not receiver_path:
+        print("Error: Logitech receiver not found", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        fd = open_hidraw(receiver_path)
+    except OSError as e:
+        print(f"Error: Cannot open {receiver_path}: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        battery_info = None
+
+        # Try cache first
+        cache = load_cache()
+        if cache:
+            device_number, feature_index, battery_type = cache
+            # Quick check if device still responds
+            if ping_device(fd, device_number) is not None:
+                if battery_type == 'voltage':
+                    battery_info = get_battery_voltage(fd, device_number, feature_index)
+                elif battery_type == 'unified':
+                    battery_info = get_unified_battery(fd, device_number, feature_index)
+
+        # If cache failed, do full discovery
+        if battery_info is None:
+            for device_number in range(1, 7):
+                dev_num, feature_index, battery_type = try_device_number(fd, device_number)
+                if dev_num is not None:
+                    save_cache(dev_num, feature_index, battery_type)
+                    if battery_type == 'voltage':
+                        battery_info = get_battery_voltage(fd, dev_num, feature_index)
+                    elif battery_type == 'unified':
+                        battery_info = get_unified_battery(fd, dev_num, feature_index)
+                    break
+
+        if battery_info is None:
+            print("Error: Could not read battery", file=sys.stderr)
+            sys.exit(1)
+
+        print(battery_info)
+
+    finally:
+        os.close(fd)
+
+
+if __name__ == '__main__':
+    main()
