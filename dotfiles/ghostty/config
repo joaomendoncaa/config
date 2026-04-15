@@ -1,4 +1,4 @@
-theme = dark:dark, light:light
+config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 
 keybind = ctrl+v=paste_from_clipboard
 cursor-style = block
