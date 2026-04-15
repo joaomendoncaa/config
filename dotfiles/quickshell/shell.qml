@@ -51,9 +51,6 @@ PanelWindow {
         Monitor {
         }
 
-        Batteries {
-        }
-
         Sink {
         }
 
