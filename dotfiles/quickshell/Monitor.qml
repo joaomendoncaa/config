@@ -10,7 +10,7 @@ Rectangle {
     property bool hasRAM: true
     property bool hasGPU: true
 
-    width: Config.buttonSize
+    width: Config.buttonSize * 2
     height: Config.buttonSize
     radius: Config.buttonBorderRadius
     color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
@@ -27,7 +27,7 @@ Rectangle {
     QtObject {
         id: internal
 
-        readonly property int historySize: 26
+        readonly property int historySize: root.width
         readonly property int padding: 6
         property var cpuHistory: new Array(historySize).fill(0.5)
         property var ramHistory: new Array(historySize).fill(0.5)
@@ -193,8 +193,8 @@ Rectangle {
         id: canvas
 
         anchors.centerIn: parent
-        width: Config.buttonSize - 8
-        height: Config.buttonSize
+        width: root.width - 8
+        height: root.height
         onPaint: {
             var ctx = getContext('2d');
             var w = width;
