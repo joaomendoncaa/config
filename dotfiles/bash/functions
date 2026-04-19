@@ -211,3 +211,13 @@ wtcd() {
 wtprune() {
 	git worktree prune -v
 }
+
+# Quick compress pass on a video
+compress() {
+	f="$1"
+	TARGET_MB=10
+	AUDIO_K=128
+	D=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f")
+	B=$(echo "$TARGET_MB*8192/$D-$AUDIO_K" | bc)
+	ffmpeg -i "$f" -c:v libx264 -b:v ${B}k -c:a aac -b:a ${AUDIO_K}k "${f%.*}_compressed.mp4"
+}
