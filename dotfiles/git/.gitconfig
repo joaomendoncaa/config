@@ -1,8 +1,8 @@
 [credential "https://github.com"]
-	helper = 
+	helper =
 	helper = !/usr/bin/gh auth git-credential
 [credential "https://gist.github.com"]
-	helper = 
+	helper =
 	helper = !/usr/bin/gh auth git-credential
 [user]
 	email = joaomendoncadev@gmail.com
@@ -15,3 +15,7 @@
 [safe]
 	directory = /home/joao
 	directory = /home/joao/lab/config
+[diff]
+	tool = nvim_difftool
+[difftool "nvim_difftool"]
+	cmd = nvim -c \"packadd nvim.difftool\" -c \"DiffTool $LOCAL $REMOTE\"
