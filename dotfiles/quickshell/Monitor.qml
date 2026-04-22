@@ -9,6 +9,7 @@ Rectangle {
     property bool hasCPU: true
     property bool hasRAM: true
     property bool hasGPU: true
+    property bool hasNet: true
 
     width: Config.buttonSize * 2
     height: Config.buttonSize
@@ -19,7 +20,7 @@ Rectangle {
         if (statFile.loaded && meminfoFile.loaded) {
             var cpu = internal.parseCpuUsage();
             var ram = internal.parseRamUsage();
-            internal.pushSample(cpu, ram, null);
+            internal.pushSample(cpu, ram, null, 0);
             canvas.requestPaint();
         }
     }
@@ -32,11 +33,17 @@ Rectangle {
         property var cpuHistory: new Array(historySize).fill(0.5)
         property var ramHistory: new Array(historySize).fill(0.5)
         property var gpuHistory: new Array(historySize).fill(0.5)
+        property var netHistory: new Array(historySize).fill(0.5)
         property int writeIndex: 0
         property var prevCpuStats: null
         property bool gpuAvailable: true
         property real pendingCpu: 0
         property real pendingRam: 0
+        property real pendingNet: 0
+        property var prevNetStats: null
+        property var prevNetTime: null
+        property string netIface: ""
+        readonly property real maxNetSpeed: 500 * 1024 * 1024 * 1024
 
         function parseCpuUsage() {
             var lines = statFile.text().split('\n');
@@ -93,9 +100,79 @@ Rectangle {
             return value / 100;
         }
 
-        function pushSample(cpu, ram, gpu) {
+        function findNetInterface(text) {
+            var lines = text.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                if (line.length === 0)
+                    continue;
+
+                if (line.startsWith("Inter-"))
+                    continue;
+
+                if (line.startsWith(" face"))
+                    continue;
+
+                var colonIdx = line.indexOf(':');
+                if (colonIdx === -1)
+                    continue;
+
+                var name = line.substring(0, colonIdx).trim();
+                if (name === "lo")
+                    continue;
+
+                return name;
+            }
+            return "";
+        }
+
+        function parseNetUsage() {
+            if (!netdevFile.loaded)
+                return 0;
+
+            var text = netdevFile.text();
+            if (netIface === "") {
+                netIface = findNetInterface(text);
+                if (netIface === "")
+                    return 0;
+
+            }
+            var lines = text.split('\n');
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].trim();
+                var colonIdx = line.indexOf(':');
+                if (colonIdx === -1)
+                    continue;
+
+                var name = line.substring(0, colonIdx).trim();
+                if (name !== netIface)
+                    continue;
+
+                var parts = line.substring(colonIdx + 1).trim().split(/\s+/);
+                var rx = parseInt(parts[0], 10) || 0;
+                var now = Date.now();
+                var usage = 0;
+                if (prevNetStats !== null && prevNetTime !== null) {
+                    var elapsed = (now - prevNetTime) / 1000;
+                    if (elapsed > 0) {
+                        var rxDiff = rx - prevNetStats.rx;
+                        usage = Math.max(0, rxDiff) / elapsed;
+                    }
+                }
+                prevNetStats = {
+                    "rx": rx
+                };
+                prevNetTime = now;
+                return Math.min(usage / maxNetSpeed, 1);
+            }
+            netIface = "";
+            return 0;
+        }
+
+        function pushSample(cpu, ram, gpu, net) {
             cpuHistory[writeIndex] = Math.round(cpu * 10) / 10;
             ramHistory[writeIndex] = Math.round(ram * 10) / 10;
+            netHistory[writeIndex] = Math.round(net * 10) / 10;
             if (gpu !== null)
                 gpuHistory[writeIndex] = Math.round(gpu * 10) / 10;
 
@@ -125,6 +202,13 @@ Rectangle {
         path: "file:///tmp/quickshell_gpu_usage"
     }
 
+    FileView {
+        id: netdevFile
+
+        blockLoading: true
+        path: "file:///proc/net/dev"
+    }
+
     Process {
         id: nvidiaSmiProc
 
@@ -152,7 +236,7 @@ Rectangle {
                 internal.gpuAvailable = false;
                 return ;
             }
-            internal.pushSample(internal.pendingCpu, internal.pendingRam, gpu);
+            internal.pushSample(internal.pendingCpu, internal.pendingRam, gpu, internal.pendingNet);
             canvas.requestPaint();
         }
 
@@ -166,6 +250,7 @@ Rectangle {
         onTriggered: {
             statFile.reload();
             meminfoFile.reload();
+            netdevFile.reload();
             if (internal.gpuAvailable && !nvidiaSmiProc.running)
                 nvidiaSmiProc.running = true;
 
@@ -174,13 +259,15 @@ Rectangle {
 
     Connections {
         function onTextChanged() {
-            if (statFile.loaded && meminfoFile.loaded) {
+            if (statFile.loaded && meminfoFile.loaded && netdevFile.loaded) {
                 var cpu = internal.parseCpuUsage();
                 var ram = internal.parseRamUsage();
+                var net = internal.parseNetUsage();
                 internal.pendingCpu = cpu;
                 internal.pendingRam = ram;
+                internal.pendingNet = net;
                 if (!internal.gpuAvailable) {
-                    internal.pushSample(cpu, ram, null);
+                    internal.pushSample(cpu, ram, null, net);
                     canvas.requestPaint();
                 }
             }
@@ -253,6 +340,21 @@ Rectangle {
                         ctx.moveTo(gx, gy);
                     else
                         ctx.lineTo(gx, gy);
+                }
+                ctx.stroke();
+            }
+            if (root.hasNet) {
+                ctx.strokeStyle = Config.foreground;
+                ctx.setLineDash([1, 2, 3, 4, 5]);
+                ctx.beginPath();
+                for (var n = 0; n < historySize; n++) {
+                    var netIdx = (writeIdx + n) % historySize;
+                    var nx = n;
+                    var ny = pad + (1 - internal.netHistory[netIdx]) * graphH;
+                    if (n === 0)
+                        ctx.moveTo(nx, ny);
+                    else
+                        ctx.lineTo(nx, ny);
                 }
                 ctx.stroke();
             }
