@@ -16,26 +16,13 @@ Rectangle {
     color: mouseArea.containsMouse && root.updateCount > 0 ? Config.backgroundHovered : "transparent"
     opacity: root.updateCount > 0 ? 1 : 0
 
-    Text {
-        id: downloadIcon
-
-        anchors.centerIn: parent
-        text: "\uF409"
-        color: Config.foreground
-        font.pixelSize: Config.fontSize * 1.25
-        font.family: Config.fontFamily
-    }
-
     Rectangle {
         id: badge
 
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.rightMargin: 1
-        anchors.bottomMargin: 1
-        width: Math.max(12, badgeText.implicitWidth + 4)
-        height: 12
-        radius: 6
+        anchors.centerIn: parent
+        width: Config.buttonSize * 0.7
+        height: Config.buttonSize * 0.7
+        radius: width / 2
         color: Config.foreground
 
         Text {
@@ -44,7 +31,7 @@ Rectangle {
             anchors.centerIn: parent
             text: root.updateCount
             color: Config.foregroundSelected
-            font.pixelSize: 9
+            font.pixelSize: Config.fontSize * 0.75
             font.family: Config.fontFamily
             font.bold: true
         }
