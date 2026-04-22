@@ -4,6 +4,7 @@ import Quickshell.Io
 pragma Singleton
 
 QtObject {
+    readonly property string sinkHeadphones: "alsa_output.usb-Razer_Razer_Barracuda_X-00.analog-stereo"
     readonly property int height: 30
     readonly property int fontSize: 16
     readonly property int buttonSize: 26

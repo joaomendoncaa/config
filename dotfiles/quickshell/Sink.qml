@@ -1,4 +1,5 @@
 import "."
+import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -8,8 +9,14 @@ Rectangle {
     id: root
 
     property real volumeRatio: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio.volume : 0
-    property bool isHeadphones: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.name === "alsa_output.usb-Razer_Razer_Barracuda_X-00.analog-stereo" : false
+    property bool isHeadphones: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.name === Config.sinkHeadphones : false
     property bool isMuted: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio.muted : false
+    readonly property string iconSource: {
+        if (root.isHeadphones)
+            return root.isMuted ? "assets/sink-headphones-muted.svg" : "assets/sink-headphones.svg";
+
+        return root.isMuted ? "assets/sink-speakers-muted.svg" : "assets/sink-speakers.svg";
+    }
 
     Layout.preferredWidth: Config.buttonSize
     Layout.preferredHeight: Config.buttonSize
@@ -20,63 +27,70 @@ Rectangle {
         objects: [Pipewire.defaultAudioSink]
     }
 
-    Canvas {
-        id: audioIcon
+    Item {
+        id: iconContainer
 
         anchors.centerIn: parent
-        width: Config.buttonSize
-        height: Config.buttonSize
+        width: Config.buttonSize * 0.75
+        height: Config.buttonSize * 0.75
         visible: Pipewire.defaultAudioSink !== null
-        onPaint: {
-            var ctx = getContext('2d');
-            ctx.clearRect(0, 0, width, height);
-            var iconText = root.isMuted ? root.isHeadphones ? "󰟎" : "󰓄" : root.isHeadphones ? "" : "󰓃";
-            var x = root.isHeadphones ? width / 2 - 2.5 : width / 2;
-            var y = root.isHeadphones ? height / 2 + 2 : height / 2 + 2;
-            var volRatio = Math.max(0, Math.min(1, root.volumeRatio));
-            // Use a minimum visible threshold so low volumes still show some foreground
-            // Only at literal 0% do we show no foreground
-            var volStop = volRatio <= 0 ? 0 : Math.max(0.25, volRatio);
-            var gradient = ctx.createLinearGradient(0, height, 0, 0);
-            gradient.addColorStop(0, Config.foreground);
-            if (volStop > 0) {
-                // Ensure the transition point is slightly before volStop to avoid same-offset issue
-                var transitionPoint = Math.max(0, volStop - 0.01);
-                if (transitionPoint > 0) {
-                    gradient.addColorStop(transitionPoint, Config.foreground);
+
+        // Shared mask image (alpha only)
+        Image {
+            id: maskImage
+
+            anchors.fill: parent
+            source: root.iconSource
+            sourceSize.width: width
+            sourceSize.height: height
+            smooth: true
+            visible: false
+        }
+
+        // Background layer: full icon in secondary color
+        Rectangle {
+            id: bgColor
+
+            anchors.fill: parent
+            color: Config.foregroundSecondary
+            visible: false
+        }
+
+        OpacityMask {
+            anchors.fill: parent
+            source: bgColor
+            maskSource: maskImage
+        }
+
+        // Foreground layer: same icon in primary color, clipped to volume height
+        Rectangle {
+            anchors.bottom: parent.bottom
+            width: parent.width
+            height: parent.height * Math.max(0, Math.min(1, root.volumeRatio))
+            clip: true
+            color: "transparent"
+
+            Item {
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: iconContainer.height
+
+                Rectangle {
+                    id: fgColor
+
+                    anchors.fill: parent
+                    color: Config.foreground
+                    visible: false
                 }
-                gradient.addColorStop(volStop, Config.foregroundSecondary);
-            }
-            gradient.addColorStop(1, Config.foregroundSecondary);
-            ctx.font = Config.fontSize + "px '" + Config.fontFamily + "'";
-            ctx.fillStyle = gradient;
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillText(iconText, x, y);
-        }
 
-        Connections {
-            function onVolumeRatioChanged() {
-                audioIcon.requestPaint();
+                OpacityMask {
+                    anchors.fill: parent
+                    source: fgColor
+                    maskSource: maskImage
+                }
+
             }
 
-            function onIsHeadphonesChanged() {
-                audioIcon.requestPaint();
-            }
-
-            function onIsMutedChanged() {
-                audioIcon.requestPaint();
-            }
-
-            target: root
-        }
-
-        Connections {
-            function onForegroundChanged() {
-                audioIcon.requestPaint();
-            }
-
-            target: Config
         }
 
     }
