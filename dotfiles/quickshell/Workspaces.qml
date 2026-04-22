@@ -4,32 +4,60 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 
-Repeater {
+RowLayout {
     id: root
+    spacing: Config.gapInner
 
-    model: Hyprland.workspaces
+    Repeater {
+        model: Hyprland.workspaces
 
-    delegate: Rectangle {
-        required property var modelData
+        delegate: Rectangle {
+            required property var modelData
 
+            Layout.preferredWidth: Config.buttonSize
+            Layout.preferredHeight: Config.buttonSize
+            radius: Config.buttonBorderRadius
+            color: modelData.focused ? Config.foreground : mouseArea.containsMouse ? Config.backgroundHovered : Config.background
+
+            Text {
+                anchors.centerIn: parent
+                text: modelData.id
+                color: modelData.focused ? Config.foregroundSelected : Config.foreground
+                font.pixelSize: Config.fontSize
+            }
+
+            MouseArea {
+                id: mouseArea
+
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: modelData.activate()
+                hoverEnabled: true
+            }
+
+        }
+
+    }
+
+    Rectangle {
         Layout.preferredWidth: Config.buttonSize
         Layout.preferredHeight: Config.buttonSize
         radius: Config.buttonBorderRadius
-        color: modelData.focused ? Config.foreground : mouseArea.containsMouse ? Config.backgroundHovered : Config.background
+        color: plusMouseArea.containsMouse ? Config.backgroundHovered : Config.background
 
         Text {
             anchors.centerIn: parent
-            text: modelData.id
-            color: modelData.focused ? Config.foregroundSelected : Config.foreground
+            text: "+"
+            color: Config.foreground
             font.pixelSize: Config.fontSize
         }
 
         MouseArea {
-            id: mouseArea
+            id: plusMouseArea
 
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: modelData.activate()
+            onClicked: Hyprland.dispatch("workspace empty")
             hoverEnabled: true
         }
 
