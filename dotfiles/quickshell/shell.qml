@@ -21,9 +21,6 @@ PanelWindow {
         Workspaces {
         }
 
-        Opencode {
-        }
-
     }
 
     RowLayout {
