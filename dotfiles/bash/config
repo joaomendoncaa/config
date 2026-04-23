@@ -24,6 +24,7 @@ export EDITOR='nvim'
 export VISUAL='nvim'
 export NVIM_AI=true
 export NVIM_THEME=default
+export ANDROID_HOME="$HOME/Android/Sdk"
 
 [ -f "$HOME/.cargo/env" ] && . "$HOME/.cargo/env"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
@@ -41,3 +42,5 @@ add_to_path "$BUN_INSTALL/bin"
 add_to_path $PNPM_HOME
 add_to_path "/opt/nvim-linux64/bin"
 add_to_path "/mnt/c/Users/joao/AppData/Local/Programs/cursor/resources/app/bin"
+add_to_path "$ANDROID_HOME/platform-tools"
+add_to_path "$ANDROID_HOME/emulator"
