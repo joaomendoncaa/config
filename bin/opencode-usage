@@ -58,10 +58,20 @@ fi
 # Extract usage percentages from /go page (ordered: 5h, weekly, monthly)
 USAGE_VALS=($(echo "$CLEAN_GO" | grep -oP 'data-slot="usage-value">\K[0-9]+' | head -n3 || printf '0 0 0'))
 
+# Extract reset-time text from /go page (ordered: continuous, weekly, monthly)
+mapfile -t RESET_TIMES_RAW < <(echo "$CLEAN_GO" | grep -oP 'data-slot="reset-time">\K[^<]+' | head -n3 || true)
+RESET_TIMES=()
+for val in "${RESET_TIMES_RAW[@]}"; do
+	RESET_TIMES+=("${val#Reinicia em }")
+done
+
 if [[ -z "$BALANCE" ]]; then
 	echo '{"error": "balance not found"}'
 	exit 0
 fi
 
-printf '{"billing":{"balance":"$%s"},"usage":{"5h":%s,"weekly":%s,"monthly":%s}}\n' \
-	"$BALANCE" "${USAGE_VALS[0]:-0}" "${USAGE_VALS[1]:-0}" "${USAGE_VALS[2]:-0}"
+printf '{"billing":{"balance":"$%s"},"usage":{"5h":{"current":%s,"reset":"%s"},"weekly":{"current":%s,"reset":"%s"},"monthly":{"current":%s,"reset":"%s"}}}\n' \
+	"$BALANCE" \
+	"${USAGE_VALS[0]:-0}" "${RESET_TIMES[0]:-}" \
+	"${USAGE_VALS[1]:-0}" "${RESET_TIMES[1]:-}" \
+	"${USAGE_VALS[2]:-0}" "${RESET_TIMES[2]:-}"
