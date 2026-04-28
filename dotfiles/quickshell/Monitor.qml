@@ -443,7 +443,9 @@ Rectangle {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         onClicked: {
+            Quickshell.execDetached(["omarchy-launch-tui", "btop"]);
         }
     }
 
