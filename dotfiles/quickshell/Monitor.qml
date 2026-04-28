@@ -9,7 +9,6 @@ Rectangle {
     property bool hasCPU: true
     property bool hasRAM: true
     property bool hasGPU: true
-    property bool hasNet: true
 
     width: Config.buttonSize * 2
     height: Config.buttonSize
@@ -34,7 +33,6 @@ Rectangle {
         property var cpuHistory: new Array(historySize).fill(0.5)
         property var ramHistory: new Array(historySize).fill(0.5)
         property var gpuHistory: new Array(historySize).fill(0.5)
-        property var netHistory: new Array(historySize).fill(0.5)
         property int writeIndex: 0
         property var prevCpuStats: null
         property bool gpuAvailable: true
@@ -57,7 +55,7 @@ Rectangle {
             if (value <= 0)
                 return 0;
 
-            return Math.pow(value, 0.33);
+            return Math.pow(value, 0.2);
         }
 
         function parseCpuUsage() {
@@ -197,7 +195,6 @@ Rectangle {
         function pushSample(cpu, ram, gpu, netDown, netUp) {
             cpuHistory[writeIndex] = Math.round(cpu * 10) / 10;
             ramHistory[writeIndex] = Math.round(ram * 10) / 10;
-            netHistory[writeIndex] = Math.round((netDown + netUp) / 2 * 10) / 10;
             downHistory[writeIndex] = Math.round(netDown * 10) / 10;
             upHistory[writeIndex] = Math.round(netUp * 10) / 10;
             currentDown = netDown;
@@ -304,75 +301,77 @@ Rectangle {
         target: statFile
     }
 
-    Canvas {
-        id: canvas
+    Rectangle {
+        id: canvasBg
 
         anchors.left: parent.left
         anchors.leftMargin: internal.hPadding
+        anchors.top: parent.top
+        anchors.topMargin: internal.padding
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: internal.padding
         width: root.width - netBars.width - internal.hPadding * 2 - 2
-        height: root.height
-        onPaint: {
-            var ctx = getContext('2d');
-            var w = width;
-            var h = height;
-            var pad = internal.padding;
-            var graphH = h - pad * 2;
-            var historySize = internal.historySize;
-            var writeIdx = internal.writeIndex;
-            ctx.clearRect(0, 0, w, h);
-            ctx.strokeStyle = Config.foregroundSecondary;
-            ctx.lineWidth = 1;
-            ctx.setLineDash([]);
-            ctx.beginPath();
-            ctx.moveTo(0, pad);
-            ctx.lineTo(w, pad);
-            ctx.moveTo(0, h - pad);
-            ctx.lineTo(w, h - pad);
-            ctx.stroke();
-            ctx.strokeStyle = Config.foreground;
-            if (root.hasCPU) {
-                ctx.setLineDash([]);
-                ctx.beginPath();
-                for (var i = 0; i < historySize; i++) {
-                    var dataIdx = (writeIdx + i) % historySize;
-                    var x = i;
-                    var y = pad + (1 - internal.cpuHistory[dataIdx]) * graphH;
-                    if (i === 0)
-                        ctx.moveTo(x, y);
-                    else
-                        ctx.lineTo(x, y);
+        radius: 2
+        clip: true
+        color: Config.foregroundSecondary
+
+        Canvas {
+            id: canvas
+
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext('2d');
+                var w = width;
+                var h = height;
+                var historySize = internal.historySize;
+                var writeIdx = internal.writeIndex;
+                ctx.clearRect(0, 0, w, h);
+                ctx.strokeStyle = Config.foreground;
+                if (root.hasCPU) {
+                    ctx.setLineDash([]);
+                    ctx.beginPath();
+                    for (var i = 0; i < historySize; i++) {
+                        var dataIdx = (writeIdx + i) % historySize;
+                        var x = Math.round(i * (w - 1) / (historySize - 1));
+                        var y = (1 - internal.cpuHistory[dataIdx]) * h;
+                        if (i === 0)
+                            ctx.moveTo(x, y);
+                        else
+                            ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
                 }
-                ctx.stroke();
-            }
-            if (root.hasRAM) {
-                ctx.setLineDash([4, 2]);
-                ctx.beginPath();
-                for (var j = 0; j < historySize; j++) {
-                    var ramIdx = (writeIdx + j) % historySize;
-                    var rx = j;
-                    var ry = pad + (1 - internal.ramHistory[ramIdx]) * graphH;
-                    if (j === 0)
-                        ctx.moveTo(rx, ry);
-                    else
-                        ctx.lineTo(rx, ry);
+                if (root.hasRAM) {
+                    ctx.setLineDash([4, 2]);
+                    ctx.beginPath();
+                    for (var j = 0; j < historySize; j++) {
+                        var ramIdx = (writeIdx + j) % historySize;
+                        var rx = Math.round(j * (w - 1) / (historySize - 1));
+                        var ry = (1 - internal.ramHistory[ramIdx]) * h;
+                        if (j === 0)
+                            ctx.moveTo(rx, ry);
+                        else
+                            ctx.lineTo(rx, ry);
+                    }
+                    ctx.stroke();
                 }
-                ctx.stroke();
-            }
-            if (root.hasGPU && internal.gpuAvailable) {
-                ctx.setLineDash([1, 1]);
-                ctx.beginPath();
-                for (var k = 0; k < historySize; k++) {
-                    var gpuIdx = (writeIdx + k) % historySize;
-                    var gx = k;
-                    var gy = pad + (1 - internal.gpuHistory[gpuIdx]) * graphH;
-                    if (k === 0)
-                        ctx.moveTo(gx, gy);
-                    else
-                        ctx.lineTo(gx, gy);
+                if (root.hasGPU && internal.gpuAvailable) {
+                    ctx.setLineDash([1, 1]);
+                    ctx.beginPath();
+                    for (var k = 0; k < historySize; k++) {
+                        var gpuIdx = (writeIdx + k) % historySize;
+                        var gx = Math.round(k * (w - 1) / (historySize - 1));
+                        var gy = (1 - internal.gpuHistory[gpuIdx]) * h;
+                        if (k === 0)
+                            ctx.moveTo(gx, gy);
+                        else
+                            ctx.lineTo(gx, gy);
+                    }
+                    ctx.stroke();
                 }
-                ctx.stroke();
             }
         }
+
     }
 
     Item {
@@ -394,6 +393,8 @@ Rectangle {
             anchors.bottomMargin: internal.padding
             width: 5
             color: Config.foregroundSecondary
+            radius: 5
+            clip: true
 
             Rectangle {
                 id: downBarFill
@@ -401,6 +402,7 @@ Rectangle {
                 anchors.top: parent.top
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
+                radius: 5
                 height: internal.currentDown > 0 ? Math.max(2, Math.min(parent.height * internal.scaleForBar(internal.currentDown), parent.height)) : 0
                 color: Config.foreground
             }
@@ -417,6 +419,8 @@ Rectangle {
             anchors.bottomMargin: internal.padding
             width: 5
             color: Config.foregroundSecondary
+            radius: 5
+            clip: true
 
             Rectangle {
                 id: upBarFill
@@ -424,6 +428,7 @@ Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 width: parent.width
+                radius: 5
                 height: internal.currentUp > 0 ? Math.max(2, Math.min(parent.height * internal.scaleForBar(internal.currentUp), parent.height)) : 0
                 color: Config.foreground
             }
