@@ -114,7 +114,7 @@ Rectangle {
             visible: true
             anchor.window: root.barWindow
             implicitWidth: 340
-            implicitHeight: 160
+            implicitHeight: 250
             color: "transparent"
 
             onVisibleChanged: {
@@ -143,137 +143,156 @@ Rectangle {
                     anchors.margins: 16
                     spacing: 0
 
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: 2
 
-                        Text {
-                            text: "5H"
-                            Layout.preferredWidth: 28
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+
+                            Text {
+                                text: "5H"
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Text {
+                                text: "🗲 " + root.reset5h
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 14
-                            radius: 7
+                            Layout.preferredHeight: 20
+                            radius: 2
                             color: Config.foregroundSecondary
 
                             Rectangle {
-                                anchors.left: parent.left
-                                anchors.verticalCenter: parent.verticalCenter
-                                height: 14
-                                radius: 7
-                                width: parent.width * Math.min(Math.max(root.pct5h, 0), 100) / 100
+                                x: 3
+                                y: 3
+                                height: parent.height - 6
+                                radius: 1
+                                width: (parent.width - 6) * Math.min(Math.max(root.pct5h, 0), 100) / 100
                                 color: Config.foreground
                             }
                         }
-
-                        Text {
-                            text: root.reset5h
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
-                        }
                     }
 
-                    Item { Layout.preferredHeight: 6 }
+                    Item { Layout.preferredHeight: 10 }
 
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: 2
 
-                        Text {
-                            text: "1W"
-                            Layout.preferredWidth: 28
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+
+                            Text {
+                                text: "1W"
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Text {
+                                text: "🗲 " + root.resetWeekly
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 14
-                            radius: 7
+                            Layout.preferredHeight: 20
+                            radius: 2
                             color: Config.foregroundSecondary
 
                             Rectangle {
-                                anchors.left: parent.left
-                                anchors.verticalCenter: parent.verticalCenter
-                                height: 14
-                                radius: 7
-                                width: parent.width * Math.min(Math.max(root.pctWeekly, 0), 100) / 100
+                                x: 3
+                                y: 3
+                                height: parent.height - 6
+                                radius: 1
+                                width: (parent.width - 6) * Math.min(Math.max(root.pctWeekly, 0), 100) / 100
                                 color: Config.foreground
                             }
                         }
-
-                        Text {
-                            text: root.resetWeekly
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
-                        }
                     }
 
-                    Item { Layout.preferredHeight: 6 }
+                    Item { Layout.preferredHeight: 10 }
 
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 8
+                        spacing: 2
 
-                        Text {
-                            text: "1M"
-                            Layout.preferredWidth: 28
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 0
+
+                            Text {
+                                text: "1M"
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
+
+                            Item { Layout.fillWidth: true }
+
+                            Text {
+                                text: "🗲 " + root.resetMonthly
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
                         }
 
                         Rectangle {
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 14
-                            radius: 7
+                            Layout.preferredHeight: 20
+                            radius: 2
                             color: Config.foregroundSecondary
 
                             Rectangle {
-                                anchors.left: parent.left
-                                anchors.verticalCenter: parent.verticalCenter
-                                height: 14
-                                radius: 7
-                                width: parent.width * Math.min(Math.max(root.pctMonthly, 0), 100) / 100
+                                x: 3
+                                y: 3
+                                height: parent.height - 6
+                                radius: 1
+                                width: (parent.width - 6) * Math.min(Math.max(root.pctMonthly, 0), 100) / 100
                                 color: Config.foreground
                             }
                         }
-
-                        Text {
-                            text: root.resetMonthly
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
-                        }
                     }
 
-                    Item { Layout.preferredHeight: 12 }
-
-                    Rectangle {
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: 1
-                        color: Config.foregroundSecondary
-                    }
-
-                    Item { Layout.preferredHeight: 12 }
+                    Item { Layout.preferredHeight: 16 }
 
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 0
 
-                        Text {
-                            text: "BALANCE → " + (root.balance || "...")
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
+                        Rectangle {
+                            Layout.preferredHeight: balanceLabel.height + 8
+                            Layout.preferredWidth: balanceLabel.width + 16
+                            radius: 2
+                            color: Config.foregroundSecondary
+
+                            Text {
+                                id: balanceLabel
+                                anchors.centerIn: parent
+                                text: "BALANCE ↗ " + (root.balance || "...")
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
                         }
 
                         Item { Layout.fillWidth: true }
