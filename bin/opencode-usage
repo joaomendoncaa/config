@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WORKSPACE_ID="${OPENCODE_WORKSPACE_ID:-wrk_01KEYSE6SWHFGJ2DB8C2690QJ2}"
+BILLING_URL="https://opencode.ai/workspace/${WORKSPACE_ID}/billing"
+GO_URL="https://opencode.ai/workspace/${WORKSPACE_ID}/go"
+
+HTML_BILLING=$(mktemp)
+HTML_GO=$(mktemp)
+
+cleanup() {
+	rm -f "$HTML_BILLING" "$HTML_GO"
+}
+trap cleanup EXIT
+
+# Fetch both pages in parallel
+# NOTE: $OPENCODE_COOKIE is expected on env
+curl -s -L \
+	--compressed \
+	-H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0" \
+	-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+	-H "Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7" \
+	-b "auth=${OPENCODE_COOKIE}" \
+	"$BILLING_URL" >"$HTML_BILLING" 2>/dev/null &
+PID1=$!
+
+curl -s -L \
+	--compressed \
+	-H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0" \
+	-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
+	-H "Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7" \
+	-b "auth=${OPENCODE_COOKIE}" \
+	"$GO_URL" >"$HTML_GO" 2>/dev/null &
+PID2=$!
+
+wait $PID1 && BILLING_OK=0 || BILLING_OK=1
+wait $PID2 && GO_OK=0 || GO_OK=1
+
+if [[ $BILLING_OK -ne 0 || $GO_OK -ne 0 ]]; then
+	echo '{"error": "failed to get usage"}'
+	exit 1
+fi
+
+BILLING_HTML=$(<"$HTML_BILLING")
+GO_HTML=$(<"$HTML_GO")
+
+# Strip HTML comments (SolidJS hydration markers like <!--$--> confuse grep)
+CLEAN_BILLING=$(echo "$BILLING_HTML" | sed 's/<!--[^>]*-->//g')
+CLEAN_GO=$(echo "$GO_HTML" | sed 's/<!--[^>]*-->//g')
+
+# Extract balance from the billing page
+BALANCE=$(echo "$CLEAN_BILLING" | grep -oP 'data-slot="balance-value">\$\K[0-9.]+' | head -n1 || true)
+
+if [[ -z "$BALANCE" ]]; then
+	BALANCE=$(echo "$CLEAN_BILLING" | grep -oiP 'data-slot="balance-[^"]*">\$\K[0-9.]+' | head -n1 || true)
+fi
+
+# Extract usage percentages from /go page (ordered: 5h, weekly, monthly)
+USAGE_VALS=($(echo "$CLEAN_GO" | grep -oP 'data-slot="usage-value">\K[0-9]+' | head -n3 || printf '0 0 0'))
+
+if [[ -z "$BALANCE" ]]; then
+	echo '{"error": "balance not found"}'
+	exit 0
+fi
+
+printf '{"billing":{"balance":"$%s"},"usage":{"5h":%s,"weekly":%s,"monthly":%s}}\n' \
+	"$BALANCE" "${USAGE_VALS[0]:-0}" "${USAGE_VALS[1]:-0}" "${USAGE_VALS[2]:-0}"

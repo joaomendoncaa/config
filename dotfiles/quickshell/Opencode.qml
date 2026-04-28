@@ -1,40 +1,50 @@
 import "."
+import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 import Quickshell
 
-Canvas {
+Rectangle {
     id: root
 
-    property real rotationAngle: 0
-
-    Layout.leftMargin: Config.gapOuter
-    Layout.preferredWidth: Config.buttonSize
+    Layout.preferredWidth: Config.buttonSize * 3
     Layout.preferredHeight: Config.buttonSize
-    onPaint: {
-        var ctx = getContext('2d');
-        ctx.clearRect(0, 0, width, height);
-        ctx.save();
-        ctx.translate(width / 2, height / 2);
-        ctx.rotate(rotationAngle * Math.PI / 180);
-        ctx.strokeStyle = Config.foreground;
-        ctx.lineWidth = 3;
-        ctx.setLineDash([0.5, 0.5]);
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-    }
+    Layout.leftMargin: Config.gapOuter
+    color: "transparent"
 
-    Timer {
-        interval: 16
-        running: true
-        repeat: true
-        onTriggered: {
-            root.rotationAngle = (root.rotationAngle + 2) % 360;
-            root.requestPaint();
+    Item {
+        id: iconContainer
+
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: Config.buttonSize * 0.7
+        height: Config.buttonSize * 0.7
+
+        Image {
+            id: maskImage
+
+            anchors.fill: parent
+            source: "assets/opencode-logo.svg"
+            sourceSize.width: width
+            sourceSize.height: height
+            smooth: true
+            visible: false
         }
+
+        Rectangle {
+            id: fgColor
+
+            anchors.fill: parent
+            color: Config.foreground
+            visible: false
+        }
+
+        OpacityMask {
+            anchors.fill: parent
+            source: fgColor
+            maskSource: maskImage
+        }
+
     }
 
 }
