@@ -5,6 +5,7 @@ import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 
 PanelWindow {
+    id: bar
     implicitHeight: Config.height
     color: Config.background
     anchors.top: true
@@ -22,6 +23,7 @@ PanelWindow {
         }
 
         Opencode {
+            barWindow: bar
         }
 
     }
