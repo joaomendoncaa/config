@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 
 RowLayout {
     id: root
+
     spacing: Config.gapInner
 
     Repeater {
@@ -24,6 +25,7 @@ RowLayout {
                 text: modelData.id
                 color: modelData.focused ? Config.foregroundSelected : Config.foreground
                 font.pixelSize: Config.fontSize
+                font.family: Config.fontFamily
             }
 
             MouseArea {

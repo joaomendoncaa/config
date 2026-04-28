@@ -31,8 +31,8 @@ Rectangle {
         id: iconContainer
 
         anchors.centerIn: parent
-        width: Config.buttonSize * 0.75
-        height: Config.buttonSize * 0.75
+        width: Config.buttonSize * 0.7
+        height: Config.buttonSize * 0.7
         visible: Pipewire.defaultAudioSink !== null
 
         // Shared mask image (alpha only)

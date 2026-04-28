@@ -20,7 +20,7 @@ Rectangle {
         if (statFile.loaded && meminfoFile.loaded) {
             var cpu = internal.parseCpuUsage();
             var ram = internal.parseRamUsage();
-            internal.pushSample(cpu, ram, null, 0);
+            internal.pushSample(cpu, ram, null, 0, 0);
             canvas.requestPaint();
         }
     }
@@ -28,6 +28,7 @@ Rectangle {
     QtObject {
         id: internal
 
+        readonly property int hPadding: 6
         readonly property int historySize: root.width
         readonly property int padding: 6
         property var cpuHistory: new Array(historySize).fill(0.5)
@@ -39,11 +40,25 @@ Rectangle {
         property bool gpuAvailable: true
         property real pendingCpu: 0
         property real pendingRam: 0
-        property real pendingNet: 0
-        property var prevNetStats: null
+        property real pendingNetDown: 0
+        property real pendingNetUp: 0
+        property var prevNetDownStats: null
+        property var prevNetUpStats: null
         property var prevNetTime: null
         property string netIface: ""
-        readonly property real maxNetSpeed: 500 * 1024 * 1024 * 1024
+        readonly property real maxDownSpeed: 500 * 1024 * 1024
+        readonly property real maxUpSpeed: 100 * 1024 * 1024
+        property var downHistory: new Array(historySize).fill(0)
+        property var upHistory: new Array(historySize).fill(0)
+        property real currentDown: 0
+        property real currentUp: 0
+
+        function scaleForBar(value) {
+            if (value <= 0)
+                return 0;
+
+            return Math.pow(value, 0.33);
+        }
 
         function parseCpuUsage() {
             var lines = statFile.text().split('\n');
@@ -127,15 +142,19 @@ Rectangle {
         }
 
         function parseNetUsage() {
-            if (!netdevFile.loaded)
-                return 0;
-
+            if (!netdevFile.loaded) {
+                pendingNetDown = 0;
+                pendingNetUp = 0;
+                return ;
+            }
             var text = netdevFile.text();
             if (netIface === "") {
                 netIface = findNetInterface(text);
-                if (netIface === "")
-                    return 0;
-
+                if (netIface === "") {
+                    pendingNetDown = 0;
+                    pendingNetUp = 0;
+                    return ;
+                }
             }
             var lines = text.split('\n');
             for (var i = 0; i < lines.length; i++) {
@@ -150,29 +169,39 @@ Rectangle {
 
                 var parts = line.substring(colonIdx + 1).trim().split(/\s+/);
                 var rx = parseInt(parts[0], 10) || 0;
+                var tx = parseInt(parts[8], 10) || 0;
                 var now = Date.now();
-                var usage = 0;
-                if (prevNetStats !== null && prevNetTime !== null) {
+                var downUsed = 0;
+                var upUsed = 0;
+                if (prevNetDownStats !== null && prevNetUpStats !== null && prevNetTime !== null) {
                     var elapsed = (now - prevNetTime) / 1000;
                     if (elapsed > 0) {
-                        var rxDiff = rx - prevNetStats.rx;
-                        usage = Math.max(0, rxDiff) / elapsed;
+                        var rxDiff = rx - prevNetDownStats;
+                        var txDiff = tx - prevNetUpStats;
+                        downUsed = Math.max(0, rxDiff) / elapsed;
+                        upUsed = Math.max(0, txDiff) / elapsed;
                     }
                 }
-                prevNetStats = {
-                    "rx": rx
-                };
+                prevNetDownStats = rx;
+                prevNetUpStats = tx;
                 prevNetTime = now;
-                return Math.min(usage / maxNetSpeed, 1);
+                pendingNetDown = Math.min(downUsed / maxDownSpeed, 1);
+                pendingNetUp = Math.min(upUsed / maxUpSpeed, 1);
+                return ;
             }
             netIface = "";
-            return 0;
+            pendingNetDown = 0;
+            pendingNetUp = 0;
         }
 
-        function pushSample(cpu, ram, gpu, net) {
+        function pushSample(cpu, ram, gpu, netDown, netUp) {
             cpuHistory[writeIndex] = Math.round(cpu * 10) / 10;
             ramHistory[writeIndex] = Math.round(ram * 10) / 10;
-            netHistory[writeIndex] = Math.round(net * 10) / 10;
+            netHistory[writeIndex] = Math.round((netDown + netUp) / 2 * 10) / 10;
+            downHistory[writeIndex] = Math.round(netDown * 10) / 10;
+            upHistory[writeIndex] = Math.round(netUp * 10) / 10;
+            currentDown = netDown;
+            currentUp = netUp;
             if (gpu !== null)
                 gpuHistory[writeIndex] = Math.round(gpu * 10) / 10;
 
@@ -236,7 +265,7 @@ Rectangle {
                 internal.gpuAvailable = false;
                 return ;
             }
-            internal.pushSample(internal.pendingCpu, internal.pendingRam, gpu, internal.pendingNet);
+            internal.pushSample(internal.pendingCpu, internal.pendingRam, gpu, internal.pendingNetDown, internal.pendingNetUp);
             canvas.requestPaint();
         }
 
@@ -262,12 +291,11 @@ Rectangle {
             if (statFile.loaded && meminfoFile.loaded && netdevFile.loaded) {
                 var cpu = internal.parseCpuUsage();
                 var ram = internal.parseRamUsage();
-                var net = internal.parseNetUsage();
+                internal.parseNetUsage();
                 internal.pendingCpu = cpu;
                 internal.pendingRam = ram;
-                internal.pendingNet = net;
                 if (!internal.gpuAvailable) {
-                    internal.pushSample(cpu, ram, null, net);
+                    internal.pushSample(cpu, ram, null, internal.pendingNetDown, internal.pendingNetUp);
                     canvas.requestPaint();
                 }
             }
@@ -279,8 +307,9 @@ Rectangle {
     Canvas {
         id: canvas
 
-        anchors.centerIn: parent
-        width: root.width - 8
+        anchors.left: parent.left
+        anchors.leftMargin: internal.hPadding
+        width: root.width - netBars.width - internal.hPadding * 2 - 2
         height: root.height
         onPaint: {
             var ctx = getContext('2d');
@@ -343,22 +372,64 @@ Rectangle {
                 }
                 ctx.stroke();
             }
-            if (root.hasNet) {
-                ctx.strokeStyle = Config.foreground;
-                ctx.setLineDash([1, 2, 3, 4, 5]);
-                ctx.beginPath();
-                for (var n = 0; n < historySize; n++) {
-                    var netIdx = (writeIdx + n) % historySize;
-                    var nx = n;
-                    var ny = pad + (1 - internal.netHistory[netIdx]) * graphH;
-                    if (n === 0)
-                        ctx.moveTo(nx, ny);
-                    else
-                        ctx.lineTo(nx, ny);
-                }
-                ctx.stroke();
-            }
         }
+    }
+
+    Item {
+        id: netBars
+
+        anchors.right: parent.right
+        anchors.rightMargin: internal.hPadding
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: downBarBg.width + upBarBg.width + 2
+
+        Rectangle {
+            id: downBarBg
+
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.topMargin: internal.padding
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: internal.padding
+            width: 5
+            color: Config.foregroundSecondary
+
+            Rectangle {
+                id: downBarFill
+
+                anchors.top: parent.top
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width
+                height: internal.currentDown > 0 ? Math.max(2, Math.min(parent.height * internal.scaleForBar(internal.currentDown), parent.height)) : 0
+                color: Config.foreground
+            }
+
+        }
+
+        Rectangle {
+            id: upBarBg
+
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.topMargin: internal.padding
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: internal.padding
+            width: 5
+            color: Config.foregroundSecondary
+
+            Rectangle {
+                id: upBarFill
+
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width
+                height: internal.currentUp > 0 ? Math.max(2, Math.min(parent.height * internal.scaleForBar(internal.currentUp), parent.height)) : 0
+                color: Config.foreground
+            }
+
+        }
+
     }
 
     MouseArea {
