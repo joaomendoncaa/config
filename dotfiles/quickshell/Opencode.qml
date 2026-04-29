@@ -137,6 +137,8 @@ Rectangle {
                 anchors.fill: parent
                 color: "#E0111111"
                 radius: 12
+                focus: true
+                Keys.onEscapePressed: root.popupVisible = false
 
                 ColumnLayout {
                     anchors.fill: parent
