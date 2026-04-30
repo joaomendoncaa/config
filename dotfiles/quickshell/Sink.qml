@@ -129,7 +129,6 @@ Rectangle {
             else
                 newVol = Math.max(0, currentVol - step);
             Pipewire.defaultAudioSink.audio.volume = newVol;
-            console.log("[Sink] Volume:", Pipewire.defaultAudioSink.audio.volume);
         }
     }
 

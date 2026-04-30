@@ -62,7 +62,11 @@ USAGE_VALS=($(echo "$CLEAN_GO" | grep -oP 'data-slot="usage-value">\K[0-9]+' | h
 mapfile -t RESET_TIMES_RAW < <(echo "$CLEAN_GO" | grep -oP 'data-slot="reset-time">\K[^<]+' | head -n3 || true)
 RESET_TIMES=()
 for val in "${RESET_TIMES_RAW[@]}"; do
-	RESET_TIMES+=("${val#Reinicia em }")
+	translated="${val#Reinicia em }"
+	translated="${translated//dias/days}"
+	translated="${translated//minutos/minutes}"
+	translated="${translated//horas/hours}"
+	RESET_TIMES+=("$translated")
 done
 
 if [[ -z "$BALANCE" ]]; then

@@ -25,6 +25,13 @@ Rectangle {
         usageProc.running = true;
     }
 
+    function scaleForBar(value) {
+        if (value <= 0)
+            return 0;
+
+        return Math.pow(value, 0.66);
+    }
+
     function parseUsage(output) {
         try {
             var data = JSON.parse(output);
@@ -89,6 +96,34 @@ Rectangle {
 
     }
 
+    Item {
+        id: battery5h
+
+        anchors.left: iconContainer.right
+        anchors.leftMargin: 4
+        anchors.verticalCenter: parent.verticalCenter
+        width: 8
+        height: Config.buttonSize * 0.55
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 2
+            color: Config.foregroundSecondary
+
+            Rectangle {
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottomMargin: 2
+                width: parent.width - 4
+                height: (parent.height - 4) * scaleForBar(Math.max(0, 1 - Math.min(Math.max(root.pct5h, 0), 100) / 100))
+                radius: 1
+                color: Config.foreground
+            }
+
+        }
+
+    }
+
     MouseArea {
         id: mouseArea
 
@@ -126,7 +161,7 @@ Rectangle {
                 if (root.barWindow) {
                     var pos = root.mapToItem(root.barWindow.contentItem, 0, 0);
                     anchor.rect.x = pos.x;
-                    anchor.rect.y = pos.y + root.height + 4;
+                    anchor.rect.y = pos.y + root.height + Config.gapsOut + Config.borderSize;
                 }
                 root.fetchUsage();
             }
@@ -136,7 +171,9 @@ Rectangle {
 
                 anchors.fill: parent
                 color: Config.backgroundColored
-                radius: 12
+                radius: 5
+                border.color: Config.accent
+                border.width: Config.borderSize
                 focus: true
                 Keys.onEscapePressed: root.popupVisible = false
 
@@ -184,7 +221,7 @@ Rectangle {
                                 y: 3
                                 height: parent.height - 6
                                 radius: 1
-                                width: (parent.width - 6) * Math.min(Math.max(root.pct5h, 0), 100) / 100
+                                width: (parent.width - 6) * Math.max(0, 1 - Math.min(Math.max(root.pct5h, 0), 100) / 100)
                                 color: Config.foreground
                             }
 
@@ -235,7 +272,7 @@ Rectangle {
                                 y: 3
                                 height: parent.height - 6
                                 radius: 1
-                                width: (parent.width - 6) * Math.min(Math.max(root.pctWeekly, 0), 100) / 100
+                                width: (parent.width - 6) * Math.max(0, 1 - Math.min(Math.max(root.pctWeekly, 0), 100) / 100)
                                 color: Config.foreground
                             }
 
@@ -286,7 +323,7 @@ Rectangle {
                                 y: 3
                                 height: parent.height - 6
                                 radius: 1
-                                width: (parent.width - 6) * Math.min(Math.max(root.pctMonthly, 0), 100) / 100
+                                width: (parent.width - 6) * Math.max(0, 1 - Math.min(Math.max(root.pctMonthly, 0), 100) / 100)
                                 color: Config.foreground
                             }
 
@@ -306,15 +343,16 @@ Rectangle {
                             Layout.preferredHeight: balanceLabel.height + 8
                             Layout.preferredWidth: balanceLabel.width + 16
                             radius: 2
-                            color: Config.foregroundSecondary
+                            color: Config.foreground
 
                             Text {
                                 id: balanceLabel
 
                                 anchors.centerIn: parent
-                                text: "BALANCE ↗ " + (root.balance || "...")
-                                color: Config.foreground
+                                text: "BALANCE " + (root.balance || "...")
+                                color: Config.backgroundColored
                                 font.family: Config.fontFamily
+                                font.weight: Font.Medium
                                 font.pixelSize: Config.fontSize - 2
                             }
 
@@ -324,13 +362,22 @@ Rectangle {
                             Layout.fillWidth: true
                         }
 
-                        Text {
-                            id: dashboardLink
+                        Rectangle {
+                            color: dashboardLinkMouse.containsMouse ? Config.foreground : "transparent"
+                            Layout.preferredHeight: Config.buttonSize
+                            implicitWidth: dashboardLink.implicitWidth + 16
+                            radius: 1
 
-                            text: "OPEN DASHBOARD ↗"
-                            color: dashboardLinkMouse.containsMouse ? Config.foreground : Config.foregroundSecondary
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
+                            Text {
+                                id: dashboardLink
+
+                                text: "OPEN DASHBOARD ↗"
+                                anchors.centerIn: parent
+                                color: dashboardLinkMouse.containsMouse ? Config.backgroundColored : Config.foreground
+                                font.family: Config.fontFamily
+                                font.weight: Font.Medium
+                                font.pixelSize: Config.fontSize - 2
+                            }
 
                             MouseArea {
                                 id: dashboardLinkMouse
@@ -338,7 +385,7 @@ Rectangle {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
                                 hoverEnabled: true
-                                onClicked: Quickshell.execDetached(["xdg-open", "https://opencode.ai/workspace/" + root.workspaceId + "/billing"])
+                                onClicked: Quickshell.execDetached(["xdg-open", "https://opencode.ai/workspace/" + root.workspaceId + "/go"])
                             }
 
                         }

@@ -30,21 +30,35 @@ parse_alacritty_selection() {
 FOREGROUND=""
 BACKGROUND=""
 SELECTION_FOREGROUND=""
+ACCENT=""
 
 if [[ -f "$COLORS_TOML" ]]; then
 	FOREGROUND=$(parse_toml_value "$COLORS_TOML" "foreground")
 	BACKGROUND=$(parse_toml_value "$COLORS_TOML" "background")
 	SELECTION_FOREGROUND=$(parse_toml_value "$COLORS_TOML" "selection_foreground")
+	ACCENT=$(parse_toml_value "$COLORS_TOML" "accent")
 elif [[ -f "$ALACRITTY_TOML" ]]; then
 	FOREGROUND=$(parse_alacritty_primary "$ALACRITTY_TOML" "foreground")
 	BACKGROUND=$(parse_alacritty_primary "$ALACRITTY_TOML" "background")
 	SELECTION_FOREGROUND=$(parse_alacritty_selection "$ALACRITTY_TOML")
 fi
 
+# Extract values from theme's hyprland.conf (fallback to system default)
+BORDER_SIZE="2"
+GAPS_OUT="10"
+THEME_HYPR_CONF="$THEME_DIR/hyprland.conf"
+if [[ -f "$THEME_HYPR_CONF" ]]; then
+	THEME_BORDER=$(sed -n 's/.*border_size\s*=\s*\([0-9]\+\).*/\1/p' "$THEME_HYPR_CONF" 2>/dev/null || true)
+	[[ -n "$THEME_BORDER" ]] && BORDER_SIZE="$THEME_BORDER" || true
+	THEME_GAPS=$(sed -n 's/.*gaps_out\s*=\s*\([0-9]\+\).*/\1/p' "$THEME_HYPR_CONF" 2>/dev/null || true)
+	[[ -n "$THEME_GAPS" ]] && GAPS_OUT="$THEME_GAPS" || true
+fi
+
 [[ -z "$FOREGROUND" ]] && FOREGROUND="#FFFFFF"
 [[ -z "$BACKGROUND" ]] && BACKGROUND="#000000"
 [[ -z "$SELECTION_FOREGROUND" ]] && SELECTION_FOREGROUND="#000000"
+[[ -z "$ACCENT" ]] && ACCENT="$FOREGROUND"
 
 cat <<EOF
-{"foreground":"$FOREGROUND","background":"$BACKGROUND","selection_foreground":"$SELECTION_FOREGROUND"}
+{"foreground":"$FOREGROUND","background":"$BACKGROUND","selection_foreground":"$SELECTION_FOREGROUND","accent":"$ACCENT","borderSize":$BORDER_SIZE,"gapsOut":$GAPS_OUT}
 EOF

@@ -16,6 +16,9 @@ QtObject {
     // Colors - computed from theme (not readonly so we can update them)
     // All colors must be in 6-digit hex format (#RRGGBB) for proper alpha derivation
     property string foreground: "white"
+    property string accent: "#509475"
+    property int borderSize: 2
+    property int gapsOut: 10
     property string foregroundSelected: "black"
     property string foregroundSecondary: "#60FFFFFF"
     property string background: "transparent"
@@ -36,14 +39,17 @@ QtObject {
         return "#" + alphaHex + hexColor.substring(1);
     }
 
-    function applyColors(fore, selFore, back) {
+    function applyColors(fore, selFore, back, acc, borderW, gaps) {
         foreground = fore || "white";
         background = "transparent";
         backgroundColored = back || "#000000";
         foregroundSelected = selFore || "black";
+        accent = acc || foreground;
+        borderSize = borderW || 2;
+        gapsOut = gaps || 10;
         foregroundSecondary = hexWithAlpha(foreground, "60");
         backgroundHovered = hexWithAlpha(foreground, "40");
-        console.log("[Config] Theme loaded - foreground:", foreground, "selected:", foregroundSelected, "secondary:", foregroundSecondary, "backgroundColored:", backgroundColored);
+        console.log("[Config] Theme loaded - foreground:", foreground, "selected:", foregroundSelected, "accent:", accent, "borderSize:", borderSize, "gapsOut:", gapsOut, "backgroundColored:", backgroundColored);
     }
 
     function parseColorOutput() {
@@ -51,7 +57,7 @@ QtObject {
         console.log("[Config] Script output:", output);
         try {
             var colors = JSON.parse(output);
-            applyColors(colors.foreground, colors.selection_foreground, colors.background);
+            applyColors(colors.foreground, colors.selection_foreground, colors.background, colors.accent, colors.borderSize, colors.gapsOut);
         } catch (e) {
             console.warn("[Config] Failed to parse colors JSON:", e);
         }
