@@ -19,6 +19,7 @@ QtObject {
     property string foregroundSelected: "black"
     property string foregroundSecondary: "#60FFFFFF"
     property string background: "transparent"
+    property string backgroundColored: "#000000"
     property string backgroundHovered: "#40FFFFFF"
     // Process to run the extraction script
     property var stdoutCollector
@@ -35,13 +36,14 @@ QtObject {
         return "#" + alphaHex + hexColor.substring(1);
     }
 
-    function applyColors(fore, selFore) {
+    function applyColors(fore, selFore, back) {
         foreground = fore || "white";
         background = "transparent";
+        backgroundColored = back || "#000000";
         foregroundSelected = selFore || "black";
         foregroundSecondary = hexWithAlpha(foreground, "60");
         backgroundHovered = hexWithAlpha(foreground, "40");
-        console.log("[Config] Theme loaded - foreground:", foreground, "selected:", foregroundSelected, "secondary:", foregroundSecondary);
+        console.log("[Config] Theme loaded - foreground:", foreground, "selected:", foregroundSelected, "secondary:", foregroundSecondary, "backgroundColored:", backgroundColored);
     }
 
     function parseColorOutput() {
@@ -49,7 +51,7 @@ QtObject {
         console.log("[Config] Script output:", output);
         try {
             var colors = JSON.parse(output);
-            applyColors(colors.foreground, colors.selection_foreground);
+            applyColors(colors.foreground, colors.selection_foreground, colors.background);
         } catch (e) {
             console.warn("[Config] Failed to parse colors JSON:", e);
         }

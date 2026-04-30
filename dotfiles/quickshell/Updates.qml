@@ -13,7 +13,7 @@ Rectangle {
     Layout.preferredWidth: Config.buttonSize
     Layout.preferredHeight: Config.buttonSize
     radius: Config.buttonBorderRadius
-    color: mouseArea.containsMouse && root.updateCount > 0 ? Config.backgroundHovered : "transparent"
+    color: mouseArea.containsMouse && root.updateCount > 0 ? Config.foreground : "transparent"
     opacity: root.updateCount > 0 ? 1 : 0
 
     Rectangle {
