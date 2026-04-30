@@ -1,62 +1,32 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
-import Quickshell.Services.Pipewire
+import "shells" as Shells
 
-PanelWindow {
-    id: bar
-    implicitHeight: Config.height
-    color: Config.background
-    anchors.top: true
-    anchors.left: true
-    anchors.right: true
-    margins.top: Config.shellPadding
+Scope {
+    id: root
 
-    RowLayout {
-        anchors.left: parent.left
-        anchors.leftMargin: Config.shellPadding
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: Config.gapInner
+    property bool searchOpen: false
 
-        Workspaces {
-        }
-
-        Opencode {
-            barWindow: bar
-        }
-
+    Shells.Bar {
+        searchOpen: root.searchOpen
+        onToggleSearch: root.searchOpen = !root.searchOpen
     }
 
-    RowLayout {
-        anchors.centerIn: parent
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: Config.gapInner
-
-        Recording {
-        }
-
-        Clock {
-        }
-
-        Updates {
-        }
-
+    HyprlandFocusGrab {
+        active: root.searchOpen && searchLoader.item !== null
+        windows: searchLoader.item ? [searchLoader.item] : []
+        onCleared: root.searchOpen = false
     }
 
-    RowLayout {
-        anchors.right: parent.right
-        anchors.rightMargin: Config.shellPadding
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: Config.gapInner
+    LazyLoader {
+        id: searchLoader
 
-        Monitor {
-        }
+        active: root.searchOpen
 
-        Sink {
-        }
-
-        Power {
+        Shells.Search {
+            visible: true
+            onDismissed: root.searchOpen = false
         }
 
     }

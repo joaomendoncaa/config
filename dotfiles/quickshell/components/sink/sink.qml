@@ -1,4 +1,4 @@
-import "."
+import "../.."
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
@@ -13,9 +13,9 @@ Rectangle {
     property bool isMuted: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio.muted : false
     readonly property string iconSource: {
         if (root.isHeadphones)
-            return root.isMuted ? "assets/sink-headphones-muted.svg" : "assets/sink-headphones.svg";
+            return root.isMuted ? "../../assets/sink-headphones-muted.svg" : "../../assets/sink-headphones.svg";
 
-        return root.isMuted ? "assets/sink-speakers-muted.svg" : "assets/sink-speakers.svg";
+        return root.isMuted ? "../../assets/sink-speakers-muted.svg" : "../../assets/sink-speakers.svg";
     }
 
     function scaleForBar(value) {

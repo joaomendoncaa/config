@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -ne 3 ]]; then
+    echo "Usage: gitcopy <owner/repo|github-url> <subdirectory> <destination>" >&2
+    exit 1
+fi
+
+INPUT="$1"
+SUBDIR="${2%/}"
+DEST="$3"
+
+if [[ "$INPUT" == *"github.com"* ]]; then
+    INPUT="${INPUT#*://}"
+    INPUT="${INPUT#*github.com/}"
+    INPUT="${INPUT%.git}"
+    INPUT="${INPUT%/}"
+fi
+
+OWNER=$(dirname "$INPUT")
+REPO=$(basename "$INPUT")
+GIT_URL="https://github.com/$OWNER/$REPO.git"
+
+if [[ "$OWNER" == "." ]]; then
+    echo "error: invalid repo format '$1'. Use owner/repo or full github URL" >&2
+    exit 1
+fi
+
+if [[ -e "$DEST" ]]; then
+    echo "error: destination '$DEST' already exists" >&2
+    exit 1
+fi
+
+TMPDIR=$(mktemp -d /tmp/gitcopy-XXXXX)
+
+cleanup() {
+    rm -rf "$TMPDIR"
+}
+trap cleanup EXIT
+
+if ! git clone --depth 1 --filter=blob:none --sparse "$GIT_URL" "$TMPDIR"; then
+    echo "error: failed to clone '$GIT_URL'" >&2
+    exit 1
+fi
+
+git -C "$TMPDIR" sparse-checkout set "$SUBDIR"
+
+if [[ ! -e "$TMPDIR/$SUBDIR" ]]; then
+    echo "error: subdirectory '$SUBDIR' not found in '$OWNER/$REPO'" >&2
+    exit 1
+fi
+
+cp -r "$TMPDIR/$SUBDIR" "$DEST"

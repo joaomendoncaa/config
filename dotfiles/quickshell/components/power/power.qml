@@ -1,4 +1,4 @@
-import "."
+import "../.."
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
@@ -23,7 +23,7 @@ Rectangle {
             id: maskImage
 
             anchors.fill: parent
-            source: "assets/power-on_off.svg"
+            source: "../../assets/power-on_off.svg"
             sourceSize.width: width
             sourceSize.height: height
             smooth: true
