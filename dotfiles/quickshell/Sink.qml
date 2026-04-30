@@ -18,6 +18,13 @@ Rectangle {
         return root.isMuted ? "assets/sink-speakers-muted.svg" : "assets/sink-speakers.svg";
     }
 
+    function scaleForBar(value) {
+        if (value <= 0)
+            return 0;
+
+        return Math.pow(value, 0.66);
+    }
+
     Layout.preferredWidth: Config.buttonSize
     Layout.preferredHeight: Config.buttonSize
     radius: Config.buttonBorderRadius
@@ -66,7 +73,7 @@ Rectangle {
         Rectangle {
             anchors.bottom: parent.bottom
             width: parent.width
-            height: parent.height * Math.max(0, Math.min(1, root.volumeRatio))
+            height: parent.height * scaleForBar(Math.max(0, Math.min(1, root.volumeRatio)))
             clip: true
             color: "transparent"
 
@@ -114,7 +121,7 @@ Rectangle {
             if (!Pipewire.defaultAudioSink || !Pipewire.defaultAudioSink.audio)
                 return ;
 
-            var step = 0.05;
+            var step = 0.025;
             var currentVol = Pipewire.defaultAudioSink.audio.volume;
             var newVol;
             if (wheel.angleDelta.y > 0)
@@ -122,6 +129,7 @@ Rectangle {
             else
                 newVol = Math.max(0, currentVol - step);
             Pipewire.defaultAudioSink.audio.volume = newVol;
+            console.log("[Sink] Volume:", Pipewire.defaultAudioSink.audio.volume);
         }
     }
 
