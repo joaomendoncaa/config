@@ -56,7 +56,7 @@ Rectangle {
         }
     }
 
-    Layout.preferredWidth: Config.buttonSize * 3
+    Layout.preferredWidth: Config.buttonSize * 3.7
     Layout.preferredHeight: Config.buttonSize
     Layout.leftMargin: Config.gapOuter
     color: "transparent"
@@ -122,6 +122,60 @@ Rectangle {
 
         }
 
+    }
+
+    Item {
+        id: spinner
+
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        width: Config.buttonSize * 0.7
+        height: Config.buttonSize * 0.7
+
+        readonly property var sqPositions: [
+            Qt.point(5, 0),
+            Qt.point(11, 0),
+            Qt.point(17, 0),
+            Qt.point(22, 5),
+            Qt.point(22, 11),
+            Qt.point(22, 17),
+            Qt.point(17, 22),
+            Qt.point(11, 22),
+            Qt.point(5, 22),
+            Qt.point(0, 17),
+            Qt.point(0, 11),
+            Qt.point(0, 5)
+        ]
+
+        property real headPhase: 0
+
+        NumberAnimation on headPhase {
+            from: 0
+            to: 12
+            duration: 2000
+            running: true
+            loops: Animation.Infinite
+        }
+
+        Repeater {
+            model: 12
+
+            Rectangle {
+                readonly property int dist1: (Math.floor(spinner.headPhase) - index + 12) % 12
+                readonly property int dist2: (Math.floor(spinner.headPhase + 6) - index + 12) % 12
+
+                width: parent.width * 4 / 26
+                height: width
+                radius: width * 0.1
+                color: Config.foreground
+                x: parent.width * parent.sqPositions[index].x / 26
+                y: parent.height * parent.sqPositions[index].y / 26
+
+                readonly property real op1: dist1 === 0 ? 1.0 : dist1 === 1 ? 0.75 : dist1 === 2 ? 0.5 : dist1 === 3 ? 0.25 : 0
+                readonly property real op2: dist2 === 0 ? 1.0 : dist2 === 1 ? 0.75 : dist2 === 2 ? 0.5 : dist2 === 3 ? 0.25 : 0
+                opacity: Math.max(op1, op2, 0.1)
+            }
+        }
     }
 
     MouseArea {
