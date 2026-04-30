@@ -1,10 +1,11 @@
-import "."
+import "../.."
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import "../ai" as AI
 
 Rectangle {
     id: root
@@ -20,6 +21,7 @@ Rectangle {
     property string resetWeekly: ""
     property string resetMonthly: ""
     property string balance: ""
+    property string sessionState: "working"
 
     function fetchUsage() {
         usageProc.running = true;
@@ -56,7 +58,7 @@ Rectangle {
         }
     }
 
-    Layout.preferredWidth: Config.buttonSize * 3.7
+    Layout.preferredWidth: Config.buttonSize * 5
     Layout.preferredHeight: Config.buttonSize
     Layout.leftMargin: Config.gapOuter
     color: "transparent"
@@ -73,7 +75,7 @@ Rectangle {
             id: maskImage
 
             anchors.fill: parent
-            source: "assets/opencode-logo.svg"
+            source: "../../assets/opencode-logo.svg"
             sourceSize.width: width
             sourceSize.height: height
             smooth: true
@@ -124,58 +126,63 @@ Rectangle {
 
     }
 
-    Item {
-        id: spinner
+    AI.Session {
+        id: statusIdle
 
+        state: "idle"
+        fillColor: Config.foreground
+        initials: "BA"
+        labelFontSize: Config.fontSize - 6
+        labelFontFamily: Config.fontFamily
+        anchors.right: statusWorking.left
+        anchors.rightMargin: 4
+        anchors.verticalCenter: parent.verticalCenter
+        width: Config.buttonSize * 0.7
+        height: Config.buttonSize * 0.7
+    }
+
+    AI.Session {
+        id: statusWorking
+
+        state: "working"
+        fillColor: Config.foreground
+        initials: "BL"
+        labelFontSize: Config.fontSize - 6
+        labelFontFamily: Config.fontFamily
+        anchors.right: statusPrompt.left
+        anchors.rightMargin: 4
+        anchors.verticalCenter: parent.verticalCenter
+        width: Config.buttonSize * 0.7
+        height: Config.buttonSize * 0.7
+    }
+
+    AI.Session {
+        id: statusPrompt
+
+        state: "prompt"
+        fillColor: Config.foreground
+        initials: "GI"
+        labelFontSize: Config.fontSize - 6
+        labelFontFamily: Config.fontFamily
+        anchors.right: statusError.left
+        anchors.rightMargin: 4
+        anchors.verticalCenter: parent.verticalCenter
+        width: Config.buttonSize * 0.7
+        height: Config.buttonSize * 0.7
+    }
+
+    AI.Session {
+        id: statusError
+
+        state: "error"
+        fillColor: Config.foreground
+        initials: "CO"
+        labelFontSize: Config.fontSize - 6
+        labelFontFamily: Config.fontFamily
         anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         width: Config.buttonSize * 0.7
         height: Config.buttonSize * 0.7
-
-        readonly property var sqPositions: [
-            Qt.point(5, 0),
-            Qt.point(11, 0),
-            Qt.point(17, 0),
-            Qt.point(22, 5),
-            Qt.point(22, 11),
-            Qt.point(22, 17),
-            Qt.point(17, 22),
-            Qt.point(11, 22),
-            Qt.point(5, 22),
-            Qt.point(0, 17),
-            Qt.point(0, 11),
-            Qt.point(0, 5)
-        ]
-
-        property real headPhase: 0
-
-        NumberAnimation on headPhase {
-            from: 0
-            to: 12
-            duration: 2000
-            running: true
-            loops: Animation.Infinite
-        }
-
-        Repeater {
-            model: 12
-
-            Rectangle {
-                readonly property int dist1: (Math.floor(spinner.headPhase) - index + 12) % 12
-                readonly property int dist2: (Math.floor(spinner.headPhase + 6) - index + 12) % 12
-
-                width: parent.width * 4 / 26
-                height: width
-                radius: width * 0.1
-                color: Config.foreground
-                x: parent.width * parent.sqPositions[index].x / 26
-                y: parent.height * parent.sqPositions[index].y / 26
-
-                readonly property real op1: dist1 === 0 ? 1.0 : dist1 === 1 ? 0.75 : dist1 === 2 ? 0.5 : dist1 === 3 ? 0.25 : 0
-                readonly property real op2: dist2 === 0 ? 1.0 : dist2 === 1 ? 0.75 : dist2 === 2 ? 0.5 : dist2 === 3 ? 0.25 : 0
-                opacity: Math.max(op1, op2, 0.1)
-            }
-        }
     }
 
     MouseArea {
