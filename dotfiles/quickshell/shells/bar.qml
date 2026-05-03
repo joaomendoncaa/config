@@ -1,22 +1,24 @@
+import ".."
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
-import ".."
 
 PanelWindow {
     id: bar
+
+    property bool searchOpen: false
+
+    signal toggleSearch()
+
     implicitHeight: Config.height
     color: Config.background
     anchors.top: true
     anchors.left: true
     anchors.right: true
     margins.top: Config.shellPadding
-
-    property bool searchOpen: false
-    signal toggleSearch
 
     RowLayout {
         anchors.left: parent.left
@@ -55,12 +57,6 @@ PanelWindow {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Config.gapInner
 
-        Monitor {
-        }
-
-        Sink {
-        }
-
         Item {
             width: Config.buttonSize
             height: Config.buttonSize
@@ -83,7 +79,15 @@ PanelWindow {
                     hoverEnabled: true
                     onClicked: bar.toggleSearch()
                 }
+
             }
+
+        }
+
+        Monitor {
+        }
+
+        Sink {
         }
 
         Power {
