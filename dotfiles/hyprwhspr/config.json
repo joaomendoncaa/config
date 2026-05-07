@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/goodroot/hyprwhspr/main/share/config.schema.json",
+  "recording_mode": "auto",
+  "use_hypr_bindings": true,
+  "audio_feedback": true,
+  "start_sound_volume": 0.5,
+  "stop_sound_volume": 0.5,
+  "start_sound_path": "ping-up.ogg",
+  "stop_sound_path": "ping-down.ogg",
+  "audio_ducking": true,
+  "transcription_backend": "vulkan",
+  "model": "large-v3"
+}
