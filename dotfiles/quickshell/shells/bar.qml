@@ -26,29 +26,54 @@ PanelWindow {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Config.gapInner
 
-        Item {
-            width: Config.buttonSize
-            height: Config.buttonSize
+        Rectangle {
+            Layout.preferredWidth: Config.buttonSize
+            Layout.preferredHeight: Config.buttonSize
+            radius: Config.buttonBorderRadius
+            color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
 
-            Rectangle {
-                anchors.fill: parent
-                radius: Config.buttonSize / 2
-                color: bar.searchOpen ? Config.accent : "transparent"
+            Item {
+                id: iconContainer
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "\u{1F50D}"
-                    color: bar.searchOpen ? Config.backgroundColored : Config.foreground
-                    font.pixelSize: Config.fontSize + 4
-                }
+                anchors.centerIn: parent
+                width: Config.buttonSize * 0.7
+                height: Config.buttonSize * 0.7
 
-                MouseArea {
+                Image {
+                    id: maskImage
+
                     anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    hoverEnabled: true
-                    onClicked: bar.toggleSearch()
+                    source: "../assets/search.svg"
+                    sourceSize.width: width
+                    sourceSize.height: height
+                    smooth: true
+                    visible: false
                 }
 
+                Rectangle {
+                    id: fgColor
+
+                    anchors.fill: parent
+                    color: Config.foreground
+                    visible: false
+                }
+
+                OpacityMask {
+                    anchors.fill: parent
+                    source: fgColor
+                    maskSource: maskImage
+                }
+
+            }
+
+            MouseArea {
+                id: mouseArea
+
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                hoverEnabled: true
+                acceptedButtons: Qt.LeftButton
+                onClicked: bar.toggleSearch()
             }
 
         }

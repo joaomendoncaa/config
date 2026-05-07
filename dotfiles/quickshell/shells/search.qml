@@ -1,4 +1,5 @@
 import QtQuick
+import Qt5Compat.GraphicalEffects
 import Quickshell
 import ".."
 
@@ -63,13 +64,50 @@ PanelWindow {
                 font.pixelSize: Config.fontSize + 8
                 clip: true
 
-                Text {
+                Row {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "\u{1F50D}  Search..."
-                    color: Config.foregroundSecondary
-                    font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize + 8
+                    spacing: 8
                     visible: parent.text.length === 0
+
+                    Item {
+                        width: Config.fontSize + 8
+                        height: Config.fontSize + 8
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Image {
+                            id: placeholderMask
+
+                            anchors.fill: parent
+                            source: "../assets/search.svg"
+                            sourceSize.width: width
+                            sourceSize.height: height
+                            smooth: true
+                            visible: false
+                        }
+
+                        Rectangle {
+                            id: placeholderFg
+
+                            anchors.fill: parent
+                            color: Config.foregroundSecondary
+                            visible: false
+                        }
+
+                        OpacityMask {
+                            anchors.fill: parent
+                            source: placeholderFg
+                            maskSource: placeholderMask
+                        }
+
+                    }
+
+                    Text {
+                        text: "Search..."
+                        color: Config.foregroundSecondary
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize + 8
+                    }
+
                 }
             }
         }
