@@ -1,9 +1,0 @@
-singleton Config config.qml
-Monitor components/monitor/monitor.qml
-Workspaces components/workspaces/workspaces.qml
-Clock components/clock/clock.qml
-Opencode components/opencode/opencode.qml
-Sink components/sink/sink.qml
-Power components/power/power.qml
-Recording components/recording/recording.qml
-Updates components/updates/updates.qml

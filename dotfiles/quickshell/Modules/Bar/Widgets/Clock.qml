@@ -1,4 +1,4 @@
-import "../.."
+import qs.Core
 import QtQuick
 import QtQuick.Layouts
 import Quickshell

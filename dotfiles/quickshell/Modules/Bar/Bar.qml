@@ -1,10 +1,11 @@
-import ".."
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
+import qs.Core
+import qs.Modules.Bar.Widgets
 
 PanelWindow {
     id: bar
@@ -43,7 +44,7 @@ PanelWindow {
                     id: maskImage
 
                     anchors.fill: parent
-                    source: "../assets/search.svg"
+                    source: "../../Assets/search.svg"
                     sourceSize.width: width
                     sourceSize.height: height
                     smooth: true

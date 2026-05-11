@@ -1,4 +1,4 @@
-import "../.."
+import qs.Core
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -60,19 +60,15 @@ Rectangle {
 
     updateProcess: Process {
         command: ["bash", "-c", `
-            # Get pacman updates (official repos)
-            pacman_updates=$(pacman -Qu 2>/dev/null | wc -l)
-
-            # Get AUR updates only (yay -Qua shows only AUR)
-            aur_updates=$(yay -Qua 2>/dev/null | wc -l)
-
-            # Get flatpak updates
-            flatpak_updates=$(flatpak remote-ls --updates 2>/dev/null | wc -l)
-
-            # Total is pacman + AUR + flatpak
-            total=$((pacman_updates + aur_updates + flatpak_updates))
-
-            echo "$total"
+            # Omarchy decides if we show updates
+            if omarchy-update-available 2>/dev/null | grep -qi "up to date"; then
+                echo 0
+            else
+                pacman_updates=$(pacman -Qu 2>/dev/null | wc -l)
+                aur_updates=$(yay -Qua 2>/dev/null | wc -l)
+                flatpak_updates=$(flatpak remote-ls --updates 2>/dev/null | wc -l)
+                echo $((pacman_updates + aur_updates + flatpak_updates + 1))
+            fi
         `]
 
         stdout: StdioCollector {

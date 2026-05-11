@@ -1,14 +1,15 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "shells" as Shells
+import qs.Modules.Bar
+import qs.Modules.Search
 
 Scope {
     id: root
 
     property bool searchOpen: false
 
-    Shells.Bar {
+    Bar {
         searchOpen: root.searchOpen
         onToggleSearch: root.searchOpen = !root.searchOpen
     }
@@ -24,7 +25,7 @@ Scope {
 
         active: root.searchOpen
 
-        Shells.Search {
+        Search {
             visible: true
             onDismissed: root.searchOpen = false
         }

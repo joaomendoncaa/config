@@ -1,7 +1,7 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
 import Quickshell
-import ".."
+import qs.Core
 
 PanelWindow {
     id: root
@@ -78,7 +78,7 @@ PanelWindow {
                             id: placeholderMask
 
                             anchors.fill: parent
-                            source: "../assets/search.svg"
+                            source: "../../Assets/search.svg"
                             sourceSize.width: width
                             sourceSize.height: height
                             smooth: true

@@ -1,11 +1,11 @@
-import "../.."
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
-import "../ai" as AI
+import qs.Core
+import qs.Widgets
 
 Rectangle {
     id: root
@@ -75,7 +75,7 @@ Rectangle {
             id: maskImage
 
             anchors.fill: parent
-            source: "../../assets/opencode-logo.svg"
+            source: "../../../Assets/opencode-logo.svg"
             sourceSize.width: width
             sourceSize.height: height
             smooth: true
@@ -124,65 +124,6 @@ Rectangle {
 
         }
 
-    }
-
-    AI.Session {
-        id: statusIdle
-
-        state: "idle"
-        fillColor: Config.foreground
-        initials: "BA"
-        labelFontSize: Config.fontSize - 6
-        labelFontFamily: Config.fontFamily
-        anchors.right: statusWorking.left
-        anchors.rightMargin: 4
-        anchors.verticalCenter: parent.verticalCenter
-        width: Config.buttonSize * 0.7
-        height: Config.buttonSize * 0.7
-    }
-
-    AI.Session {
-        id: statusWorking
-
-        state: "working"
-        fillColor: Config.foreground
-        initials: "BL"
-        labelFontSize: Config.fontSize - 6
-        labelFontFamily: Config.fontFamily
-        anchors.right: statusPrompt.left
-        anchors.rightMargin: 4
-        anchors.verticalCenter: parent.verticalCenter
-        width: Config.buttonSize * 0.7
-        height: Config.buttonSize * 0.7
-    }
-
-    AI.Session {
-        id: statusPrompt
-
-        state: "prompt"
-        fillColor: Config.foreground
-        initials: "GI"
-        labelFontSize: Config.fontSize - 6
-        labelFontFamily: Config.fontFamily
-        anchors.right: statusError.left
-        anchors.rightMargin: 4
-        anchors.verticalCenter: parent.verticalCenter
-        width: Config.buttonSize * 0.7
-        height: Config.buttonSize * 0.7
-    }
-
-    AI.Session {
-        id: statusError
-
-        state: "error"
-        fillColor: Config.foreground
-        initials: "CO"
-        labelFontSize: Config.fontSize - 6
-        labelFontFamily: Config.fontFamily
-        anchors.right: parent.right
-        anchors.verticalCenter: parent.verticalCenter
-        width: Config.buttonSize * 0.7
-        height: Config.buttonSize * 0.7
     }
 
     MouseArea {
