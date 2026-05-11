@@ -41,7 +41,7 @@ Rectangle {
     Timer {
         id: updateTimer
 
-        interval: 3.6e+06
+        interval: 1.2e+06
         running: true
         repeat: true
         triggeredOnStart: true
