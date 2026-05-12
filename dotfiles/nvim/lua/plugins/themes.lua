@@ -130,6 +130,11 @@ local function apply_highlights()
         hi DiagnosticSignInfo guibg=none
         hi DiagnosticSignWarn guibg=none
         hi DiagnosticSignError guibg=none
+	hi NeoTreeNormal guibg=none
+	hi NeoTreeNormalNC guibg=none
+	hi NeoTreeEndOfBuffer guibg=none
+	hi NeoTreeTabActive guibg=none
+	hi NeoTreeTabSeparatorActive guibg=none
     ]]
 end
 

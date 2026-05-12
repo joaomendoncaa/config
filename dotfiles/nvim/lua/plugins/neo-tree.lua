@@ -10,7 +10,7 @@ return {
             {
                 '<C-e>',
                 function()
-                    vim.cmd('Neotree toggle position=current')
+                    vim.cmd 'Neotree toggle position=current'
                 end,
                 desc = 'Toggle [E]xplorer',
             },
@@ -23,7 +23,9 @@ return {
                     },
                 },
                 filesystem = {
-                    follow_current_file = true,
+                    follow_current_file = {
+                        enabled = true,
+                    },
                 },
             }
         end,
