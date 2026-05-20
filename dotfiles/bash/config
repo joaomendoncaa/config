@@ -37,6 +37,7 @@ add_to_path "$HOME/.opencode/bin"
 add_to_path "$HOME/.local/share/solana/install/active_release/bin"
 add_to_path "$HOME/.config.jmmm.sh/bin"
 add_to_path "$HOME/.local/bin"
+add_to_path "$HOME/.cargo/bin"
 add_to_path "$HOME/bin"
 add_to_path "$BUN_INSTALL/bin"
 add_to_path $PNPM_HOME
