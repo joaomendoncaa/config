@@ -44,6 +44,14 @@ return {
         local plugin = require 'snacks'
 
         plugin.setup(vim.tbl_extend('force', opts, {
+            lazygit = {
+                config = {
+                    os = {
+                        edit = '[ -z "$NVIM" ] && (nvim -- {{filename}}) || (nvim --server "$NVIM" --remote-send "q" && nvim --server "$NVIM" --remote {{filename}})',
+                        editAtLine = '[ -z "$NVIM" ] && (nvim +{{line}} -- {{filename}}) || (nvim --server "$NVIM" --remote-send "q" && nvim --server "$NVIM" --remote {{filename}} && nvim --server "$NVIM" --remote-send ":{{line}}<CR>")',
+                    },
+                },
+            },
             notifier = {
                 enabled = true,
                 timeout = 1500,

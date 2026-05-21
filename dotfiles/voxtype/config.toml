@@ -243,7 +243,7 @@ pre_type_delay_ms = 0
 
 [output.notification]
 # Show notification when recording starts (hotkey pressed)
-on_recording_start = false
+on_recording_start = true
 
 # Show notification when recording stops (transcription beginning)
 on_recording_stop = false
@@ -321,9 +321,12 @@ show_engine_icon = false
 # output_mode = "clipboard"
 
 [parakeet]
-model = "parakeet-tdt-0.6b-v3"
+model = "parakeet-unified-en-0.6b-onnx"
 on_demand_loading = false
 streaming = true
+streaming_chunk_secs = 0.32         # how often partials are emitted
+streaming_left_context_secs = 5.6   # history fed to each chunk
+streaming_right_context_secs = 0.32 # lookahead per chunk
 
 [text]
 spoken_punctuation = false
