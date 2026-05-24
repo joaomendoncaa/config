@@ -115,6 +115,12 @@ return {
             print('Inlay hints ' .. (vim.lsp.inlay_hint.is_enabled {} and 'enabled' or 'disabled'))
         end
 
+        local function toggle_virtual_text()
+            local current = not not vim.diagnostic.config().virtual_text
+            vim.diagnostic.config { virtual_text = not current }
+            print('Virtual text ' .. (not current and 'enabled' or 'disabled'))
+        end
+
         local function lsp_restart()
             vim.cmd 'LspRestart'
             vim.notify('LSP Restarting...', vim.log.levels.WARN)
@@ -253,6 +259,7 @@ return {
             key({ 'n', 'v', 'x' }, '<leader>lr', lsp_restart, '[L]sp [R]estart.')
             key({ 'n', 'v', 'x' }, '<leader>lk', lsp_start, '[L]sp [S]tart.')
             key({ 'n', 'v', 'x' }, '<leader>lj', lsp_stop, '[L]sp [S]top.')
+            key('n', '<leader>lv', toggle_virtual_text, '[L]sp Toggle [V]irtual Diagnostics')
             key('n', '<leader>ll', lsp_list, '[L]sp [L]ist servers')
             key('n', '<leader>la', vim.lsp.buf.code_action, '[L]sp code [A]ctions.')
 

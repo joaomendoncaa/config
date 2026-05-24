@@ -1,25 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ ${OS:-} = Windows_NT ]]; then
-	echo 'error: This config is destined to a UNIX based system.'
-	exit 1
-fi
-
 FORCE_DELETE=false
-CONFIG_SOURCE="$HOME/.config.jmmm.sh"
-COLOR_RESET=''
-RED=''
-GREEN=''
-DIM=''
-BOLD_WHITE=''
+CONFIG="$HOME/.config.jmmm.sh"
 
-if [[ -t 1 ]]; then
-	COLOR_RESET='\033[0m'
-	RED='\033[0;31m'
-	GREEN='\033[0;32m'
-	DIM='\033[0;2m'
-	BOLD_WHITE='\033[1m'
+if [[ ${OS:-} = Windows_NT ]]; then
+	echo '[ERROR] This config is destined for linux systems.'
+	exit 1
 fi
 
 while [[ $# -gt 0 ]]; do
@@ -35,35 +22,14 @@ while [[ $# -gt 0 ]]; do
 	shift
 done
 
-error() {
-	echo -e "${RED}error${COLOR_RESET}:" "$@" >&2
-	exit 1
-}
-
-error_silent() {
-	echo -e "${RED}error${COLOR_RESET}:" "$@" >&2
-}
-
-info() {
-	echo -e "${DIM}$@ ${COLOR_RESET}"
-}
-
-info_bold() {
-	echo -e "${BOLD_WHITE}$@ ${COLOR_RESET}"
-}
-
-success() {
-	echo -e "${GREEN}$@ ${COLOR_RESET} \n"
-}
-
 path() {
 	local new_path="$1"
 
 	if [[ ":$PATH:" != *":$new_path:"* ]]; then
 		export PATH="$new_path:$PATH"
-		success "Added $new_path to PATH"
+		echo "[SUCCESS] Added $new_path to PATH"
 	else
-		info "Path $new_path already exists in PATH"
+		echo "[INFO] Path $new_path already exists in PATH"
 	fi
 }
 
@@ -73,12 +39,12 @@ symlink() {
 
 	if [ ! -t 0 ]; then
 		if [ -e "$config_path" ]; then
-			info "Creating backup of existing config at $config_path.bak..."
+			echo "[INFO] Creating backup of existing config at $config_path.bak..."
 			mv "$config_path" "$config_path.bak"
 		fi
 
 		ln -s "$source_path" "$config_path"
-		success "Symlink created successfully: $source_path -> $config_path"
+		echo "[SUCCESS] Symlink created successfully: $source_path -> $config_path"
 
 		return
 	fi
@@ -86,38 +52,38 @@ symlink() {
 	if [[ "$FORCE_DELETE" == true || ! -e "$config_path" ]]; then
 		rm -rf "$config_path"
 		ln -s "$source_path" "$config_path"
-		success "Symlink created successfully: $source_path -> $config_path"
+		echo "[SUCCESS] Symlink created successfully: $source_path -> $config_path"
 
 		return
 	fi
 
-	error_silent "There's already a config in $config_path"
-	info "You can:"
-	info "1. Delete it [D]"
-	info "2. Backup it and proceed with symlinking [B] (default)"
-	info "3. Don't symlink this config [N]"
+	echo "[ERROR] There's already a config in $config_path"
+	echo "[INFO] You can:"
+	echo "[INFO] 1. Delete it [D]"
+	echo "[INFO] 2. Backup it and proceed with symlinking [B] (default)"
+	echo "[INFO] 3. Don't symlink this config [N]"
 
 	read -n1 -p "Enter your choice [D/B/N]: " response
 	echo ""
 
 	case $response in
 	[dD])
-		info "Deleting existing config at $config_path..."
+		echo "[INFO] Deleting existing config at $config_path..."
 		rm -rf "$config_path"
 		ln -s "$source_path" "$config_path"
-		success "Symlink created successfully: $source_path -> $config_path"
+		echo "[SUCCESS] Symlink created successfully: $source_path -> $config_path"
 		;;
 	[bB] | "")
-		info "Creating backup of existing config at $config_path.bak..."
+		echo "[INFO] Creating backup of existing config at $config_path.bak..."
 		mv "$config_path" "$config_path.bak"
 		ln -s "$source_path" "$config_path"
-		success "Symlink created successfully: $source_path -> $config_path. Previous config backed up as $config_path.bak"
+		echo "[SUCCESS] Symlink created successfully: $source_path -> $config_path. Previous config backed up as $config_path.bak"
 		;;
 	[nN])
-		info "Symlinking for $source_path cancelled."
+		echo "[INFO] Symlinking for $source_path cancelled."
 		;;
 	*)
-		info "Invalid choice."
+		echo "[INFO] Invalid choice."
 		symlink "$config_path" "$source_path"
 		;;
 	esac
@@ -125,24 +91,24 @@ symlink() {
 
 echo "Creating symlinks for config files...\n"
 
-symlink "$HOME/.config/nvim" "$CONFIG_SOURCE/dotfiles/nvim"
-symlink "$HOME/.config/starship.toml" "$CONFIG_SOURCE/dotfiles/starship/starship.toml"
-symlink "$HOME/.config/alacritty" "$CONFIG_SOURCE/dotfiles/alacritty"
-symlink "$HOME/.config/vicinae" "$CONFIG_SOURCE/dotfiles/vicinae"
-symlink "$HOME/.config/yazi" "$CONFIG_SOURCE/dotfiles/yazi"
-symlink "$HOME/.config/tmux" "$CONFIG_SOURCE/dotfiles/tmux"
-symlink "$HOME/.config/hypr" "$CONFIG_SOURCE/dotfiles/hypr"
-symlink "$HOME/.config/quickshell" "$CONFIG_SOURCE/dotfiles/quickshell"
-symlink "$HOME/.config/ghostty" "$CONFIG_SOURCE/dotfiles/ghostty"
-symlink "$HOME/.config/lazygit" "$CONFIG_SOURCE/dotfiles/lazygit"
-symlink "$HOME/.config/systemd" "$CONFIG_SOURCE/dotfiles/systemd"
-symlink "$HOME/.config/atuin" "$CONFIG_SOURCE/dotfiles/atuin"
-symlink "$HOME/.config/voxtype" "$CONFIG_SOURCE/dotfiles/voxtype"
-symlink "$HOME/.config/opencode" "$CONFIG_SOURCE/dotfiles/opencode"
-symlink "$HOME/.config/hyprwhspr/config.json" "$CONFIG_SOURCE/dotfiles/hyprwhspr/config.json"
-symlink "$HOME/.gitconfig" "$CONFIG_SOURCE/dotfiles/git/.gitconfig"
-symlink "$HOME/.bashrc" "$CONFIG_SOURCE/dotfiles/bash/.bashrc"
-symlink "$HOME/biome.json" "$CONFIG_SOURCE/dotfiles/biome/config.json"
-symlink "$HOME/.local/bin/toggle-sink" "$CONFIG_SOURCE/bin/toggle-sink"
+symlink "$HOME/.config/nvim" "$CONFIG/dotfiles/nvim"
+symlink "$HOME/.config/starship.toml" "$CONFIG/dotfiles/starship/starship.toml"
+symlink "$HOME/.config/alacritty" "$CONFIG/dotfiles/alacritty"
+symlink "$HOME/.config/vicinae" "$CONFIG/dotfiles/vicinae"
+symlink "$HOME/.config/yazi" "$CONFIG/dotfiles/yazi"
+symlink "$HOME/.config/tmux" "$CONFIG/dotfiles/tmux"
+symlink "$HOME/.config/hypr" "$CONFIG/dotfiles/hypr"
+symlink "$HOME/.config/quickshell" "$CONFIG/dotfiles/quickshell"
+symlink "$HOME/.config/ghostty" "$CONFIG/dotfiles/ghostty"
+symlink "$HOME/.config/lazygit" "$CONFIG/dotfiles/lazygit"
+symlink "$HOME/.config/systemd" "$CONFIG/dotfiles/systemd"
+symlink "$HOME/.config/atuin" "$CONFIG/dotfiles/atuin"
+symlink "$HOME/.config/voxtype" "$CONFIG/dotfiles/voxtype"
+symlink "$HOME/.config/opencode" "$CONFIG/dotfiles/opencode"
+symlink "$HOME/.config/hyprwhspr/config.json" "$CONFIG/dotfiles/hyprwhspr/config.json"
+symlink "$HOME/.gitconfig" "$CONFIG/dotfiles/git/.gitconfig"
+symlink "$HOME/.bashrc" "$CONFIG/dotfiles/bash/.bashrc"
+symlink "$HOME/biome.json" "$CONFIG/dotfiles/biome/config.json"
+symlink "$HOME/.local/bin/toggle-sink" "$CONFIG/bin/toggle-sink"
 
-echo "Setup complete! 🥳"
+echo "Setup complete!"
