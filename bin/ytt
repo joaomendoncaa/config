@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -e
+
+url="$1"
+
+if [ -z "$url" ]; then
+	echo "missing yt link"
+	exit 1
+fi
+
+tmp="$(mktemp)"
+
+yt-dlp \
+	--skip-download \
+	--write-auto-subs \
+	--sub-langs en \
+	--sub-format ttml \
+	-o "$tmp" \
+	"$url" \
+	--newline
+
+file="${tmp}.en.ttml"
+
+if [ ! -f "$file" ]; then
+	echo "no subtitles found"
+	rm -f "$tmp"*
+	exit 1
+fi
+
+awk -v RS='</p>' -f - "$file" <<'AWK' | wl-copy
+function parse_time(t,    a) {
+    split(t, a, ":")
+    return (a[1] + 0) * 3600 + (a[2] + 0) * 60 + (a[3] + 0)
+}
+
+{
+    b = $0
+    if (b !~ /begin="[^"]*"/ || b !~ /<p/) next
+
+    if (match(b, /begin="[^"]+"/)) {
+        val = substr(b, RSTART + 7, RLENGTH - 8)
+        t = parse_time(val)
+        key = int(t / 10) * 10
+
+        gsub(/<[^>]*>/, " ", b)
+        gsub(/&amp;/, "\\&", b)
+        gsub(/&lt;/, "<", b)
+        gsub(/&gt;/, ">", b)
+        gsub(/&quot;/, "\"", b)
+        gsub(/&#39;/, "'", b)
+        gsub(/&nbsp;/, " ", b)
+        gsub(/&#[0-9]+;/, "", b)
+        gsub(/&#x[0-9a-fA-F]+;/, "", b)
+        gsub(/[[:space:]]+/, " ", b)
+        gsub(/^ | $/, "", b)
+
+        if (length(b) > 0) {
+            out[key] = out[key] (out[key] == "" ? "" : " ") b
+        }
+    }
+}
+
+END {
+    max = 0
+    for (k in out) if (k + 0 > max) max = k + 0
+    for (i = 0; i <= max; i += 10) {
+        if (i in out) {
+            minutes = int(i / 60)
+            seconds = i % 60
+            printf "[%02d:%02d] %s\n", minutes, seconds, out[i]
+        }
+    }
+}
+AWK
+
+rm -f "$file" "$tmp"*
