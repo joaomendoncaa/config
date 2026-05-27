@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -e
+export LC_ALL=C.UTF-8
 
 url="$1"
 
@@ -9,6 +10,7 @@ if [ -z "$url" ]; then
 fi
 
 tmp="$(mktemp)"
+dlp_log="$(mktemp)"
 
 yt-dlp \
 	--skip-download \
@@ -17,7 +19,36 @@ yt-dlp \
 	--sub-format ttml \
 	-o "$tmp" \
 	"$url" \
-	--newline
+	--newline \
+	>"$dlp_log" 2>&1 &
+pid=$!
+
+spinner='|/-\'
+i=0
+len=${#spinner}
+cols=$(tput cols 2>/dev/null || echo 80)
+max_len=$((cols - 2))
+while kill -0 "$pid" 2>/dev/null; do
+	last="$(tail -1 "$dlp_log" 2>/dev/null | tr '\r' ' ' || true)"
+	if [ ${#last} -gt $max_len ]; then
+		last="${last:0:$max_len}"
+	fi
+	printf '\r\033[K\033[97m%c\033[0m %s\033[0m' "${spinner:$i:1}" "$last"
+	i=$(( (i + 1) % len ))
+	sleep 0.1
+done
+printf '\r\033[0m\033[K'
+set +e
+wait "$pid"
+rc=$?
+set -e
+rm -f "$dlp_log"
+
+if [ "$rc" -ne 0 ]; then
+	echo "yt-dlp failed with exit code $rc"
+	rm -f "$tmp"*
+	exit 1
+fi
 
 file="${tmp}.en.ttml"
 
@@ -27,7 +58,7 @@ if [ ! -f "$file" ]; then
 	exit 1
 fi
 
-awk -v RS='</p>' -f - "$file" <<'AWK' | wl-copy
+awk -v RS='</p>' -f - "$file" <<'AWK'
 function parse_time(t,    a) {
     split(t, a, ":")
     return (a[1] + 0) * 3600 + (a[2] + 0) * 60 + (a[3] + 0)
