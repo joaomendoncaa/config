@@ -3,5 +3,14 @@
   "theme": "system",
   "autoshare": false,
   "autoupdate": true,
-  "default_agent": "build"
+  "default_agent": "build",
+  "model": "opencode-go/deepseek-v4-flash",
+  "permission": {
+    "edit": "ask",
+    "bash": {
+      "*": "ask",
+      "ls": "allow",
+      "grep": "allow"
+    }
+  }
 }
