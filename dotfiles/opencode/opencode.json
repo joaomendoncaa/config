@@ -6,6 +6,12 @@
   "default_agent": "build",
   "model": "opencode-go/deepseek-v4-flash",
   "permission": {
+    "read": {
+      "*": "allow",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.env.example": "allow"
+    },
     "edit": "ask",
     "bash": {
       "*": "ask",
