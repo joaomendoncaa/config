@@ -14,9 +14,10 @@
     },
     "edit": "ask",
     "bash": {
-      "*": "ask",
       "ls": "allow",
-      "grep": "allow"
+      "grep": "allow",
+      "wc": "allow",
+      "*": "ask"
     }
   }
 }

@@ -15,6 +15,50 @@ return {
         local f = misc.func
         local key = misc.key
 
+        local cwd_formatter = {}
+
+        local function find_file_up(name, start)
+            local dir = start
+            for _ = 1, 10 do
+                if vim.fn.filereadable(dir .. '/' .. name) == 1 then
+                    return true
+                end
+                local parent = vim.fn.fnamemodify(dir, ':h')
+                if parent == dir then
+                    break
+                end
+                dir = parent
+            end
+            return false
+        end
+
+        local prettier_files = { '.prettierrc', '.prettierrc.json', '.prettierrc.js', 'prettier.config.js', 'prettier.config.mjs' }
+
+        local function pick_formatter(cwd)
+            if cwd_formatter[cwd] then
+                return cwd_formatter[cwd]
+            end
+
+            local has_biome = find_file_up('biome.json', cwd)
+            local has_prettier = false
+            for _, f in ipairs(prettier_files) do
+                if find_file_up(f, cwd) then
+                    has_prettier = true
+                    break
+                end
+            end
+
+            local choice
+            if has_prettier and not has_biome then
+                choice = 'prettier'
+            else
+                choice = 'biome'
+            end
+
+            cwd_formatter[cwd] = choice
+            return choice
+        end
+
         local has_format_on_save = true
 
         local function set_format_on_save(value, opts)
@@ -110,7 +154,7 @@ return {
                 },
                 biome = {
                     condition = function()
-                        return vim.fn.filereadable(vim.fn.getcwd() .. '/biome.json') == 1
+                        return pick_formatter(vim.fn.getcwd()) == 'biome'
                     end,
 
                     prepend_args = {
@@ -121,7 +165,7 @@ return {
                 },
                 prettier = {
                     condition = function()
-                        return vim.fn.filereadable(vim.fn.getcwd() .. '/biome.json') == 0
+                        return pick_formatter(vim.fn.getcwd()) == 'prettier'
                     end,
                     prepend_args = {
                         '--write',
