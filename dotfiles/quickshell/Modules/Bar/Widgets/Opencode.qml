@@ -12,7 +12,7 @@ Rectangle {
 
     property QtObject barWindow: null
     property bool popupVisible: false
-    property string workspaceId: Quickshell.env("OPENCODE_WORKSPACE_ID") || "wrk_01KEYSE6SWHFGJ2DB8C2690QJ2"
+    property string workspaceId: Quickshell.env("QUICKSHELL_OPENCODE_WORKSPACE_ID") || "wrk_01KEYSE6SWHFGJ2DB8C2690QJ2"
     property var usageData: null
     property real pct5h: 0
     property real pctWeekly: 0
