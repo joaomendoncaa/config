@@ -28,6 +28,6 @@ else
     fi
     filename=$(date +%Y-%m-%d_%H-%M-%S).mp4
     qs ipc call recording setRecording true
-    gpu-screen-recorder -w region -region "$REGION_SELECTION" -c mp4 -k h264 -ac aac -f 60 -fm vfr -cursor yes -restore-portal-session yes -cr full -encoder gpu -o "$OUTPUT_DIR/$filename" -q very_high -a device:default_output &
+    gpu-screen-recorder -w "$REGION_SELECTION" -c mp4 -k h264 -ac aac -f 60 -fm vfr -cursor yes -restore-portal-session yes -cr full -fallback-cpu-encoding yes -o "$OUTPUT_DIR/$filename" -q very_high -a device:default_output &
     echo $! > "$PID_FILE"
 fi

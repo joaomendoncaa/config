@@ -179,7 +179,7 @@ fallback_to_clipboard = true
 
 # Delay between typed characters in milliseconds
 # 0 = fastest possible, increase if characters are dropped
-type_delay_ms = 0
+type_delay_ms = 20
 auto_submit = false
 shift_enter_newlines = false
 pre_type_delay_ms = 0
