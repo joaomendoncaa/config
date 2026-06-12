@@ -244,12 +244,10 @@ pre_type_delay_ms = 0
 [output.notification]
 # Show notification when recording starts (hotkey pressed)
 on_recording_start = true
-
-# Show notification when recording stops (transcription beginning)
-on_recording_stop = false
+on_recording_stop = true
 
 # Show notification with transcribed text after transcription completes
-on_transcription = true
+on_transcription = false
 show_engine_icon = false
 
 # Notification urgency level: "low", "normal", or "critical".
@@ -257,11 +255,11 @@ show_engine_icon = false
 # Use "normal" (default) to ensure notifications appear as banners.
 # urgency = "normal"
 
-# [text]
+[text]
 # Text processing options (word replacements, spoken punctuation)
 #
 # Enable spoken punctuation conversion (e.g., say "period" to get ".")
-# spoken_punctuation = false
+spoken_punctuation = true
 #
 # Custom word replacements (case-insensitive)
 # replacements = { "vox type" = "voxtype" }
@@ -273,8 +271,8 @@ show_engine_icon = false
 # Remove filler words like "uh" and "um" from transcribed text.
 # Enabled by default. Set filter_filler_words = false to disable, or override
 # the word list via filler_words.
-# filter_filler_words = true
-# filler_words = ["uh", "um", "er", "ah", "eh", "hmm", "hm", "mm", "mhm"]
+filter_filler_words = true
+filler_words = ["uh", "um", "er", "ah", "eh", "hmm", "hm", "mm", "mhm"]
 
 # [vad]
 # Voice Activity Detection - filters silence-only recordings
@@ -328,9 +326,6 @@ streaming_chunk_secs = 0.32         # how often partials are emitted
 streaming_left_context_secs = 5.6   # history fed to each chunk
 streaming_right_context_secs = 0.32 # lookahead per chunk
 
-[text]
-spoken_punctuation = false
-smart_auto_submit = false
 
 [meeting]
 enabled = false

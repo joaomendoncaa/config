@@ -5,7 +5,14 @@
     "autoupdate": true,
     "default_agent": "build",
     "model": "opencode-go/deepseek-v4-flash",
-    "server": {
-        "port": 4096
+    "references": {
+        "config": {
+            "path": "~/.config.jmmm.sh",
+            "description": "Use for personal configuration files"
+        },
+        "voxtype": {
+            "path": "~/lab/voxtype",
+            "description": "Use for voxtype local clone"
+        }
     }
 }
