@@ -10,9 +10,9 @@ import qs.Modules.Bar.Widgets
 PanelWindow {
     id: bar
 
-    property bool searchOpen: false
+    property bool launcherOpen: false
 
-    signal toggleSearch()
+    signal toggleLauncher()
 
     implicitHeight: Config.height
     color: Config.background
@@ -74,7 +74,7 @@ PanelWindow {
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
                 acceptedButtons: Qt.LeftButton
-                onClicked: bar.toggleSearch()
+                onClicked: bar.toggleLauncher()
             }
 
         }
