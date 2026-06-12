@@ -12,7 +12,12 @@
         },
         "voxtype": {
             "path": "~/lab/voxtype",
-            "description": "Use for voxtype local clone"
+            "description": "Use for patching voxtype"
+        },
+        "omarchy-4": {
+            "repository": "github.com/basecamp/omarchy",
+            "branch": "omarchy-shell",
+            "description": "Use for omarchy's migration to quickshell and lua-based hyprland"
         }
     }
 }
