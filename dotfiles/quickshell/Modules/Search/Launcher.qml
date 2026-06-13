@@ -414,7 +414,7 @@ PanelWindow {
 
         Item {
           width: parent.width
-          height: searchRow.height + 8
+          height: Config.fontSize + 16
 
           Row {
             id: searchRow
@@ -505,7 +505,7 @@ PanelWindow {
                   readonly property bool isSelected: index === root.selectedIndex
 
                   width: ListView.view.width
-                  height: type === "emoji" ? 52 : 44
+                  height: 44
                   radius: 3
                   color: isSelected ? Config.accent : "transparent"
 
@@ -516,13 +516,13 @@ PanelWindow {
                     spacing: 10
 
                     Item {
-                      width: type === "emoji" ? 48 : 32
+                      width: 32
                       height: parent.height
 
                       Text {
                         visible: type === "emoji"
                         text: emojiChar
-                        font.pixelSize: 28
+                        font.pixelSize: 22
                         anchors.centerIn: parent
                       }
 
@@ -569,7 +569,7 @@ PanelWindow {
                     }
 
                     Column {
-                      width: parent.width - (type === "emoji" ? 48 + 10 : 32 + 10)
+                      width: parent.width - 32 - 10
                       anchors.verticalCenter: parent.verticalCenter
                       spacing: 2
 
