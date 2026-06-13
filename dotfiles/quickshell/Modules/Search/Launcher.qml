@@ -395,9 +395,8 @@ PanelWindow {
 
     Rectangle {
       id: card
-      readonly property int cardWidth: 600
+      readonly property int cardWidth: 900
       readonly property int cardHeight: 420
-      readonly property int headerHeight: 44
 
       width: Math.min(cardWidth, parent.width - Config.shellPadding * 2)
       height: Math.min(cardHeight, parent.height - Config.shellPadding * 2)
@@ -414,9 +413,10 @@ PanelWindow {
 
         Item {
           width: parent.width
-          height: card.headerHeight
+          height: searchRow.height + 8
 
           Row {
+            id: searchRow
             anchors.verticalCenter: parent.verticalCenter
             spacing: 0
 
@@ -427,7 +427,6 @@ PanelWindow {
               width: modePillLabel.width + 10
               radius: 3
               color: Config.accent
-              anchors.verticalCenter: parent.verticalCenter
 
               Text {
                 id: modePillLabel
@@ -452,14 +451,12 @@ PanelWindow {
               color: Config.foreground
               font.family: Config.fontFamily
               font.pixelSize: Config.fontSize
-              anchors.verticalCenter: parent.verticalCenter
             }
 
             Rectangle {
               width: 10
               height: Config.fontSize + 4
               color: Config.foreground
-              anchors.verticalCenter: parent.verticalCenter
             }
 
             Text {
@@ -469,150 +466,187 @@ PanelWindow {
               color: Config.foreground
               font.family: Config.fontFamily
               font.pixelSize: Config.fontSize
-              anchors.verticalCenter: parent.verticalCenter
             }
-
           }
         }
 
         Item {
           width: parent.width
-          height: parent.height - card.headerHeight - 8 - 1
+          height: parent.height - searchRow.parent.height - parent.spacing
 
-          ListView {
-            id: resultList
+          Row {
             anchors.fill: parent
-            model: displayModel
-            clip: true
-            spacing: 2
-            boundsBehavior: Flickable.StopAtBounds
+            spacing: 0
 
-            delegate: Rectangle {
-              required property int index
-              required property string type
-              required property string label
-              required property string detail
-              required property string emojiChar
-              required property string iconName
-              required property string fullText
-              required property string imagePath
-              required property string mime
+            Item {
+              width: parent.width - (previewPanel.visible ? previewPanel.width : 0)
+              height: parent.height
 
-              readonly property bool isSelected: index === root.selectedIndex
-
-              width: ListView.view.width
-              height: type === "emoji" ? 52 : 44
-              radius: 3
-              color: isSelected ? Config.accent : "transparent"
-
-              Row {
+              ListView {
+                id: resultList
                 anchors.fill: parent
-                anchors.leftMargin: 8
-                anchors.rightMargin: 8
-                spacing: 10
+                model: displayModel
+                clip: true
+                spacing: 2
+                boundsBehavior: Flickable.StopAtBounds
 
-                Item {
-                  width: type === "emoji" ? 48 : 32
-                  height: parent.height
+                delegate: Rectangle {
+                  required property int index
+                  required property string type
+                  required property string label
+                  required property string detail
+                  required property string emojiChar
+                  required property string iconName
+                  required property string fullText
+                  required property string imagePath
+                  required property string mime
 
-                  Text {
-                    visible: type === "emoji"
-                    text: emojiChar
-                    font.pixelSize: 28
-                    anchors.centerIn: parent
-                  }
+                  readonly property bool isSelected: index === root.selectedIndex
 
-                  IconImage {
-                    visible: type === "app"
-                    anchors.centerIn: parent
-                    implicitSize: 22
-                    source: root.resolveIcon(iconName)
-                    asynchronous: true
-                  }
+                  width: ListView.view.width
+                  height: type === "emoji" ? 52 : 44
+                  radius: 3
+                  color: isSelected ? Config.accent : "transparent"
 
-                  Text {
-                    visible: type === "file"
-                    text: "\uD83D\uDCC4"
-                    font.pixelSize: 18
-                    anchors.centerIn: parent
-                  }
+                  Row {
+                    anchors.fill: parent
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    spacing: 10
 
-                  Item {
-                    visible: type === "clipboard"
-                    width: imagePath.length > 0 ? parent.height - 4 : 22
-                    height: parent.height - 4
-                    anchors.centerIn: parent
-                    clip: true
+                    Item {
+                      width: type === "emoji" ? 48 : 32
+                      height: parent.height
 
-                    Image {
-                      visible: imagePath.length > 0
-                      anchors.fill: parent
-                      source: imagePath.length > 0 ? "file://" + imagePath : ""
-                      fillMode: Image.PreserveAspectCrop
-                      asynchronous: true
-                      smooth: true
+                      Text {
+                        visible: type === "emoji"
+                        text: emojiChar
+                        font.pixelSize: 28
+                        anchors.centerIn: parent
+                      }
+
+                      IconImage {
+                        visible: type === "app"
+                        anchors.centerIn: parent
+                        implicitSize: 22
+                        source: root.resolveIcon(iconName)
+                        asynchronous: true
+                      }
+
+                      Text {
+                        visible: type === "file"
+                        text: "\uD83D\uDCC4"
+                        font.pixelSize: 18
+                        anchors.centerIn: parent
+                      }
+
+                      Item {
+                        visible: type === "clipboard"
+                        width: parent.height - 4
+                        height: parent.height - 4
+                        anchors.centerIn: parent
+                        clip: true
+
+                        Image {
+                          visible: imagePath.length > 0
+                          anchors.fill: parent
+                          source: imagePath.length > 0 ? "file://" + imagePath : ""
+                          fillMode: Image.PreserveAspectCrop
+                          asynchronous: true
+                          smooth: true
+                        }
+
+                        Rectangle {
+                          visible: imagePath.length === 0
+                          anchors.centerIn: parent
+                          width: 16; height: 20; radius: 2
+                          color: "transparent"
+                          border.color: isSelected ? Config.foregroundSelected : Config.foreground
+                          border.width: 2
+                        }
+                      }
                     }
 
-                    Rectangle {
-                      visible: imagePath.length === 0
-                      anchors.centerIn: parent
-                      width: 16; height: 20; radius: 2
-                      color: "transparent"
-                      border.color: isSelected ? Config.foregroundSelected : Config.foreground
-                      border.width: 2
+                    Column {
+                      width: parent.width - (type === "emoji" ? 48 + 10 : 32 + 10)
+                      anchors.verticalCenter: parent.verticalCenter
+                      spacing: 2
+
+                      Text {
+                        width: parent.width
+                        text: type === "clipboard" ? label : label
+                        color: isSelected ? Config.foregroundSelected : Config.foreground
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize
+                        elide: Text.ElideRight
+                      }
+
+                      Text {
+                        width: parent.width
+                        visible: detail.length > 0
+                        text: detail
+                        color: isSelected ? Config.foregroundSelected : Config.foregroundSecondary
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize - 4
+                        opacity: 0.7
+                        elide: Text.ElideRight
+                      }
                     }
                   }
-                }
 
-                Column {
-                  width: parent.width - (type === "emoji" ? 48 + 10 : 32 + 10)
-                  anchors.verticalCenter: parent.verticalCenter
-                  spacing: 2
-
-                  Text {
-                    width: parent.width
-                    text: type === "clipboard" ? label : label
-                    color: isSelected ? Config.foregroundSelected : Config.foreground
-                    font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize
-                    elide: Text.ElideRight
-                  }
-
-                  Text {
-                    width: parent.width
-                    visible: detail.length > 0
-                    text: detail
-                    color: isSelected ? Config.foregroundSelected : Config.foregroundSecondary
-                    font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize - 4
-                    opacity: 0.7
-                    elide: Text.ElideRight
+                  MouseArea {
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onContainsMouseChanged: {
+                      if (containsMouse) root.selectedIndex = index
+                    }
+                    onClicked: {
+                      root.selectedIndex = index
+                      root.activateSelected()
+                    }
                   }
                 }
               }
 
-              MouseArea {
+              Text {
+                anchors.centerIn: parent
+                visible: displayModel.count === 0
+                text: root.filterText.length > 0 ? "No results" : "Start typing\u2026"
+                color: Config.foregroundSecondary
+                font.family: Config.fontFamily
+                font.pixelSize: Config.fontSize
+              }
+            }
+
+            Item {
+              id: previewPanel
+              visible: root.modeIndex === 3 && selectedClipHasImage()
+              width: visible ? parent.height : 0
+              height: parent.height
+              clip: false
+
+              function selectedClipHasImage() {
+                if (displayModel.count === 0) return false
+                var item = displayModel.get(root.selectedIndex)
+                return item && item.imagePath && item.imagePath.length > 0
+              }
+
+              Image {
                 anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onContainsMouseChanged: {
-                  if (containsMouse) root.selectedIndex = index
-                }
-                onClicked: {
-                  root.selectedIndex = index
-                  root.activateSelected()
+                anchors.margins: 8
+                source: previewPanel.visible ? "file://" + previewImagePath() : ""
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                smooth: true
+
+                function previewImagePath() {
+                  if (displayModel.count === 0) return ""
+                  var item = displayModel.get(root.selectedIndex)
+                  return item ? item.imagePath : ""
                 }
               }
             }
-          }
-
-          Text {
-            anchors.centerIn: parent
-            visible: displayModel.count === 0
-            text: root.filterText.length > 0 ? "No results" : "Start typing\u2026"
-            color: Config.foregroundSecondary
-            font.family: Config.fontFamily
-            font.pixelSize: Config.fontSize
           }
         }
       }
