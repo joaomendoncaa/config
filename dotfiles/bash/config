@@ -4,6 +4,9 @@ HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=2000
 
+bind '"\C-b": backward-word'
+bind '"\C-f": forward-word'
+
 shopt -s histappend
 shopt -s checkwinsize
 set -o vi
