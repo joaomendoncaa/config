@@ -20,6 +20,7 @@ PanelWindow {
   property var emojiData: []
   property var clipboardData: []
   property var fileResults: []
+  property int cursorBlink: 0
 
   ListModel { id: displayModel }
 
@@ -31,7 +32,7 @@ PanelWindow {
   color: "transparent"
   anchors { left: true; right: true; top: true; bottom: true }
   WlrLayershell.layer: WlrLayer.Overlay
-  WlrLayershell.namespace: "launcher"
+  WlrLayershell.namespace: "superbar"
   WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
   exclusionMode: ExclusionMode.Ignore
 
@@ -381,7 +382,7 @@ PanelWindow {
 
   Rectangle {
     anchors.fill: parent
-    color: Qt.rgba(0, 0, 0, 0.4)
+    color: Qt.rgba(0, 0, 0, 0.2)
 
     MouseArea {
       anchors.fill: parent
@@ -455,6 +456,7 @@ PanelWindow {
             }
 
             Rectangle {
+              id: cursorRect
               width: 10
               height: Config.fontSize + 4
               color: Config.foreground
@@ -770,7 +772,7 @@ PanelWindow {
   }
 
   FileView {
-    path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/quickshell/Modules/Search/emojis.json"
+    path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/quickshell/Data/emojis.json"
     onLoaded: root.emojiData = root.parseEmojiJson(text())
     onLoadFailed: root.emojiData = []
   }
@@ -853,5 +855,15 @@ PanelWindow {
 
   onFileResultsChanged: {
     if (modeIndex === 2) rebuildDisplay()
+  }
+
+  Timer {
+    interval: 530
+    running: true
+    repeat: true
+    onTriggered: {
+      root.cursorBlink = root.cursorBlink === 0 ? 1 : 0
+      cursorRect.visible = root.cursorBlink === 0
+    }
   }
 }

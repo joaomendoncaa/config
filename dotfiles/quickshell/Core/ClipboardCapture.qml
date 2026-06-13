@@ -7,7 +7,7 @@ Item {
 
   readonly property string home: Quickshell.env("HOME")
   readonly property string stateDir: home + "/.local/state"
-  readonly property string scriptPath: home + "/.config/quickshell/Modules/Search/capture.sh"
+  readonly property string scriptPath: home + "/.config/quickshell/Scripts/clipboard-intercept"
   property var history: []
 
   function capture(entry) {

@@ -2,8 +2,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import qs.Core
 import qs.Modules.Bar
-import qs.Modules.Search
+import qs.Modules.Superbar
 
 Scope {
     id: root
@@ -50,7 +51,7 @@ Scope {
 
         active: root.launcherOpen
 
-        Launcher {
+        Superbar {
             onDismissed: root.launcherOpen = false
         }
 
