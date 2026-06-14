@@ -15,14 +15,14 @@ Rectangle {
     required property string fullText
     required property string imagePath
     required property string mime
-
     property int selectedIndex: 0
-    property var iconResolver: function(name) { return '' }
+    property var iconResolver: function(name) {
+        return '';
+    }
+    readonly property bool isSelected: index === selectedIndex
 
     signal itemClicked(int index)
     signal itemHovered(int index)
-
-    readonly property bool isSelected: index === selectedIndex
 
     width: ListView.view.width
     height: 44
@@ -84,15 +84,16 @@ Rectangle {
                     smooth: true
                 }
 
-                Rectangle {
+                Text {
                     visible: imagePath.length === 0
+                    text: '\uD83D\uDDB9'
+                    color: isSelected ? Config.foregroundSelected : Config.foregroundSecondary
+                    font.pixelSize: 18
                     anchors.centerIn: parent
-                    width: 16; height: 20; radius: 2
-                    color: 'transparent'
-                    border.color: isSelected ? Config.foregroundSelected : Config.foreground
-                    border.width: 2
                 }
+
             }
+
         }
 
         Column {
@@ -119,7 +120,9 @@ Rectangle {
                 opacity: 0.7
                 elide: Text.ElideRight
             }
+
         }
+
     }
 
     MouseArea {
@@ -127,8 +130,11 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onContainsMouseChanged: {
-            if (containsMouse) itemHovered(index)
+            if (containsMouse)
+                itemHovered(index);
+
         }
         onClicked: itemClicked(index)
     }
+
 }
