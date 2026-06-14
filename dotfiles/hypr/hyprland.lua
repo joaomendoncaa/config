@@ -1,11 +1,18 @@
 -- Learn how to configure Hyprland: https://wiki.hypr.land/Configuring/Start/
 
--- Load user modules from ~/.config and Omarchy defaults from $OMARCHY_PATH.
+-- Load user modules from ~/.config and Omarchy-4 defaults.
 package.path = os.getenv("HOME")
     .. "/.config/?.lua;"
+    .. "/home/joao/.local/share/opencode/repos/github.com/basecamp/omarchy"
+    .. "/?.lua;"
     .. (os.getenv("OMARCHY_PATH") or (os.getenv("HOME") .. "/.local/share/omarchy"))
     .. "/?.lua;"
     .. package.path
+
+-- Point omarchy paths to the Lua version for app/window rule resolution.
+require("default.hypr.paths")
+local paths = require("default.hypr.paths")
+paths.omarchy_path = "/home/joao/.local/share/opencode/repos/github.com/basecamp/omarchy"
 
 -- Omarchy defaults (loaded individually to exclude default autostart).
 require("default.hypr.helpers")
@@ -30,21 +37,21 @@ require("hypr.autostart")
 -- Window rules for specific apps.
 hl.window_rule({ match = { initial_class = "zen" }, tag = "-firefox-based-browser" })
 hl.window_rule({ match = { initial_class = "zen" }, float = true })
-hl.window_rule({ match = { initial_class = "zen" }, size = { w = 500, h = 800 } })
+hl.window_rule({ match = { initial_class = "zen" }, size = { 500, 800 } })
 hl.window_rule({ match = { initial_class = "zen" }, center = true })
 
 hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, float = true })
-hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, size = { w = 600, h = 800 } })
-hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, move = { x = 1947, y = 47 } })
+hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, size = { 600, 800 } })
+hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, move = { 1947, 47 } })
 
 hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, float = true })
-hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, size = { w = 600, h = 800 } })
-hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, move = { x = 1343, y = 47 } })
+hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, size = { 600, 800 } })
+hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, move = { 1343, 47 } })
 
 hl.window_rule({ match = { initial_class = "steam_app_230410" }, render_unfocused = true })
 
 hl.window_rule({ match = { initial_class = "Aether" }, float = true })
-hl.window_rule({ match = { initial_class = "Aether" }, size = { w = 1259, h = 1000 } })
+hl.window_rule({ match = { initial_class = "Aether" }, size = { 1259, 1000 } })
 hl.window_rule({ match = { initial_class = "Aether" }, center = true })
 
 -- Toggle config flags dynamically.
