@@ -2,7 +2,11 @@
 .import QtQuick 2.15 as QtQuick
 .import Quickshell as Quickshell
 
-// ---- General utilities ----
+/**
+ * Parses a JSON string of emoji data into an array.
+ * @param {string} raw - Raw JSON string
+ * @returns {Array} Parsed emoji array, or empty array on failure
+ */
 function parseEmojiJson(raw) {
     try {
         var data = JSON.parse(String(raw || '[]'))
@@ -12,10 +16,22 @@ function parseEmojiJson(raw) {
     }
 }
 
+/**
+ * Shell-escapes a string for safe use in command-line arguments.
+ * Wraps in single quotes, escaping any embedded single quotes.
+ * @param {string} s - The string to escape
+ * @returns {string} Shell-escaped string
+ */
 function shellQuote(s) {
     return "'" + String(s || '').replace(/'/g, "'\\''") + "'"
 }
 
+/**
+ * Resolves an icon name to a Quickshell-compatible icon path.
+ * Handles absolute paths, file:// URIs, image:// URIs, and themed icons.
+ * @param {string} name - Icon name or path
+ * @returns {string} Resolved icon URI
+ */
 function resolveIcon(name) {
     if (!name) return Quickshell.iconPath('application-x-executable', true)
     if (name.indexOf('/') >= 0) {
@@ -25,16 +41,32 @@ function resolveIcon(name) {
     return Quickshell.iconPath(name, true)
 }
 
-// ---- LauncherAppSearch.js ----
+/**
+ * Returns the display name of a desktop entry.
+ * @param {Object} entry - Desktop entry object
+ * @returns {string} Entry name or id
+ */
 function entryName(entry) {
     return String((entry && entry.name) || (entry && entry.id) || '')
 }
 
+/**
+ * Builds a full searchable text string from a desktop entry.
+ * Combines name, generic name, comment, keywords, and id.
+ * @param {Object} entry - Desktop entry object
+ * @returns {string} Lowercased searchable text
+ */
 function entrySearchText(entry) {
     if (!entry) return ''
     return [entry.name, entry.genericName, entry.comment, entry.keywords ? entry.keywords.join(' ') : '', entry.id].join(' ').toLowerCase()
 }
 
+/**
+ * Generates an acronym from a desktop entry's name/identifier.
+ * Takes the first character of each word.
+ * @param {Object} entry - Desktop entry object
+ * @returns {string} Acronym string
+ */
 function entryAcronym(entry) {
     var vals = words([entry && entry.name, entry && entry.genericName, entry && entry.id].join(' '))
     var r = ''
@@ -42,6 +74,11 @@ function entryAcronym(entry) {
     return r
 }
 
+/**
+ * Tokenizes text into lowercase word tokens, handling camelCase, separators, and special characters.
+ * @param {string} value - Input text
+ * @returns {Array<string>} Array of word tokens
+ */
 function words(value) {
     var v = String(value || '')
         .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
@@ -50,6 +87,13 @@ function words(value) {
     return v.split(/[^a-z0-9]+/).filter(function(w) { return w.length > 0 })
 }
 
+/**
+ * Checks if a desktop entry matches a single search term.
+ * Matches against name, id, full search text, and acronym.
+ * @param {Object} entry - Desktop entry object
+ * @param {string} term - Single search term
+ * @returns {boolean} True if the entry matches the term
+ */
 function termMatches(entry, term) {
     if (!term) return true
     var name = entryName(entry).toLowerCase()
@@ -61,6 +105,14 @@ function termMatches(entry, term) {
     return term.length <= 5 && entryAcronym(entry).indexOf(term) >= 0
 }
 
+/**
+ * Computes a fuzzy relevance score for a desktop entry against a multi-word query.
+ * Returns -1 if the entry does not match all terms.
+ * Higher scores indicate better matches, with exact prefix matches ranked highest.
+ * @param {Object} entry - Desktop entry object
+ * @param {string} query - Search query string
+ * @returns {number} Relevance score, or -1 if no match
+ */
 function fuzzyScore(entry, query) {
     var q = String(query || '').trim().toLowerCase()
     if (!q) return 0
@@ -86,6 +138,13 @@ function fuzzyScore(entry, query) {
     return 4000 - name.length
 }
 
+/**
+ * Sorts desktop entries by fuzzy match score against a query.
+ * Entries that don't match are excluded. Ties are broken alphabetically.
+ * @param {Array<Object>} values - Array of desktop entry objects
+ * @param {string} query - Search query string
+ * @returns {Array<Object>} Sorted array of { entry, score, key, name } objects
+ */
 function sortedEntries(values, query) {
     var q = String(query || '').trim()
     var rows = []
@@ -107,7 +166,14 @@ function sortedEntries(values, query) {
     return rows
 }
 
-// ---- EmojiSearch.js ----
+/**
+ * Filters an emoji list by a search query, limited to a maximum number of results.
+ * Matches against the `k` (keywords) field of each emoji entry.
+ * @param {Array<Object>} emojis - Array of emoji objects with `e` (emoji) and `k` (keywords) fields
+ * @param {string} query - Search query
+ * @param {number} limit - Maximum number of results
+ * @returns {Array<Object>} Filtered emoji array
+ */
 function filterEmojis(emojis, query, limit) {
     var values = Array.isArray(emojis) ? emojis : []
     var needle = String(query || '').trim().toLowerCase()
@@ -126,7 +192,11 @@ function filterEmojis(emojis, query, limit) {
     return out
 }
 
-// ---- ClipboardHistory.js ----
+/**
+ * Parses a JSON string of clipboard history into an array.
+ * @param {string} raw - Raw JSON string
+ * @returns {Array} Parsed clipboard history array, or empty array on failure
+ */
 function parseClipboardHistory(raw) {
     try {
         var parsed = JSON.parse(String(raw || '[]'))
@@ -136,6 +206,14 @@ function parseClipboardHistory(raw) {
     }
 }
 
+/**
+ * Filters clipboard history entries by a search query, limited to a maximum number of results.
+ * Supports string entries and typed entries (text, image, video).
+ * @param {Array} history - Clipboard history array
+ * @param {string} query - Search query
+ * @param {number} limit - Maximum number of results
+ * @returns {Array<{entry: *, index: number}>} Filtered clipboard entries with their original indices
+ */
 function filterClipboardHistory(history, query, limit) {
     var needle = String(query || '').trim().toLowerCase()
     var max = Math.max(0, Number(limit) || 50)

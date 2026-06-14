@@ -4,7 +4,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.Core
-import "Utils.js" as Utils
+import "Lib.js" as Lib
 import "Widgets"
 
 
@@ -110,7 +110,7 @@ PanelWindow {
 
   function searchApps() {
     var entries = DesktopEntries.applications.values || []
-    var rows = Utils.sortedEntries(entries, filterText)
+    var rows = Lib.sortedEntries(entries, filterText)
     var max = Math.min(rows.length, 100)
     var out = []
     for (var i = 0; i < max; i++) {
@@ -125,7 +125,7 @@ PanelWindow {
   }
 
   function searchEmojis() {
-    var results = Utils.filterEmojis(emojiData, filterText, 100)
+    var results = Lib.filterEmojis(emojiData, filterText, 100)
     var out = []
     for (var i = 0; i < results.length; i++) {
       out.push({
@@ -146,7 +146,7 @@ PanelWindow {
 
   function searchClipboard() {
     if (clipboardData.length === 0 && filterText.length === 0) return []
-    var results = Utils.filterClipboardHistory(clipboardData, filterText, 50)
+    var results = Lib.filterClipboardHistory(clipboardData, filterText, 50)
     return results.map(function(r) {
       var entry = r.entry
       if (typeof entry === "string") {
@@ -202,7 +202,7 @@ PanelWindow {
     if (item.type === "app") {
       var entries = DesktopEntries.applications.values || []
       for (var i = 0; i < entries.length; i++) {
-        if (Utils.entryName(entries[i]) === item.label) {
+        if (Lib.entryName(entries[i]) === item.label) {
           entries[i].execute()
           dismiss()
           return
@@ -214,19 +214,19 @@ PanelWindow {
       dismiss()
     }
     if (item.type === "file") {
-      Quickshell.execDetached(["bash", "-c", "xdg-open " + Utils.shellQuote(item.label)])
+      Quickshell.execDetached(["bash", "-c", "xdg-open " + Lib.shellQuote(item.label)])
       dismiss()
     }
     if (item.type === "clipboard") {
       if (item.imagePath) {
-        Quickshell.execDetached(["bash", "-c", "wl-copy --type " + Utils.shellQuote(item.mime) + " < " + Utils.shellQuote(item.imagePath)])
+        Quickshell.execDetached(["bash", "-c", "wl-copy --type " + Lib.shellQuote(item.mime) + " < " + Lib.shellQuote(item.imagePath)])
       } else {
-        Quickshell.execDetached(["bash", "-c", "wl-copy " + Utils.shellQuote(item.fullText)])
+        Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.fullText)])
       }
       dismiss()
     }
     if (item.type === "calc") {
-      Quickshell.execDetached(["bash", "-c", "wl-copy " + Utils.shellQuote(item.fullText)])
+      Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.fullText)])
       dismiss()
     }
   }
@@ -235,7 +235,7 @@ PanelWindow {
     if (modeIndex !== 2 || selectedIndex < 0) return
     var item = displayModel.get(selectedIndex)
     if (item && item.type === "file") {
-      Quickshell.execDetached(["bash", "-c", "wl-copy " + Utils.shellQuote(item.label)])
+      Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.label)])
     }
   }
 
@@ -350,7 +350,7 @@ PanelWindow {
             active: root.chartInitialized
             visible: root.modeIndex === 5
             anchors.fill: parent
-            source: "Widgets/Chart/Chart.qml"
+            source: "Widgets/Chart.qml"
           }
         }
       }
@@ -366,7 +366,7 @@ PanelWindow {
 
   FileView {
     path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/quickshell/Data/emojis.json"
-    onLoaded:     root.emojiData = Utils.parseEmojiJson(text())
+    onLoaded:     root.emojiData = Lib.parseEmojiJson(text())
     onLoadFailed: root.emojiData = []
   }
 
@@ -377,7 +377,7 @@ PanelWindow {
     atomicWrites: true
     printErrors: false
     onLoaded: {
-      root.clipboardData = Utils.parseClipboardHistory(text())
+      root.clipboardData = Lib.parseClipboardHistory(text())
       if (root.modeIndex === 3) root.rebuildDisplay()
     }
     onFileChanged: reload()
