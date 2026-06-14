@@ -79,6 +79,22 @@ Item {
         } else if (event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
             root.cursorPosition = root.filterText.length
             event.accepted = true
+        } else if (event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)) {
+            if (root.cursorPosition > 0) {
+                var pos = root.cursorPosition - 1
+                while (pos > 0 && root.filterText[pos] === ' ') pos--
+                while (pos > 0 && root.filterText[pos - 1] !== ' ') pos--
+                root.cursorPosition = pos
+            }
+            event.accepted = true
+        } else if (event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier)) {
+            if (root.cursorPosition < root.filterText.length) {
+                var pos = root.cursorPosition
+                while (pos < root.filterText.length && root.filterText[pos] !== ' ') pos++
+                while (pos < root.filterText.length && root.filterText[pos] === ' ') pos++
+                root.cursorPosition = pos
+            }
+            event.accepted = true
         } else if (event.key === Qt.Key_W && (event.modifiers & Qt.ControlModifier)) {
             if (root.cursorPosition === 0 && root.modeIndex !== 0) {
                 root.setMode(0)

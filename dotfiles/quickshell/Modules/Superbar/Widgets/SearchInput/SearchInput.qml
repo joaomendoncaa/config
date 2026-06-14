@@ -60,18 +60,40 @@ Item {
             font.pixelSize: Config.fontSize
         }
 
-        Rectangle {
-            id: cursorRect
-            width: 10
-            height: Config.fontSize + 4
-            color: Config.foreground
-            visible: cursorBlink === 0
+        Text {
+            id: charWidth
+            visible: false
+            text: ' '
+            font.family: Config.fontFamily
+            font.pixelSize: Config.fontSize
+        }
+
+        Item {
+            id: cursorItem
+            width: charWidth.width
+            height: cursorChar.implicitHeight
+
+            Rectangle {
+                id: cursorRect
+                anchors.fill: parent
+                color: Config.foreground
+                visible: cursorBlink === 0
+            }
+
+            Text {
+                id: cursorChar
+                visible: cursorPosition < filterText.length
+                text: cursorPosition < filterText.length ? filterText[cursorPosition] : ''
+                color: cursorBlink === 0 ? Config.backgroundColored : Config.foreground
+                font.family: Config.fontFamily
+                font.pixelSize: Config.fontSize
+            }
         }
 
         Text {
             id: textAfter
-            visible: filterText.length > 0
-            text: filterText.substring(cursorPosition)
+            visible: cursorPosition < filterText.length
+            text: filterText.substring(cursorPosition + 1)
             color: Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize
