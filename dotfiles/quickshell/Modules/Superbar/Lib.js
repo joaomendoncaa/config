@@ -1,3 +1,5 @@
+// biome-ignore-all format: qml is fake js
+// biome-ignore-all lint: qml is fake js
 .pragma library
 .import QtQuick 2.15 as QtQuick
 .import Quickshell as Quickshell
