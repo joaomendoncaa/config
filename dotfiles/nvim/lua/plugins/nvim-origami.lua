@@ -3,6 +3,9 @@ return {
 
     event = 'VeryLazy',
     opts = {
+        autoFold = {
+            enabled = false,
+        },
         foldKeymaps = {
             setup = false,
         },
