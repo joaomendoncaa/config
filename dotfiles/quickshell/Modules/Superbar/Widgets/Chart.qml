@@ -3,47 +3,38 @@ import QtWebEngine
 import Quickshell
 
 Item {
-  id: root
+    id: root
 
-  property string symbol: "BINANCE:BTCUSDT"
-  property bool pageReady: false
+    property string symbol: "BINANCE:BTCUSDT"
+    property bool pageReady: false
 
-  function embedUrl(sym) {
-    return "https://www.tradingview.com/widgetembed/?symbol=" + encodeURIComponent(sym || "BINANCE:BTCUSDT")
-      + "&interval=D&theme=dark&locale=en&toolbar_bg=%231e1e1e"
-      + "&enable_publishing=0&hideideas=1&allow_symbol_change=1"
-      + "&hide_side_toolbar=0&details=0&hotlist=0"
-  }
-
-  WebEngineView {
-    id: webview
-    anchors.fill: parent
-    backgroundColor: "#1e1e1e"
-    opacity: root.pageReady ? 1 : 0
-    url: root.embedUrl(root.symbol)
-
-    onLoadingChanged: function(load) {
-      if (load.status === 0) {
-        root.pageReady = false
-      } else if (load.status === 2) {
-        webview.runJavaScript(
-          "var s=document.createElement('style');" +
-          "s.textContent='" +
-          "body{background:#0f0f0f!important;overflow:hidden!important;margin:0;padding:0}" +
-          ".chart-markup-volume{display:none!important}" +
-          "';" +
-          "document.head.appendChild(s)",
-          function() { root.pageReady = true }
-        )
-      }
+    function embedUrl(sym) {
+        return "https://www.tradingview.com/widgetembed/?symbol=" + encodeURIComponent(sym || "BINANCE:BTCUSDT") + "&interval=D&theme=dark&locale=en&toolbar_bg=%231e1e1e" + "&enable_publishing=0&hideideas=1&allow_symbol_change=1" + "&hide_side_toolbar=0&details=0&hotlist=0";
     }
-  }
 
-  Text {
-    anchors.centerIn: parent
-    text: "Loading " + root.symbol.toUpperCase() + "..."
-    color: "#ffffff"
-    font.pixelSize: 14
-    visible: !root.pageReady
-  }
+    WebEngineView {
+        id: webview
+
+        anchors.fill: parent
+        backgroundColor: "#1e1e1e"
+        opacity: root.pageReady ? 1 : 0
+        url: root.embedUrl(root.symbol)
+        onLoadingChanged: function(load) {
+            if (load.status === 0)
+                root.pageReady = false;
+            else if (load.status === 2)
+                webview.runJavaScript("var s=document.createElement('style');" + "s.textContent='" + "body{background:#0f0f0f!important;overflow:hidden!important;margin:0;padding:0}" + ".chart-markup-volume{display:none!important}" + "';" + "document.head.appendChild(s)", function() {
+                root.pageReady = true;
+            });
+        }
+    }
+
+    Text {
+        anchors.centerIn: parent
+        text: "Loading " + root.symbol.toUpperCase() + "..."
+        color: "#ffffff"
+        font.pixelSize: 14
+        visible: !root.pageReady
+    }
+
 }
