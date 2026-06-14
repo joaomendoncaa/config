@@ -4,6 +4,8 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
 import qs.Core
+import "Utils.js" as Utils
+import "Widgets"
 
 
 PanelWindow {
@@ -20,8 +22,6 @@ PanelWindow {
   property var emojiData: []
   property var clipboardData: []
   property var fileResults: []
-  property int cursorBlink: 0
-
   property string calcResult: ""
   property string calcQueryMarker: ""
 
@@ -47,14 +47,7 @@ PanelWindow {
     Qt.callLater(function() { keyCatcher.forceActiveFocus() })
   }
 
-  function parseEmojiJson(raw) {
-    try {
-      var data = JSON.parse(String(raw || "[]"))
-      return Array.isArray(data) ? data : []
-    } catch (e) {
-      return []
-    }
-  }
+
 
   function setMode(mode) {
     if (mode < 0 || mode > 5) return
@@ -117,7 +110,7 @@ PanelWindow {
 
   function searchApps() {
     var entries = DesktopEntries.applications.values || []
-    var rows = sortedEntries(entries, filterText)
+    var rows = Utils.sortedEntries(entries, filterText)
     var max = Math.min(rows.length, 100)
     var out = []
     for (var i = 0; i < max; i++) {
@@ -132,7 +125,7 @@ PanelWindow {
   }
 
   function searchEmojis() {
-    var results = filterEmojis(emojiData, filterText, 100)
+    var results = Utils.filterEmojis(emojiData, filterText, 100)
     var out = []
     for (var i = 0; i < results.length; i++) {
       out.push({
@@ -153,7 +146,7 @@ PanelWindow {
 
   function searchClipboard() {
     if (clipboardData.length === 0 && filterText.length === 0) return []
-    var results = filterClipboardHistory(clipboardData, filterText, 50)
+    var results = Utils.filterClipboardHistory(clipboardData, filterText, 50)
     return results.map(function(r) {
       var entry = r.entry
       if (typeof entry === "string") {
@@ -209,7 +202,7 @@ PanelWindow {
     if (item.type === "app") {
       var entries = DesktopEntries.applications.values || []
       for (var i = 0; i < entries.length; i++) {
-        if (entryName(entries[i]) === item.label) {
+        if (Utils.entryName(entries[i]) === item.label) {
           entries[i].execute()
           dismiss()
           return
@@ -221,19 +214,19 @@ PanelWindow {
       dismiss()
     }
     if (item.type === "file") {
-      Quickshell.execDetached(["bash", "-c", "xdg-open " + shellQuote(item.label)])
+      Quickshell.execDetached(["bash", "-c", "xdg-open " + Utils.shellQuote(item.label)])
       dismiss()
     }
     if (item.type === "clipboard") {
       if (item.imagePath) {
-        Quickshell.execDetached(["bash", "-c", "wl-copy --type " + shellQuote(item.mime) + " < " + shellQuote(item.imagePath)])
+        Quickshell.execDetached(["bash", "-c", "wl-copy --type " + Utils.shellQuote(item.mime) + " < " + Utils.shellQuote(item.imagePath)])
       } else {
-        Quickshell.execDetached(["bash", "-c", "wl-copy " + shellQuote(item.fullText)])
+        Quickshell.execDetached(["bash", "-c", "wl-copy " + Utils.shellQuote(item.fullText)])
       }
       dismiss()
     }
     if (item.type === "calc") {
-      Quickshell.execDetached(["bash", "-c", "wl-copy " + shellQuote(item.fullText)])
+      Quickshell.execDetached(["bash", "-c", "wl-copy " + Utils.shellQuote(item.fullText)])
       dismiss()
     }
   }
@@ -242,13 +235,11 @@ PanelWindow {
     if (modeIndex !== 2 || selectedIndex < 0) return
     var item = displayModel.get(selectedIndex)
     if (item && item.type === "file") {
-      Quickshell.execDetached(["bash", "-c", "wl-copy " + shellQuote(item.label)])
+      Quickshell.execDetached(["bash", "-c", "wl-copy " + Utils.shellQuote(item.label)])
     }
   }
 
-  function shellQuote(s) {
-    return "'" + String(s || "").replace(/'/g, "'\\''") + "'"
-  }
+
 
   function resolveIcon(name) {
     if (!name) return Quickshell.iconPath("application-x-executable", true)
@@ -259,143 +250,7 @@ PanelWindow {
     return Quickshell.iconPath(name, true)
   }
 
-  // ---- inlined from LauncherAppSearch.js ----
-  function entryName(entry) {
-    return String((entry && entry.name) || (entry && entry.id) || "")
-  }
 
-  function entrySearchText(entry) {
-    if (!entry) return ""
-    return [entry.name, entry.genericName, entry.comment, entry.keywords ? entry.keywords.join(" ") : "", entry.id].join(" ").toLowerCase()
-  }
-
-  function entryAcronym(entry) {
-    var vals = words([entry && entry.name, entry && entry.genericName, entry && entry.id].join(" "))
-    var r = ""
-    for (var i = 0; i < vals.length; i++) r += vals[i].charAt(0)
-    return r
-  }
-
-  function words(value) {
-    var v = String(value || "")
-      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-      .replace(/[._:\/\\-]+/g, " ")
-      .toLowerCase()
-    return v.split(/[^a-z0-9]+/).filter(function(w) { return w.length > 0 })
-  }
-
-  function termMatches(entry, term) {
-    if (!term) return true
-    var name = entryName(entry).toLowerCase()
-    var id = String((entry && entry.id) || "").toLowerCase()
-    var haystack = entrySearchText(entry)
-    if (name.indexOf(term) >= 0) return true
-    if (id.indexOf(term) >= 0) return true
-    if (haystack.indexOf(term) >= 0) return true
-    return term.length <= 5 && entryAcronym(entry).indexOf(term) >= 0
-  }
-
-  function fuzzyScore(entry, query) {
-    var q = String(query || "").trim().toLowerCase()
-    if (!q) return 0
-    var terms = q.split(/\s+/)
-    for (var i = 0; i < terms.length; i++) {
-      if (terms[i] && !termMatches(entry, terms[i])) return -1
-    }
-    var name = entryName(entry).toLowerCase()
-    var id = String((entry && entry.id) || "").toLowerCase()
-    var haystack = entrySearchText(entry)
-    var directName = name.indexOf(q)
-    var directId = id.indexOf(q)
-    if (directName === 0) return 10000 - name.length
-    if (directId === 0) return 9500 - id.length
-    if (directName > 0) return 8000 - directName * 10 - name.length
-    if (directId > 0) return 7600 - directId * 10 - id.length
-    var hayIndex = haystack.indexOf(q)
-    if (hayIndex >= 0) return 6000 - hayIndex
-    var acronym = entryAcronym(entry)
-    var acronymIndex = acronym.indexOf(q)
-    if (acronymIndex === 0) return 5000 - acronym.length
-    if (acronymIndex > 0) return 4600 - acronymIndex * 10 - acronym.length
-    return 4000 - name.length
-  }
-
-  function sortedEntries(values, query) {
-    var q = String(query || "").trim()
-    var rows = []
-    for (var i = 0; i < values.length; i++) {
-      var entry = values[i]
-      if (!entry || entry.noDisplay) continue
-      var name = entryName(entry)
-      if (!name) continue
-      var score = fuzzyScore(entry, q)
-      if (score < 0) continue
-      rows.push({ entry: entry, score: score, key: name.toLowerCase(), name: name })
-    }
-    rows.sort(function(a, b) {
-      if (q && a.score !== b.score) return b.score - a.score
-      if (a.key < b.key) return -1
-      if (a.key > b.key) return 1
-      return 0
-    })
-    return rows
-  }
-
-  // ---- inlined from EmojiSearch.js ----
-  function filterEmojis(emojis, query, limit) {
-    var values = Array.isArray(emojis) ? emojis : []
-    var needle = String(query || "").trim().toLowerCase()
-    var max = Math.max(0, Number(limit) || 100)
-    if (max === 0) return []
-
-    var out = []
-    for (var i = 0; i < values.length; i++) {
-      var item = values[i]
-      if (!item || !item.e) continue
-      if (!needle || (item.k && item.k.toLowerCase().indexOf(needle) >= 0)) {
-        out.push(item)
-        if (out.length >= max) break
-      }
-    }
-    return out
-  }
-
-  // ---- inlined from ClipboardHistory.js ----
-  function parseClipboardHistory(raw) {
-    try {
-      var parsed = JSON.parse(String(raw || "[]"))
-      return Array.isArray(parsed) ? parsed : []
-    } catch (e) {
-      return []
-    }
-  }
-
-  function filterClipboardHistory(history, query, limit) {
-    var needle = String(query || "").trim().toLowerCase()
-    var max = Math.max(0, Number(limit) || 50)
-    if (max === 0) return []
-
-    var out = []
-    for (var i = 0; i < history.length; i++) {
-      var entry = history[i]
-      if (!entry) continue
-      var searchText = ""
-      if (typeof entry === "string") {
-        searchText = entry
-      } else if (entry.type === "image") {
-        searchText = (entry.capturedAt || "") + " " + (entry.mime || "") + " image"
-      } else if (entry.type === "video") {
-        searchText = (entry.capturedAt || "") + " " + (entry.mime || "") + " video"
-      } else {
-        searchText = String(entry.text || "")
-      }
-      if (!needle || searchText.toLowerCase().indexOf(needle) >= 0) {
-        out.push({ entry: entry, index: i })
-        if (out.length >= max) break
-      }
-    }
-    return out
-  }
 
   Rectangle {
     anchors.fill: parent
@@ -430,69 +285,19 @@ PanelWindow {
         anchors.margins: Config.shellPadding
         spacing: 1
 
-        Item {
+        SearchInput {
+          id: searchInput
           width: parent.width
           height: Config.fontSize + 16
-
-          Row {
-            id: searchRow
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: 0
-
-            Rectangle {
-              id: modePill
-              visible: root.modeIndex !== 0
-              height: Config.fontSize + 6
-              width: modePillLabel.width + 10
-              radius: 3
-              color: Config.accent
-
-              Text {
-                id: modePillLabel
-                anchors.centerIn: parent
-                text: root.modeNames[root.modeIndex]
-                color: Config.foregroundSelected
-                font.family: Config.fontFamily
-                font.pixelSize: Config.fontSize - 2
-              }
-            }
-
-            Item {
-              width: root.modeIndex !== 0 ? 8 : 0
-              height: 1
-            }
-
-            Text {
-              id: textBefore
-              text: root.filterText.length > 0
-                ? root.filterText.substring(0, root.cursorPosition)
-                : ""
-              color: Config.foreground
-              font.family: Config.fontFamily
-              font.pixelSize: Config.fontSize
-            }
-
-            Rectangle {
-              id: cursorRect
-              width: 10
-              height: Config.fontSize + 4
-              color: Config.foreground
-            }
-
-            Text {
-              id: textAfter
-              visible: root.filterText.length > 0
-              text: root.filterText.substring(root.cursorPosition)
-              color: Config.foreground
-              font.family: Config.fontFamily
-              font.pixelSize: Config.fontSize
-            }
-          }
+          modeIndex: root.modeIndex
+          modeNames: root.modeNames
+          filterText: root.filterText
+          cursorPosition: root.cursorPosition
         }
 
         Item {
           width: parent.width
-          height: parent.height - searchRow.parent.height - parent.spacing
+          height: parent.height - searchInput.height - parent.spacing
 
           Row {
             visible: root.modeIndex !== 5
@@ -511,128 +316,13 @@ PanelWindow {
                 spacing: 2
                 boundsBehavior: Flickable.StopAtBounds
 
-                delegate: Rectangle {
-                  required property int index
-                  required property string type
-                  required property string label
-                  required property string detail
-                  required property string emojiChar
-                  required property string iconName
-                  required property string fullText
-                  required property string imagePath
-                  required property string mime
-
-                  readonly property bool isSelected: index === root.selectedIndex
-
-                  width: ListView.view.width
-                  height: 44
-                  radius: 3
-                  color: isSelected ? Config.accent : "transparent"
-
-                  Row {
-                    anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
-                    spacing: 10
-
-                    Item {
-                      width: 32
-                      height: parent.height
-
-                      Text {
-                        visible: type === "emoji"
-                        text: emojiChar
-                        font.pixelSize: 22
-                        anchors.centerIn: parent
-                      }
-
-                      IconImage {
-                        visible: type === "app"
-                        anchors.centerIn: parent
-                        implicitSize: 22
-                        source: root.resolveIcon(iconName)
-                        asynchronous: true
-                      }
-
-                      Text {
-                        visible: type === "file"
-                        text: "\uD83D\uDCC4"
-                        font.pixelSize: 18
-                        anchors.centerIn: parent
-                      }
-
-                      Text {
-                        visible: type === "calc"
-                        text: "="
-                        font.pixelSize: 18
-                        anchors.centerIn: parent
-                      }
-
-                      Item {
-                        visible: type === "clipboard"
-                        width: parent.height - 4
-                        height: parent.height - 4
-                        anchors.centerIn: parent
-                        clip: true
-
-                        Image {
-                          visible: imagePath.length > 0
-                          anchors.fill: parent
-                          source: imagePath.length > 0 ? "file://" + imagePath : ""
-                          fillMode: Image.PreserveAspectCrop
-                          asynchronous: true
-                          smooth: true
-                        }
-
-                        Rectangle {
-                          visible: imagePath.length === 0
-                          anchors.centerIn: parent
-                          width: 16; height: 20; radius: 2
-                          color: "transparent"
-                          border.color: isSelected ? Config.foregroundSelected : Config.foreground
-                          border.width: 2
-                        }
-                      }
-                    }
-
-                    Column {
-                      width: parent.width - 32 - 10
-                      anchors.verticalCenter: parent.verticalCenter
-                      spacing: 2
-
-                      Text {
-                        width: parent.width
-                        text: type === "clipboard" ? label : label
-                        color: isSelected ? Config.foregroundSelected : Config.foreground
-                        font.family: Config.fontFamily
-                        font.pixelSize: Config.fontSize
-                        elide: Text.ElideRight
-                      }
-
-                      Text {
-                        width: parent.width
-                        visible: detail.length > 0
-                        text: detail
-                        color: isSelected ? Config.foregroundSelected : Config.foregroundSecondary
-                        font.family: Config.fontFamily
-                        font.pixelSize: Config.fontSize - 4
-                        opacity: 0.7
-                        elide: Text.ElideRight
-                      }
-                    }
-                  }
-
-                  MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onContainsMouseChanged: {
-                      if (containsMouse) root.selectedIndex = index
-                    }
-                    onClicked: {
-                      root.selectedIndex = index
-                      root.activateSelected()
-                    }
+                delegate: ResultDelegate {
+                  selectedIndex: root.selectedIndex
+                  iconResolver: function(name) { return root.resolveIcon(name) }
+                  onItemHovered: root.selectedIndex = index
+                  onItemClicked: {
+                    root.selectedIndex = index
+                    root.activateSelected()
                   }
                 }
               }
@@ -647,33 +337,11 @@ PanelWindow {
               }
             }
 
-            Item {
+            Preview {
               id: previewPanel
-              visible: root.modeIndex === 3 && selectedClipHasImage()
-              width: visible ? parent.height : 0
-              height: parent.height
-              clip: false
-
-              function selectedClipHasImage() {
-                if (displayModel.count === 0) return false
-                var item = displayModel.get(root.selectedIndex)
-                return item && item.imagePath && item.imagePath.length > 0
-              }
-
-              Image {
-                anchors.fill: parent
-                anchors.margins: 8
-                source: previewPanel.visible ? "file://" + previewImagePath() : ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                smooth: true
-
-                function previewImagePath() {
-                  if (displayModel.count === 0) return ""
-                  var item = displayModel.get(root.selectedIndex)
-                  return item ? item.imagePath : ""
-                }
-              }
+              displayModel: displayModel
+              selectedIndex: root.selectedIndex
+              active: root.modeIndex === 3
             }
           }
 
@@ -688,119 +356,17 @@ PanelWindow {
       }
     }
 
-    Item {
+    KeyIntercept {
       id: keyCatcher
       anchors.fill: parent
-      focus: true
-
-      Keys.priority: Keys.BeforeItem
-      Keys.onPressed: function(event) {
-        if (event.key === Qt.Key_Escape) {
-          dismiss()
-          event.accepted = true
-        } else if (event.key === Qt.Key_Backspace) {
-          if (root.cursorPosition > 0) {
-            root.filterText = root.filterText.substring(0, root.cursorPosition - 1) + root.filterText.substring(root.cursorPosition)
-            root.cursorPosition--
-            if (root.modeIndex !== 2) root.selectedIndex = 0
-          } else if (root.modeIndex !== 0) {
-            root.setMode(0)
-          }
-          event.accepted = true
-        } else if (event.key === Qt.Key_Left) {
-          root.cursorPosition = Math.max(0, root.cursorPosition - 1)
-          event.accepted = true
-        } else if (event.key === Qt.Key_Right) {
-          root.cursorPosition = Math.min(root.filterText.length, root.cursorPosition + 1)
-          event.accepted = true
-        } else if (event.key === Qt.Key_Up) {
-          if (displayModel.count > 0) {
-            root.selectedIndex = (root.selectedIndex - 1 + displayModel.count) % displayModel.count
-            root.positionToSelected()
-          }
-          event.accepted = true
-        } else if (event.key === Qt.Key_Down) {
-          if (displayModel.count > 0) {
-            root.selectedIndex = (root.selectedIndex + 1) % displayModel.count
-            root.positionToSelected()
-          }
-          event.accepted = true
-        } else if (event.key === Qt.Key_PageUp) {
-          if (displayModel.count > 0) {
-            root.selectedIndex = Math.max(0, root.selectedIndex - 8)
-            root.positionToSelected()
-          }
-          event.accepted = true
-        } else if (event.key === Qt.Key_PageDown) {
-          if (displayModel.count > 0) {
-            root.selectedIndex = Math.min(displayModel.count - 1, root.selectedIndex + 8)
-            root.positionToSelected()
-          }
-          event.accepted = true
-        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-          root.activateSelected()
-          event.accepted = true
-        } else if (event.key === Qt.Key_Y && (event.modifiers & Qt.ControlModifier)) {
-          root.activateSelected()
-          event.accepted = true
-        } else if (event.key === Qt.Key_C && (event.modifiers & Qt.ControlModifier)) {
-          if (root.modeIndex === 2) root.copySelectedPath()
-          event.accepted = true
-        } else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) {
-          if (displayModel.count > 0) {
-            root.selectedIndex = (root.selectedIndex - 1 + displayModel.count) % displayModel.count
-            root.positionToSelected()
-          }
-          event.accepted = true
-        } else if (event.key === Qt.Key_N && (event.modifiers & Qt.ControlModifier)) {
-          if (displayModel.count > 0) {
-            root.selectedIndex = (root.selectedIndex + 1) % displayModel.count
-            root.positionToSelected()
-          }
-          event.accepted = true
-        } else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
-          root.cursorPosition = 0
-          event.accepted = true
-        } else if (event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
-          root.cursorPosition = root.filterText.length
-          event.accepted = true
-        } else if (event.key === Qt.Key_W && (event.modifiers & Qt.ControlModifier)) {
-          if (root.cursorPosition === 0 && root.modeIndex !== 0) {
-            root.setMode(0)
-          } else if (root.cursorPosition > 0) {
-            var pos = root.cursorPosition
-            while (pos > 0 && root.filterText[pos - 1] === ' ') pos--
-            while (pos > 0 && root.filterText[pos - 1] !== ' ') pos--
-            if (pos < root.cursorPosition) {
-              root.filterText = root.filterText.substring(0, pos) + root.filterText.substring(root.cursorPosition)
-              root.cursorPosition = pos
-              if (root.modeIndex !== 2) root.selectedIndex = 0
-            }
-          }
-          event.accepted = true
-        } else if (event.text && event.text.length === 1) {
-          var char = event.text
-          if (root.filterText.length === 0 && root.modeIndex === 0) {
-            if (char === ":") { root.setMode(1); event.accepted = true; return }
-            if (char === ".") { root.setMode(2); event.accepted = true; return }
-            if (char === "$") { root.setMode(3); event.accepted = true; return }
-            if (char === "=") { root.setMode(4); event.accepted = true; return }
-            if (char === "#") { root.setMode(5); event.accepted = true; return }
-          }
-          if (char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127) {
-            root.selectedIndex = 0
-            root.filterText = root.filterText.substring(0, root.cursorPosition) + char + root.filterText.substring(root.cursorPosition)
-            root.cursorPosition++
-            event.accepted = true
-          }
-        }
-      }
+      root: root
+      displayModel: displayModel
     }
   }
 
   FileView {
     path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/quickshell/Data/emojis.json"
-    onLoaded: root.emojiData = root.parseEmojiJson(text())
+    onLoaded:     root.emojiData = Utils.parseEmojiJson(text())
     onLoadFailed: root.emojiData = []
   }
 
@@ -811,7 +377,7 @@ PanelWindow {
     atomicWrites: true
     printErrors: false
     onLoaded: {
-      root.clipboardData = parseClipboardHistory(text())
+      root.clipboardData = Utils.parseClipboardHistory(text())
       if (root.modeIndex === 3) root.rebuildDisplay()
     }
     onFileChanged: reload()
@@ -932,13 +498,4 @@ PanelWindow {
     if (modeIndex === 2) rebuildDisplay()
   }
 
-  Timer {
-    interval: 530
-    running: true
-    repeat: true
-    onTriggered: {
-      root.cursorBlink = root.cursorBlink === 0 ? 1 : 0
-      cursorRect.visible = root.cursorBlink === 0
-    }
-  }
 }

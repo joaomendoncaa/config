@@ -1,0 +1,6 @@
+module qs.Modules.Superbar.Widgets
+Chart 1.0 Chart/Chart.qml
+SearchInput 1.0 SearchInput/SearchInput.qml
+ResultDelegate 1.0 ResultDelegate/ResultDelegate.qml
+Preview 1.0 Preview/Preview.qml
+KeyIntercept 1.0 KeyIntercept/KeyIntercept.qml
