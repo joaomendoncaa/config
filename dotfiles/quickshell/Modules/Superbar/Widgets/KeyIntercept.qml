@@ -57,7 +57,7 @@ Item {
     function deleteCharBeforeCursor() {
         root.filterText = root.filterText.substring(0, root.cursorPosition - 1) + root.filterText.substring(root.cursorPosition);
         root.cursorPosition--;
-        if (root.modeIndex !== 2)
+        if (root.mode !== "files")
             root.selectedIndex = 0;
 
     }
@@ -71,26 +71,26 @@ Item {
     function trySetModeFromPrefix(c) {
         switch (c) {
         case ':':
-            root.setMode(1);
+            root.setSearchMode("emojis");
             return true;
         case '.':
-            root.setMode(2);
+            root.setSearchMode("files");
             return true;
         case '$':
-            root.setMode(3);
+            root.setSearchMode("clipboard");
             return true;
         case '=':
-            root.setMode(4);
+            root.setSearchMode("calc");
             return true;
         case '#':
-            root.setMode(5);
+            root.setSearchMode("chart");
             return true;
         }
         return false;
     }
 
     function copySelectedPath() {
-        if (root.modeIndex === 2)
+        if (root.mode === "files")
             root.copySelectedPath();
 
     }
@@ -98,13 +98,13 @@ Item {
     function handleBackspace() {
         if (root.cursorPosition > 0)
             deleteCharBeforeCursor();
-        else if (root.modeIndex !== 0)
-            root.setMode(0);
+        else if (root.mode !== "apps")
+            root.setSearchMode("apps");
     }
 
     function handleCtrlW() {
-        if (root.cursorPosition === 0 && root.modeIndex !== 0) {
-            root.setMode(0);
+        if (root.cursorPosition === 0 && root.mode !== "apps") {
+            root.setSearchMode("apps");
         } else {
             var pos = root.cursorPosition;
             while (pos > 0 && root.filterText[pos - 1] === ' ')pos--
@@ -112,7 +112,7 @@ Item {
             if (pos < root.cursorPosition) {
                 root.filterText = root.filterText.substring(0, pos) + root.filterText.substring(root.cursorPosition);
                 root.cursorPosition = pos;
-                if (root.modeIndex !== 2)
+                if (root.mode !== "files")
                     root.selectedIndex = 0;
 
             }

@@ -6,8 +6,7 @@ import qs.Core
 Item {
     id: searchInput
 
-    property int modeIndex: 0
-    property var modeNames: []
+    property string mode: "apps"
     property string filterText: ''
     property int cursorPosition: 0
 
@@ -28,7 +27,7 @@ Item {
 
         Rectangle {
             id: modePill
-            visible: modeIndex !== 0
+            visible: mode !== "apps"
             height: Config.fontSize + 6
             width: modePillLabel.width + 10
             radius: 3
@@ -37,7 +36,7 @@ Item {
             Text {
                 id: modePillLabel
                 anchors.centerIn: parent
-                text: modeNames[modeIndex]
+                text: mode
                 color: Config.foregroundSelected
                 font.family: Config.fontFamily
                 font.pixelSize: Config.fontSize - 2
@@ -45,7 +44,7 @@ Item {
         }
 
         Item {
-            width: modeIndex !== 0 ? 8 : 0
+            width: mode !== "apps" ? 8 : 0
             height: 1
         }
 

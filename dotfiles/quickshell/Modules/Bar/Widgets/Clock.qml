@@ -1,7 +1,7 @@
-import qs.Core
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import qs.Core
 
 Rectangle {
     id: root

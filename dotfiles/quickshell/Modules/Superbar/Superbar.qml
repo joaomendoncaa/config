@@ -10,8 +10,8 @@ import qs.Core
 PanelWindow {
     id: root
 
-    readonly property var modeNames: ["apps", "emojis", "files", "clipboard", "calc", "chart"]
-    property int modeIndex: 0
+    property var modes: ["apps", "emojis", "files", "clipboard", "calc", "chart"]
+    property string mode: "apps"
     property string filterText: ""
     property int selectedIndex: 0
     property int cursorPosition: 0
@@ -30,12 +30,13 @@ PanelWindow {
         dismissed();
     }
 
-    function setMode(mode) {
-        if (mode < 0 || mode > 5)
+    function setSearchMode(m) {
+        if (modes.indexOf(m) === -1) {
+            console.error("Superbar: invalid mode '" + m + "'");
             return ;
-
-        if (modeIndex !== mode) {
-            modeIndex = mode;
+        }
+        if (m !== m) {
+            m = m;
             filterText = "";
             selectedIndex = 0;
             cursorPosition = 0;
@@ -82,16 +83,16 @@ PanelWindow {
     }
 
     function searchResults() {
-        switch (modeIndex) {
-        case 0:
+        switch (mode) {
+        case "apps":
             return searchApps();
-        case 1:
+        case "emojis":
             return searchEmojis();
-        case 2:
+        case "files":
             return searchFiles();
-        case 3:
+        case "clipboard":
             return searchClipboard();
-        case 4:
+        case "calc":
             return searchCalc();
         }
         return [];
@@ -147,33 +148,33 @@ PanelWindow {
             var entry = r.entry;
             if (typeof entry === "string")
                 return {
-                    "type": "clipboard",
-                    "label": entry.replace(/\n/g, " ").substring(0, 120),
-                    "detail": String(entry.length) + " chars",
-                    "fullText": entry,
-                    "imagePath": "",
-                    "mime": ""
-                };
+                "type": "clipboard",
+                "label": entry.replace(/\n/g, " ").substring(0, 120),
+                "detail": String(entry.length) + " chars",
+                "fullText": entry,
+                "imagePath": "",
+                "mime": ""
+            };
 
             if (entry.type === "image")
                 return {
-                    "type": "clipboard",
-                    "label": entry.capturedAt || "Image",
-                    "detail": entry.mime || "",
-                    "fullText": "",
-                    "imagePath": String(entry.path || ""),
-                    "mime": String(entry.mime || "")
-                };
+                "type": "clipboard",
+                "label": entry.capturedAt || "Image",
+                "detail": entry.mime || "",
+                "fullText": "",
+                "imagePath": String(entry.path || ""),
+                "mime": String(entry.mime || "")
+            };
 
             if (entry.type === "video")
                 return {
-                    "type": "clipboard",
-                    "label": entry.capturedAt || "Video",
-                    "detail": entry.mime || "",
-                    "fullText": "",
-                    "imagePath": String(entry.thumbnail || entry.path || ""),
-                    "mime": String(entry.mime || "")
-                };
+                "type": "clipboard",
+                "label": entry.capturedAt || "Video",
+                "detail": entry.mime || "",
+                "fullText": "",
+                "imagePath": String(entry.thumbnail || entry.path || ""),
+                "mime": String(entry.mime || "")
+            };
 
             return {
                 "type": "clipboard",
@@ -237,7 +238,7 @@ PanelWindow {
     }
 
     function copySelectedPath() {
-        if (modeIndex !== 2 || selectedIndex < 0)
+        if (mode !== "files" || selectedIndex < 0)
             return ;
 
         var item = displayModel.get(selectedIndex);
@@ -273,40 +274,40 @@ PanelWindow {
             keyCatcher.forceActiveFocus();
         });
     }
-    onModeIndexChanged: {
-        if (modeIndex === 2 && filterText)
+    onModeChanged: {
+        if (mode === "files" && filterText)
             fileSearchTimer.restart();
-        else if (modeIndex !== 2)
+        else if (mode !== "files")
             clearFileSearch();
-        if (modeIndex === 3)
+        if (mode === "clipboard")
             rebuildDisplay();
 
-        if (modeIndex === 5 && !chartInitialized)
+        if (mode === "chart" && !chartInitialized)
             chartInitialized = true;
 
     }
     onFilterTextChanged: {
-        if (modeIndex === 2)
+        if (mode === "files")
             fileSearchTimer.restart();
 
-        if (modeIndex === 4) {
+        if (mode === "calc") {
             root.calcResult = "";
             calcTimer.restart();
         }
-        if (modeIndex === 5)
+        if (mode === "chart")
             chartTimer.restart();
 
-        if (modeIndex !== 2)
+        if (mode !== "files")
             rebuildDisplay();
 
     }
     onCalcResultChanged: {
-        if (modeIndex === 4)
+        if (mode === "calc")
             rebuildDisplay();
 
     }
     onFileResultsChanged: {
-        if (modeIndex === 2)
+        if (mode === "files")
             rebuildDisplay();
 
     }
@@ -363,8 +364,7 @@ PanelWindow {
 
                     width: parent.width
                     height: Config.fontSize + 16
-                    modeIndex: root.modeIndex
-                    modeNames: root.modeNames
+                    mode: root.mode
                     filterText: root.filterText
                     cursorPosition: root.cursorPosition
                 }
@@ -374,7 +374,7 @@ PanelWindow {
                     height: parent.height - searchInput.height - parent.spacing
 
                     Row {
-                        visible: root.modeIndex !== 5
+                        visible: root.mode !== "chart"
                         anchors.fill: parent
                         spacing: 0
 
@@ -421,7 +421,7 @@ PanelWindow {
 
                             displayModel: displayModel
                             selectedIndex: root.selectedIndex
-                            active: root.modeIndex === 3
+                            active: root.mode === "clipboard"
                         }
 
                     }
@@ -430,7 +430,7 @@ PanelWindow {
                         id: chartLoader
 
                         active: root.chartInitialized
-                        visible: root.modeIndex === 5
+                        visible: root.mode === "chart"
                         anchors.fill: parent
                         source: "Widgets/Chart.qml"
                     }
@@ -466,7 +466,7 @@ PanelWindow {
         printErrors: false
         onLoaded: {
             root.clipboardData = Lib.parseClipboardHistory(text());
-            if (root.modeIndex === 3)
+            if (root.mode === "clipboard")
                 root.rebuildDisplay();
 
         }
@@ -478,7 +478,7 @@ PanelWindow {
 
         interval: 200
         onTriggered: {
-            if (root.modeIndex !== 2 || !root.filterText) {
+            if (root.mode !== "files" || !root.filterText) {
                 root.fileResults = [];
                 return ;
             }
@@ -521,7 +521,7 @@ PanelWindow {
 
         interval: 200
         onTriggered: {
-            if (root.modeIndex !== 4 || !root.filterText)
+            if (root.mode !== "calc" || !root.filterText)
                 return ;
 
             root.calcQueryMarker = root.filterText;
@@ -551,7 +551,7 @@ PanelWindow {
 
         interval: 400
         onTriggered: {
-            if (root.modeIndex !== 5 || !root.filterText)
+            if (root.mode !== "chart" || !root.filterText)
                 return ;
 
             root.chartQueryMarker = root.filterText;
@@ -564,7 +564,7 @@ PanelWindow {
 
     Connections {
         function onValuesChanged() {
-            if (root.modeIndex === 0)
+            if (root.mode === "apps")
                 root.rebuildDisplay();
 
         }
