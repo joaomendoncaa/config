@@ -11,7 +11,7 @@ PanelWindow {
 
   signal dismissed
 
-  readonly property var modeNames: ["apps", "emojis", "files", "clipboard"]
+  readonly property var modeNames: ["apps", "emojis", "files", "clipboard", "calc", "chart"]
   property int modeIndex: 0
   property string filterText: ""
   property int selectedIndex: 0
@@ -21,6 +21,12 @@ PanelWindow {
   property var clipboardData: []
   property var fileResults: []
   property int cursorBlink: 0
+
+  property string calcResult: ""
+  property string calcQueryMarker: ""
+
+  property bool chartInitialized: false
+  property string chartQueryMarker: ""
 
   ListModel { id: displayModel }
 
@@ -51,7 +57,7 @@ PanelWindow {
   }
 
   function setMode(mode) {
-    if (mode < 0 || mode > 3) return
+    if (mode < 0 || mode > 5) return
     if (modeIndex !== mode) {
       modeIndex = mode
       filterText = ""
@@ -104,6 +110,7 @@ PanelWindow {
       case 1: return searchEmojis()
       case 2: return searchFiles()
       case 3: return searchClipboard()
+      case 4: return searchCalc()
     }
     return []
   }
@@ -190,6 +197,12 @@ PanelWindow {
     })
   }
 
+  function searchCalc() {
+    if (!filterText) return []
+    if (!calcResult || calcQueryMarker !== filterText) return []
+    return [{ type: "calc", label: calcResult, fullText: calcResult }]
+  }
+
   function activateSelected() {
     if (selectedIndex < 0 || selectedIndex >= displayModel.count) return
     var item = displayModel.get(selectedIndex)
@@ -217,6 +230,10 @@ PanelWindow {
       } else {
         Quickshell.execDetached(["bash", "-c", "wl-copy " + shellQuote(item.fullText)])
       }
+      dismiss()
+    }
+    if (item.type === "calc") {
+      Quickshell.execDetached(["bash", "-c", "wl-copy " + shellQuote(item.fullText)])
       dismiss()
     }
   }
@@ -478,6 +495,7 @@ PanelWindow {
           height: parent.height - searchRow.parent.height - parent.spacing
 
           Row {
+            visible: root.modeIndex !== 5
             anchors.fill: parent
             spacing: 0
 
@@ -539,6 +557,13 @@ PanelWindow {
                       Text {
                         visible: type === "file"
                         text: "\uD83D\uDCC4"
+                        font.pixelSize: 18
+                        anchors.centerIn: parent
+                      }
+
+                      Text {
+                        visible: type === "calc"
+                        text: "="
                         font.pixelSize: 18
                         anchors.centerIn: parent
                       }
@@ -651,6 +676,14 @@ PanelWindow {
               }
             }
           }
+
+          Loader {
+            id: chartLoader
+            active: root.chartInitialized
+            visible: root.modeIndex === 5
+            anchors.fill: parent
+            source: "Widgets/Chart/Chart.qml"
+          }
         }
       }
     }
@@ -663,15 +696,7 @@ PanelWindow {
       Keys.priority: Keys.BeforeItem
       Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
-          if (root.filterText.length > 0) {
-            root.selectedIndex = 0
-            root.filterText = ""
-            root.cursorPosition = 0
-          } else if (root.modeIndex !== 0) {
-            root.setMode(0)
-          } else {
-            dismiss()
-          }
+          dismiss()
           event.accepted = true
         } else if (event.key === Qt.Key_Backspace) {
           if (root.cursorPosition > 0) {
@@ -759,6 +784,8 @@ PanelWindow {
             if (char === ":") { root.setMode(1); event.accepted = true; return }
             if (char === ".") { root.setMode(2); event.accepted = true; return }
             if (char === "$") { root.setMode(3); event.accepted = true; return }
+            if (char === "=") { root.setMode(4); event.accepted = true; return }
+            if (char === "#") { root.setMode(5); event.accepted = true; return }
           }
           if (char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127) {
             root.selectedIndex = 0
@@ -828,6 +855,40 @@ PanelWindow {
     }
   }
 
+  Timer {
+    id: calcTimer
+    interval: 200
+    onTriggered: {
+      if (root.modeIndex !== 4 || !root.filterText) return
+      root.calcQueryMarker = root.filterText
+      root.calcResult = ""
+      calcProc.command = ["qalc", "-t", root.filterText]
+      calcProc.running = true
+    }
+  }
+
+  Process {
+    id: calcProc
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: {
+        if (root.calcQueryMarker !== root.filterText) return
+        root.calcResult = String(text || "").trim()
+      }
+    }
+  }
+
+  Timer {
+    id: chartTimer
+    interval: 400
+    onTriggered: {
+      if (root.modeIndex !== 5 || !root.filterText) return
+      root.chartQueryMarker = root.filterText
+      var chart = chartLoader.item
+      if (chart) chart.symbol = root.filterText
+    }
+  }
+
   Connections {
     target: DesktopEntries.applications
     function onValuesChanged() {
@@ -842,15 +903,29 @@ PanelWindow {
       clearFileSearch()
     }
     if (modeIndex === 3) rebuildDisplay()
+    if (modeIndex === 5 && !chartInitialized) {
+      chartInitialized = true
+    }
   }
 
   onFilterTextChanged: {
     if (modeIndex === 2) {
       fileSearchTimer.restart()
     }
+    if (modeIndex === 4) {
+      root.calcResult = ""
+      calcTimer.restart()
+    }
+    if (modeIndex === 5) {
+      chartTimer.restart()
+    }
     if (modeIndex !== 2) {
       rebuildDisplay()
     }
+  }
+
+  onCalcResultChanged: {
+    if (modeIndex === 4) rebuildDisplay()
   }
 
   onFileResultsChanged: {

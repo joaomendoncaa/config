@@ -1,3 +1,5 @@
+//@ pragma EnableQtWebEngineQuick
+
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
