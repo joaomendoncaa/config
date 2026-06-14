@@ -24,7 +24,6 @@ Item {
 
     Row {
         id: searchRow
-        anchors.verticalCenter: parent.verticalCenter
         spacing: 0
 
         Rectangle {
