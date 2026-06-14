@@ -9,7 +9,7 @@ Item {
   property bool pageReady: false
 
   function embedUrl(sym) {
-    return "https://www.tradingview.com/widgetembed/?symbol=" + encodeURIComponent(sym)
+    return "https://www.tradingview.com/widgetembed/?symbol=" + encodeURIComponent(sym || "BINANCE:BTCUSDT")
       + "&interval=D&theme=dark&locale=en&toolbar_bg=%231e1e1e"
       + "&enable_publishing=0&hideideas=1&allow_symbol_change=1"
       + "&hide_side_toolbar=0&details=0&hotlist=0"
@@ -22,8 +22,6 @@ Item {
     opacity: root.pageReady ? 1 : 0
     url: root.embedUrl(root.symbol)
 
-    Behavior on opacity { NumberAnimation { duration: 150 } }
-
     onLoadingChanged: function(load) {
       if (load.status === 0) {
         root.pageReady = false
@@ -32,11 +30,20 @@ Item {
           "var s=document.createElement('style');" +
           "s.textContent='" +
           "body{background:#0f0f0f!important;overflow:hidden!important;margin:0;padding:0}" +
+          ".chart-markup-volume{display:none!important}" +
           "';" +
           "document.head.appendChild(s)",
           function() { root.pageReady = true }
         )
       }
     }
+  }
+
+  Text {
+    anchors.centerIn: parent
+    text: "Loading " + root.symbol.toUpperCase() + "..."
+    color: "#ffffff"
+    font.pixelSize: 14
+    visible: !root.pageReady
   }
 }
