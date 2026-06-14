@@ -6,124 +6,188 @@ Item {
     property var root: null
     property var displayModel: null
 
+    function itemPrevious() {
+        if (displayModel.count > 0) {
+            root.selectedIndex = (root.selectedIndex - 1 + displayModel.count) % displayModel.count;
+            root.positionToSelected();
+        }
+    }
+
+    function itemNext() {
+        if (displayModel.count > 0) {
+            root.selectedIndex = (root.selectedIndex + 1) % displayModel.count;
+            root.positionToSelected();
+        }
+    }
+
+    function cursorUnshift() {
+        root.cursorPosition = Math.max(0, root.cursorPosition - 1);
+    }
+
+    function cursorShift() {
+        root.cursorPosition = Math.min(root.filterText.length, root.cursorPosition + 1);
+    }
+
+    function cursorHead() {
+        root.cursorPosition = 0;
+    }
+
+    function cursorTail() {
+        root.cursorPosition = root.filterText.length;
+    }
+
+    function cursorUnshiftWord() {
+        if (root.cursorPosition > 0) {
+            var pos = root.cursorPosition - 1;
+            while (pos > 0 && root.filterText[pos] === ' ')pos--
+            while (pos > 0 && root.filterText[pos - 1] !== ' ')pos--
+            root.cursorPosition = pos;
+        }
+    }
+
+    function cursorShiftWord() {
+        if (root.cursorPosition < root.filterText.length) {
+            var pos = root.cursorPosition;
+            while (pos < root.filterText.length && root.filterText[pos] !== ' ')pos++
+            while (pos < root.filterText.length && root.filterText[pos] === ' ')pos++
+            root.cursorPosition = pos;
+        }
+    }
+
+    function deleteCharBeforeCursor() {
+        root.filterText = root.filterText.substring(0, root.cursorPosition - 1) + root.filterText.substring(root.cursorPosition);
+        root.cursorPosition--;
+        if (root.modeIndex !== 2)
+            root.selectedIndex = 0;
+
+    }
+
+    function insertTextChar(c) {
+        root.selectedIndex = 0;
+        root.filterText = root.filterText.substring(0, root.cursorPosition) + c + root.filterText.substring(root.cursorPosition);
+        root.cursorPosition++;
+    }
+
+    function trySetModeFromPrefix(c) {
+        switch (c) {
+        case ':':
+            root.setMode(1);
+            return true;
+        case '.':
+            root.setMode(2);
+            return true;
+        case '$':
+            root.setMode(3);
+            return true;
+        case '=':
+            root.setMode(4);
+            return true;
+        case '#':
+            root.setMode(5);
+            return true;
+        }
+        return false;
+    }
+
+    function copySelectedPath() {
+        if (root.modeIndex === 2)
+            root.copySelectedPath();
+
+    }
+
+    function handleBackspace() {
+        if (root.cursorPosition > 0)
+            deleteCharBeforeCursor();
+        else if (root.modeIndex !== 0)
+            root.setMode(0);
+    }
+
+    function handleCtrlW() {
+        if (root.cursorPosition === 0 && root.modeIndex !== 0) {
+            root.setMode(0);
+        } else {
+            var pos = root.cursorPosition;
+            while (pos > 0 && root.filterText[pos - 1] === ' ')pos--
+            while (pos > 0 && root.filterText[pos - 1] !== ' ')pos--
+            if (pos < root.cursorPosition) {
+                root.filterText = root.filterText.substring(0, pos) + root.filterText.substring(root.cursorPosition);
+                root.cursorPosition = pos;
+                if (root.modeIndex !== 2)
+                    root.selectedIndex = 0;
+
+            }
+        }
+    }
+
     focus: true
     Keys.priority: Keys.BeforeItem
     Keys.onPressed: function(event) {
-        if (!root || !displayModel) return
-        if (event.key === Qt.Key_Escape) {
-            root.dismiss()
-            event.accepted = true
-        } else if (event.key === Qt.Key_Backspace) {
-            if (root.cursorPosition > 0) {
-                root.filterText = root.filterText.substring(0, root.cursorPosition - 1) + root.filterText.substring(root.cursorPosition)
-                root.cursorPosition--
-                if (root.modeIndex !== 2) root.selectedIndex = 0
-            } else if (root.modeIndex !== 0) {
-                root.setMode(0)
+        if (!root || !displayModel)
+            return ;
+
+        if (event.modifiers & Qt.ControlModifier) {
+            if (event.key == Qt.Key_Y)
+                return root.activateSelected();
+
+            if (event.key == Qt.Key_C)
+                return copySelectedPath();
+
+            if (event.key == Qt.Key_P)
+                return itemPrevious();
+
+            if (event.key == Qt.Key_N)
+                return itemNext();
+
+            if (event.key == Qt.Key_A)
+                return cursorHead();
+
+            if (event.key == Qt.Key_E)
+                return cursorTail();
+
+            if (event.key == Qt.Key_B)
+                return cursorUnshiftWord();
+
+            if (event.key == Qt.Key_F)
+                return cursorShiftWord();
+
+            if (event.key == Qt.Key_W)
+                return handleCtrlW();
+
+            event.accepted = false;
+            return ;
+        }
+        if (event.key == Qt.Key_Escape)
+            return root.dismiss();
+
+        if (event.key == Qt.Key_Backspace)
+            return handleBackspace();
+
+        if (event.key == Qt.Key_Left)
+            return cursorUnshift();
+
+        if (event.key == Qt.Key_Right)
+            return cursorShift();
+
+        if (event.key == Qt.Key_Up)
+            return itemPrevious();
+
+        if (event.key == Qt.Key_Down)
+            return itemNext();
+
+        if (event.key == Qt.Key_Enter || event.key == Qt.Key_Return)
+            return root.activateSelected();
+
+        if (event.text && event.text.length === 1) {
+            var c = event.text;
+            if (c.charCodeAt(0) >= 32 && c.charCodeAt(0) !== 127) {
+                if (trySetModeFromPrefix(c))
+                    return ;
+
+                insertTextChar(c);
             }
-            event.accepted = true
-        } else if (event.key === Qt.Key_Left) {
-            root.cursorPosition = Math.max(0, root.cursorPosition - 1)
-            event.accepted = true
-        } else if (event.key === Qt.Key_Right) {
-            root.cursorPosition = Math.min(root.filterText.length, root.cursorPosition + 1)
-            event.accepted = true
-        } else if (event.key === Qt.Key_Up) {
-            if (displayModel.count > 0) {
-                root.selectedIndex = (root.selectedIndex - 1 + displayModel.count) % displayModel.count
-                root.positionToSelected()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_Down) {
-            if (displayModel.count > 0) {
-                root.selectedIndex = (root.selectedIndex + 1) % displayModel.count
-                root.positionToSelected()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_PageUp) {
-            if (displayModel.count > 0) {
-                root.selectedIndex = Math.max(0, root.selectedIndex - 8)
-                root.positionToSelected()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_PageDown) {
-            if (displayModel.count > 0) {
-                root.selectedIndex = Math.min(displayModel.count - 1, root.selectedIndex + 8)
-                root.positionToSelected()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            root.activateSelected()
-            event.accepted = true
-        } else if (event.key === Qt.Key_Y && (event.modifiers & Qt.ControlModifier)) {
-            root.activateSelected()
-            event.accepted = true
-        } else if (event.key === Qt.Key_C && (event.modifiers & Qt.ControlModifier)) {
-            if (root.modeIndex === 2) root.copySelectedPath()
-            event.accepted = true
-        } else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier)) {
-            if (displayModel.count > 0) {
-                root.selectedIndex = (root.selectedIndex - 1 + displayModel.count) % displayModel.count
-                root.positionToSelected()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_N && (event.modifiers & Qt.ControlModifier)) {
-            if (displayModel.count > 0) {
-                root.selectedIndex = (root.selectedIndex + 1) % displayModel.count
-                root.positionToSelected()
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_A && (event.modifiers & Qt.ControlModifier)) {
-            root.cursorPosition = 0
-            event.accepted = true
-        } else if (event.key === Qt.Key_E && (event.modifiers & Qt.ControlModifier)) {
-            root.cursorPosition = root.filterText.length
-            event.accepted = true
-        } else if (event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)) {
-            if (root.cursorPosition > 0) {
-                var pos = root.cursorPosition - 1
-                while (pos > 0 && root.filterText[pos] === ' ') pos--
-                while (pos > 0 && root.filterText[pos - 1] !== ' ') pos--
-                root.cursorPosition = pos
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_F && (event.modifiers & Qt.ControlModifier)) {
-            if (root.cursorPosition < root.filterText.length) {
-                var pos = root.cursorPosition
-                while (pos < root.filterText.length && root.filterText[pos] !== ' ') pos++
-                while (pos < root.filterText.length && root.filterText[pos] === ' ') pos++
-                root.cursorPosition = pos
-            }
-            event.accepted = true
-        } else if (event.key === Qt.Key_W && (event.modifiers & Qt.ControlModifier)) {
-            if (root.cursorPosition === 0 && root.modeIndex !== 0) {
-                root.setMode(0)
-            } else if (root.cursorPosition > 0) {
-                var pos = root.cursorPosition
-                while (pos > 0 && root.filterText[pos - 1] === ' ') pos--
-                while (pos > 0 && root.filterText[pos - 1] !== ' ') pos--
-                if (pos < root.cursorPosition) {
-                    root.filterText = root.filterText.substring(0, pos) + root.filterText.substring(root.cursorPosition)
-                    root.cursorPosition = pos
-                    if (root.modeIndex !== 2) root.selectedIndex = 0
-                }
-            }
-            event.accepted = true
-        } else if (event.text && event.text.length === 1) {
-            var char = event.text
-            if (root.filterText.length === 0 && root.modeIndex === 0) {
-                if (char === ':') { root.setMode(1); event.accepted = true; return }
-                if (char === '.') { root.setMode(2); event.accepted = true; return }
-                if (char === '$') { root.setMode(3); event.accepted = true; return }
-                if (char === '=') { root.setMode(4); event.accepted = true; return }
-                if (char === '#') { root.setMode(5); event.accepted = true; return }
-            }
-            if (char.charCodeAt(0) >= 32 && char.charCodeAt(0) !== 127) {
-                root.selectedIndex = 0
-                root.filterText = root.filterText.substring(0, root.cursorPosition) + char + root.filterText.substring(root.cursorPosition)
-                root.cursorPosition++
-                event.accepted = true
-            }
+        } else {
+            event.accepted = false;
+            return ;
         }
     }
 }
