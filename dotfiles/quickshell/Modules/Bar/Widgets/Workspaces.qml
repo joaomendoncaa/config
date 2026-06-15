@@ -59,7 +59,7 @@ RowLayout {
 
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: Hyprland.dispatch("workspace empty")
+            onClicked: Quickshell.execDetached(["hyprctl", "dispatch", 'hl.dsp.focus({ workspace = "empty" })'])
             hoverEnabled: true
         }
 
