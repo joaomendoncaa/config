@@ -172,10 +172,7 @@ fallback_to_clipboard = true
 # Customize to prefer a specific driver or change the fallback order.
 # Available drivers: wtype, dotool, ydotool, clipboard
 # Example: prefer ydotool over dotool:
-driver_order = ["dotool", "wtype", "ydotool", "clipboard"]
-# Example: use only ydotool, no fallback:
-#   driver_order = ["ydotool"]
-# driver_order = ["wtype", "dotool", "ydotool", "clipboard"]
+# driver_order = ["dotool", "wtype", "ydotool", "clipboard"]
 
 # Delay between typed characters in milliseconds
 # 0 = fastest possible, increase if characters are dropped

@@ -49,4 +49,7 @@ o.virtualedit = 'all'
 
 version('>=0.12.0', function()
     require('vim._core.ui2').enable { enable = true }
+
+    vim.cmd 'packadd nvim.undotree'
+    vim.cmd 'packadd nvim.difftool'
 end)
