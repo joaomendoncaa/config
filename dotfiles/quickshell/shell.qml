@@ -6,8 +6,8 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Core
 import qs.Modules.Bar
+import qs.Modules.Lock
 import qs.Modules.Superbar
-import qs.Services
 
 Scope {
     id: root
@@ -15,10 +15,6 @@ Scope {
     property bool launcherOpen: false
 
     Lock { id: lockService }
-
-    Idle {
-        onLockRequested: lockService.lock()
-    }
 
     IpcHandler {
         target: "launcher"

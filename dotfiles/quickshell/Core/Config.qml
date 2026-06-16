@@ -12,6 +12,7 @@ QtObject {
     readonly property int gapOuter: 12
     readonly property int gapInner: 4
     readonly property int idleLockTimeout: 600
+    readonly property int cursorBlinkInterval: 530
     readonly property string fontFamily: "JetBrainsMonoNL Nerd Font"
     readonly property int shellPadding: 10
     // Colors - computed from theme (not readonly so we can update them)

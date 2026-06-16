@@ -13,7 +13,7 @@ Item {
     property int cursorBlink: 0
 
     Timer {
-        interval: 530
+        interval: Config.cursorBlinkInterval
         running: true
         repeat: true
         onTriggered: {
