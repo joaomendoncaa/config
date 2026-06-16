@@ -7,11 +7,18 @@ import Quickshell.Io
 import qs.Core
 import qs.Modules.Bar
 import qs.Modules.Superbar
+import qs.Services
 
 Scope {
     id: root
 
     property bool launcherOpen: false
+
+    Lock { id: lockService }
+
+    Idle {
+        onLockRequested: lockService.lock()
+    }
 
     IpcHandler {
         target: "launcher"

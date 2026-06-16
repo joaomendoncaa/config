@@ -123,6 +123,11 @@ function M.active_window_is_terminal()
 	return terminal_classes[window.class:lower()] == true
 end
 
+function M.quickshell_ipc(target, method, ...)
+	local args = table.concat({ ... }, " ")
+	return "quickshell ipc -p ~/.config/quickshell call " .. target .. " " .. method .. (args ~= "" and " " .. args or "")
+end
+
 function M.universal_clipboard_shortcut(default_mods, default_key, terminal_mods, terminal_key)
 	return function()
 		if active_window_is_terminal() then

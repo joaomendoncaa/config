@@ -24,11 +24,7 @@ end)
 hl.bind("SUPER + D", hl.dsp.exec_cmd("/home/joao/.local/bin/voxtype record toggle"), { description = "Voxtype toggle" })
 hl.bind("SUPER + F", hl.dsp.window.fullscreen(), { description = "Toggle Fullscreen" })
 hl.bind("SUPER + SHIFT + V", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle Float" })
-hl.bind(
-	"SUPER + SHIFT + L",
-	hl.dsp.exec_cmd("loginctl lock-session & omarchy-lock-screen"),
-	{ description = "Lock Screen" }
-)
+utils.bind("SUPER + SHIFT + L", "Lock Screen", utils.quickshell_ipc("lock", "lock"))
 hl.bind(
 	"SUPER + ALT + RETURN",
 	hl.dsp.exec_cmd('uwsm-app -- xdg-terminal-exec --dir="$(omarchy-cmd-terminal-cwd)" tmux attach'),
