@@ -6,7 +6,8 @@ import qs.Core
 Rectangle {
     id: root
 
-    Layout.preferredWidth: clockText.implicitWidth + Config.gapInner * 4
+    implicitWidth: clockText.implicitWidth + Config.gapInner * 4
+    Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: Config.buttonSize
     radius: Config.buttonBorderRadius
     color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"

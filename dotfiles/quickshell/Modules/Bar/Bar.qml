@@ -88,20 +88,9 @@ PanelWindow {
 
     }
 
-    RowLayout {
+    CenterBar {
         anchors.centerIn: parent
         anchors.verticalCenter: parent.verticalCenter
-        spacing: Config.gapInner
-
-        Recording {
-        }
-
-        Clock {
-        }
-
-        Updates {
-        }
-
     }
 
     RowLayout {
