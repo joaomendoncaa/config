@@ -35,8 +35,8 @@ PanelWindow {
             console.error("Superbar: invalid mode '" + m + "'");
             return ;
         }
-        if (m !== m) {
-            m = m;
+        if (m !== mode) {
+            mode = m;
             filterText = "";
             selectedIndex = 0;
             cursorPosition = 0;
