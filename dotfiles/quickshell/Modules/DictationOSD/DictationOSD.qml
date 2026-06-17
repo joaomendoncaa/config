@@ -45,7 +45,7 @@ Item {
         color: "transparent"
         anchors.bottom: true
         anchors.left: true
-        margins.left: osdWindow.screen ? Math.round((osdWindow.screen.width - 150) / 2) : 0
+        margins.left: Math.round((Screen.width - implicitWidth) / 2)
         margins.bottom: 200
         WlrLayershell.namespace: "dictation-osd"
         WlrLayershell.layer: WlrLayer.Overlay
