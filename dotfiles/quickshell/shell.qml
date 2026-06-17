@@ -6,6 +6,7 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Core
 import qs.Modules.Bar
+import qs.Modules.DictationOSD
 import qs.Modules.Lock
 import qs.Modules.Superbar
 
@@ -15,6 +16,8 @@ Scope {
     property bool launcherOpen: false
 
     Lock { id: lockService }
+
+    DictationOSD { }
 
     IpcHandler {
         target: "launcher"

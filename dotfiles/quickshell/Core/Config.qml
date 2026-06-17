@@ -20,6 +20,7 @@ QtObject {
     property string foreground: "white"
     property string accent: "#509475"
     property int borderSize: 2
+    property int borderRadius: 5
     property int gapsOut: 10
     property string foregroundSelected: "black"
     property string foregroundSecondary: "#60FFFFFF"

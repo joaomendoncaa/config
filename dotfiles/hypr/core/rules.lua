@@ -177,6 +177,7 @@ utils.window({ title = "WebcamOverlay" }, {
 utils.window({ tag = "default-opacity" }, { opacity = "0.97 0.9" })
 
 hl.layer_rule({ match = { namespace = "superbar" }, blur = true, no_anim = true })
+hl.layer_rule({ match = { namespace = "dictation-osd" }, blur = true, no_anim = true })
 
 hl.window_rule({ match = { class = "(Alacritty|kitty|foot)" }, scroll_touchpad = 1.5 })
 hl.window_rule({ match = { class = "com.mitchellh.ghostty" }, scroll_touchpad = 0.2 })
