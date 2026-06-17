@@ -73,9 +73,7 @@ hl.bind(
 )
 hl.bind(
 	"SUPER + SPACE",
-	hl.dsp.exec_cmd(
-		[[bash -c 'pgrep -x quickshell >/dev/null && quickshell ipc -p ~/.config/quickshell call launcher toggle || (quickshell & sleep 1 && quickshell ipc -p ~/.config/quickshell call launcher toggle)']]
-	),
+	hl.dsp.exec_cmd(utils.quickshell_ipc("launcher", "toggle")),
 	{ description = "Open Launcher" }
 )
 hl.bind(

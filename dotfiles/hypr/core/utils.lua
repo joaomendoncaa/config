@@ -1,5 +1,6 @@
 M = {}
 
+local QUICKSHELL_CONFIG = "$(realpath ~/.config/quickshell)"
 local terminal_classes = {
 	alacritty = true,
 	["com.mitchellh.ghostty"] = true,
@@ -125,8 +126,10 @@ end
 
 function M.quickshell_ipc(target, method, ...)
 	local args = table.concat({ ... }, " ")
-	return "quickshell ipc -p ~/.config/quickshell call " .. target .. " " .. method .. (args ~= "" and " " .. args or "")
+	return "quickshell ipc -p " .. QUICKSHELL_CONFIG .. " call " .. target .. " " .. method .. (args ~= "" and " " .. args or "")
 end
+
+M.QUICKSHELL_CONFIG = QUICKSHELL_CONFIG
 
 function M.universal_clipboard_shortcut(default_mods, default_key, terminal_mods, terminal_key)
 	return function()

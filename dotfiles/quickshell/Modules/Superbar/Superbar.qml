@@ -4,7 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
-import "Widgets"
+import "Widgets" as Widgets
 import qs.Core
 
 PanelWindow {
@@ -359,7 +359,7 @@ PanelWindow {
                 anchors.margins: Config.shellPadding
                 spacing: 1
 
-                SearchInput {
+                Widgets.SearchInput {
                     id: searchInput
 
                     width: parent.width
@@ -391,7 +391,7 @@ PanelWindow {
                                 spacing: 2
                                 boundsBehavior: Flickable.StopAtBounds
 
-                                delegate: ResultDelegate {
+                                delegate: Widgets.ResultDelegate {
                                     selectedIndex: root.selectedIndex
                                     iconResolver: function(name) {
                                         return root.resolveIcon(name);
@@ -416,7 +416,7 @@ PanelWindow {
 
                         }
 
-                        Preview {
+                        Widgets.Preview {
                             id: previewPanel
 
                             displayModel: displayModel
@@ -441,7 +441,7 @@ PanelWindow {
 
         }
 
-        KeyIntercept {
+        Widgets.KeyIntercept {
             id: keyCatcher
 
             anchors.fill: parent

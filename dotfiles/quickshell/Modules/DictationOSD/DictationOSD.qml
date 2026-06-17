@@ -1,7 +1,9 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Pipewire
 import Quickshell.Wayland
+import "Widgets" as Widgets
 import qs.Core
 
 Item {
@@ -36,11 +38,18 @@ Item {
         onTriggered: stateFile.reload()
     }
 
+    PwNodePeakMonitor {
+        id: peakMonitor
+
+        node: Pipewire.defaultAudioSource
+        enabled: root.showOsd
+    }
+
     PanelWindow {
         id: osdWindow
 
         visible: root.showOsd
-        implicitWidth: 150
+        implicitWidth: 200
         implicitHeight: Config.fontSize * 3
         color: "transparent"
         anchors.bottom: true
@@ -57,13 +66,12 @@ Item {
             radius: Config.borderRadius
             color: Config.hexWithAlpha(Config.foreground, "10")
 
-            Text {
-                anchors.centerIn: parent
-                text: "TRANSCRIBING"
-                color: Config.foreground
-                font.pixelSize: Config.fontSize
-                font.bold: true
-                font.family: Config.fontFamily
+            Widgets.Waveform {
+                id: waveform
+
+                anchors.fill: parent
+                anchors.margins: 6
+                peak: peakMonitor.peak
             }
 
         }
