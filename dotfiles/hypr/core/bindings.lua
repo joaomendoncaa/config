@@ -1,5 +1,6 @@
 local utils = require("core.utils")
 local terminal = "uwsm app -- xdg-terminal-exec"
+local bind = utils.bind
 
 hl.unbind("SUPER + W")
 hl.unbind("SHIFT + F11")
@@ -8,23 +9,23 @@ hl.unbind("SUPER + SHIFT + A")
 hl.unbind("SUPER + SHIFT + T")
 hl.unbind("SUPER + D")
 
-utils.bind("PRINT", "Screenshot", "capture-screenshot")
-utils.bind("SUPER + PRINT", "Color picker", "pkill hyprpicker || hyprpicker -a")
-utils.bind("SUPER + CTRL + PRINT", "Extract text (OCR) from screenshot", "capture-screenshot-text")
+bind("PRINT", "Screenshot", "capture-screenshot")
+bind("SUPER + PRINT", "Color picker", "pkill hyprpicker || hyprpicker -a")
+bind("SUPER + CTRL + PRINT", "Extract text (OCR) from screenshot", "capture-screenshot-text")
 
-utils.bind("SUPER + CTRL + Z", "Zoom in", function()
+bind("SUPER + CTRL + Z", "Zoom in", function()
 	local zoom = hl.get_config("cursor.zoom_factor") or 1
 	hl.config({ cursor = { zoom_factor = zoom + 1 } })
 end)
 
-utils.bind("SUPER + CTRL + ALT + Z", "Reset zoom", function()
+bind("SUPER + CTRL + ALT + Z", "Reset zoom", function()
 	hl.config({ cursor = { zoom_factor = 1 } })
 end)
 
 hl.bind("SUPER + D", hl.dsp.exec_cmd("/home/joao/.local/bin/voxtype record toggle"), { description = "Voxtype toggle" })
 hl.bind("SUPER + F", hl.dsp.window.fullscreen(), { description = "Toggle Fullscreen" })
 hl.bind("SUPER + SHIFT + V", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle Float" })
-utils.bind("SUPER + SHIFT + L", "Lock Screen", utils.quickshell_ipc("lock", "lock"))
+bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
 hl.bind(
 	"SUPER + ALT + RETURN",
 	hl.dsp.exec_cmd('uwsm-app -- xdg-terminal-exec --dir="$(omarchy-cmd-terminal-cwd)" tmux attach'),
@@ -40,7 +41,11 @@ hl.bind(
 	hl.dsp.exec_cmd("$HOME/.config.jmmm.sh/bin/toggle-obs-record"),
 	{ description = "Toggle OBS Record" }
 )
-hl.bind("SUPER + V", hl.dsp.exec_cmd("omarchy-launch-walker -m clipboard"), { description = "Clipboard" })
+hl.bind(
+	"SUPER + V",
+	hl.dsp.exec_cmd(utils.quickshell_ipc("launcher", "openClipboard")),
+	{ description = "Clipboard Manager" }
+)
 hl.bind("SUPER + S", hl.dsp.layout("togglesplit"), { description = "Toggle Split" })
 hl.bind(
 	"SUPER + RETURN",
@@ -71,18 +76,13 @@ hl.bind(
 	hl.dsp.exec_cmd('omarchy-launch-webapp "https://translate.google.pt/?sl=auto&tl=en&op=translate"'),
 	{ description = "Launch Translator" }
 )
-hl.bind(
-	"SUPER + SPACE",
-	hl.dsp.exec_cmd(utils.quickshell_ipc("launcher", "toggle")),
-	{ description = "Open Launcher" }
-)
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd(utils.quickshell_ipc("launcher", "toggle")), { description = "Open Launcher" })
 hl.bind(
 	"SUPER + SHIFT + SPACE",
 	hl.dsp.exec_cmd([[bash -c 'if pgrep -x quickshell >/dev/null; then pkill -x quickshell; else quickshell & fi']]),
 	{ description = "Toggle Quickshell" }
 )
 
--- Focus, swap, and resize bindings.
 hl.bind("SUPER + H", hl.dsp.focus({ direction = "l" }), { description = "Focus Left" })
 hl.bind("SUPER + L", hl.dsp.focus({ direction = "r" }), { description = "Focus Right" })
 hl.bind("SUPER + K", hl.dsp.focus({ direction = "u" }), { description = "Focus Up" })
@@ -98,11 +98,9 @@ hl.bind("SUPER + CTRL + L", hl.dsp.window.resize({ x = 80, y = 0 }), { descripti
 hl.bind("SUPER + CTRL + K", hl.dsp.window.resize({ x = 0, y = -80 }), { description = "Resize Up" })
 hl.bind("SUPER + CTRL + J", hl.dsp.window.resize({ x = 0, y = 80 }), { description = "Resize Down" })
 
--- Workspace navigation.
 hl.bind("SUPER + TAB", hl.dsp.focus({ workspace = "previous" }), { description = "Switch to last visited workspace" })
 hl.bind("SUPER + CTRL + TAB", hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
 
--- Toggles submap (SUPER + T): theme, sink, audio mute.
 hl.define_submap("toggles", "reset", function()
 	hl.bind("T", function()
 		hl.dispatch(
@@ -169,7 +167,6 @@ hl.define_submap("comms", "reset", function()
 end)
 hl.bind("SUPER + C", hl.dsp.submap("comms"), { description = "Enter comms submap" })
 
--- AI submap (SUPER + A): chatgpt, grok, perplexity.
 hl.define_submap("ai", "reset", function()
 	hl.bind("A", function()
 		hl.dispatch(
@@ -194,241 +191,195 @@ hl.define_submap("ai", "reset", function()
 end)
 hl.bind("SUPER + A", hl.dsp.submap("ai"), { description = "Enter AI submap" })
 
-utils.bind(
-	"XF86AudioRaiseVolume",
-	"Volume up",
-	"omarchy-audio-output-volume raise",
-	{ locked = true, repeating = true }
-)
-utils.bind(
-	"XF86AudioLowerVolume",
-	"Volume down",
-	"omarchy-audio-output-volume lower",
-	{ locked = true, repeating = true }
-)
-utils.bind("XF86AudioMute", "Mute", "omarchy-audio-output-volume mute-toggle", { locked = true })
-utils.bind("XF86AudioMicMute", "Mute microphone", "omarchy-audio-input-mute", { locked = true })
-utils.bind(
-	"XF86MonBrightnessUp",
-	"Brightness up",
-	"omarchy-brightness-display +5%",
-	{ locked = true, repeating = true }
-)
-utils.bind(
-	"XF86MonBrightnessDown",
-	"Brightness down",
-	"omarchy-brightness-display 5%-",
-	{ locked = true, repeating = true }
-)
-utils.bind(
+bind("XF86AudioRaiseVolume", "Volume up", "omarchy-audio-output-volume raise", { locked = true, repeating = true })
+bind("XF86AudioLowerVolume", "Volume down", "omarchy-audio-output-volume lower", { locked = true, repeating = true })
+bind("XF86AudioMute", "Mute", "omarchy-audio-output-volume mute-toggle", { locked = true })
+bind("XF86AudioMicMute", "Mute microphone", "omarchy-audio-input-mute", { locked = true })
+bind("XF86MonBrightnessUp", "Brightness up", "omarchy-brightness-display +5%", { locked = true, repeating = true })
+bind("XF86MonBrightnessDown", "Brightness down", "omarchy-brightness-display 5%-", { locked = true, repeating = true })
+bind(
 	"SHIFT + XF86MonBrightnessUp",
 	"Brightness maximum",
 	"omarchy-brightness-display 100%",
 	{ locked = true, repeating = true }
 )
-utils.bind(
+bind(
 	"SHIFT + XF86MonBrightnessDown",
 	"Brightness minimum",
 	"omarchy-brightness-display 1%",
 	{ locked = true, repeating = true }
 )
-utils.bind(
+bind(
 	"XF86KbdBrightnessUp",
 	"Keyboard brightness up",
 	"omarchy-brightness-keyboard up",
 	{ locked = true, repeating = true }
 )
-utils.bind(
+bind(
 	"XF86KbdBrightnessDown",
 	"Keyboard brightness down",
 	"omarchy-brightness-keyboard down",
 	{ locked = true, repeating = true }
 )
-utils.bind("XF86KbdLightOnOff", "Keyboard backlight cycle", "omarchy-brightness-keyboard cycle", { locked = true })
+bind("XF86KbdLightOnOff", "Keyboard backlight cycle", "omarchy-brightness-keyboard cycle", { locked = true })
 utils.omarchy_bind_toggle("XF86TouchpadToggle", "Toggle touchpad", "touchpad", { locked = true })
-utils.bind("XF86TouchpadOn", "Enable touchpad", "omarchy-toggle-touchpad on", { locked = true })
-utils.bind("XF86TouchpadOff", "Disable touchpad", "omarchy-toggle-touchpad off", { locked = true })
+bind("XF86TouchpadOn", "Enable touchpad", "omarchy-toggle-touchpad on", { locked = true })
+bind("XF86TouchpadOff", "Disable touchpad", "omarchy-toggle-touchpad off", { locked = true })
 
-utils.bind(
+bind(
 	"ALT + XF86AudioRaiseVolume",
 	"Volume up precise",
 	"omarchy-audio-output-volume +1",
 	{ locked = true, repeating = true }
 )
-utils.bind(
+bind(
 	"ALT + XF86AudioLowerVolume",
 	"Volume down precise",
 	"omarchy-audio-output-volume -1",
 	{ locked = true, repeating = true }
 )
-utils.bind(
+bind(
 	"ALT + XF86MonBrightnessUp",
 	"Brightness up precise",
 	"omarchy-brightness-display +1%",
 	{ locked = true, repeating = true }
 )
-utils.bind(
+bind(
 	"ALT + XF86MonBrightnessDown",
 	"Brightness down precise",
 	"omarchy-brightness-display 1%-",
 	{ locked = true, repeating = true }
 )
 
-utils.bind("XF86AudioNext", "Next track", "omarchy-shell media next", { locked = true })
-utils.bind("XF86AudioPause", "Pause", "omarchy-shell media playPause", { locked = true })
-utils.bind("XF86AudioPlay", "Play", "omarchy-shell media playPause", { locked = true })
-utils.bind("XF86AudioPrev", "Previous track", "omarchy-shell media previous", { locked = true })
+bind("XF86AudioNext", "Next track", "omarchy-shell media next", { locked = true })
+bind("XF86AudioPause", "Pause", "omarchy-shell media playPause", { locked = true })
+bind("XF86AudioPlay", "Play", "omarchy-shell media playPause", { locked = true })
+bind("XF86AudioPrev", "Previous track", "omarchy-shell media previous", { locked = true })
 
-utils.bind("SHIFT + XF86AudioMute", "Switch audio output", "omarchy-audio-output-switch", { locked = true })
-utils.bind("SHIFT + XF86AudioPause", "Switch media source", "omarchy-audio-source-switch", { locked = true })
-utils.bind("SHIFT + XF86AudioPlay", "Switch media source", "omarchy-audio-source-switch", { locked = true })
+bind("SHIFT + XF86AudioMute", "Switch audio output", "omarchy-audio-output-switch", { locked = true })
+bind("SHIFT + XF86AudioPause", "Switch media source", "omarchy-audio-source-switch", { locked = true })
+bind("SHIFT + XF86AudioPlay", "Switch media source", "omarchy-audio-source-switch", { locked = true })
 
--- Tiling, window management, and workspace navigation bindings.
+bind("SUPER + W", "Close window", hl.dsp.window.close())
+bind("CTRL + ALT + DELETE", "Close all windows", "qs-power-window-close-all")
 
-utils.bind("SUPER + W", "Close window", hl.dsp.window.close())
-utils.bind("CTRL + ALT + DELETE", "Close all windows", "omarchy-hyprland-window-close-all")
+bind("SUPER + T", "Toggle window floating/tiling", hl.dsp.window.float({ action = "toggle" }))
+bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
+bind("SUPER + CTRL + F", "Tiled full screen", "omarchy-hyprland-window-tiled-fullscreen-toggle")
+bind("SUPER + ALT + F", "Full width", hl.dsp.window.fullscreen({ mode = "maximized" }))
+bind("SUPER + O", "Pop window out (float & pin)", "omarchy-hyprland-window-pop")
+bind("SUPER + ALT + Home", "Save window width", "omarchy-hyprland-window-width save")
+bind("SUPER + Home", "Restore window width", "omarchy-hyprland-window-width restore")
+bind("SUPER + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
 
-utils.bind("SUPER + T", "Toggle window floating/tiling", hl.dsp.window.float({ action = "toggle" }))
-utils.bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
-utils.bind("SUPER + CTRL + F", "Tiled full screen", "omarchy-hyprland-window-tiled-fullscreen-toggle")
-utils.bind("SUPER + ALT + F", "Full width", hl.dsp.window.fullscreen({ mode = "maximized" }))
-utils.bind("SUPER + O", "Pop window out (float & pin)", "omarchy-hyprland-window-pop")
-utils.bind("SUPER + ALT + Home", "Save window width", "omarchy-hyprland-window-width save")
-utils.bind("SUPER + Home", "Restore window width", "omarchy-hyprland-window-width restore")
-utils.bind("SUPER + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
-
-utils.bind("SUPER + LEFT", "Focus on left window", hl.dsp.focus({ direction = "l" }))
-utils.bind("SUPER + RIGHT", "Focus on right window", hl.dsp.focus({ direction = "r" }))
-utils.bind("SUPER + UP", "Focus on above window", hl.dsp.focus({ direction = "u" }))
-utils.bind("SUPER + DOWN", "Focus on below window", hl.dsp.focus({ direction = "d" }))
+bind("SUPER + LEFT", "Focus on left window", hl.dsp.focus({ direction = "l" }))
+bind("SUPER + RIGHT", "Focus on right window", hl.dsp.focus({ direction = "r" }))
+bind("SUPER + UP", "Focus on above window", hl.dsp.focus({ direction = "u" }))
+bind("SUPER + DOWN", "Focus on below window", hl.dsp.focus({ direction = "d" }))
 
 for workspace = 1, 10 do
 	local key = "code:" .. tostring(workspace + 9)
-	utils.bind(
-		"SUPER + " .. key,
-		"Switch to workspace " .. workspace,
-		hl.dsp.focus({ workspace = tostring(workspace) })
-	)
-	utils.bind(
+	bind("SUPER + " .. key, "Switch to workspace " .. workspace, hl.dsp.focus({ workspace = tostring(workspace) }))
+	bind(
 		"SUPER + SHIFT + " .. key,
 		"Move window to workspace " .. workspace,
 		hl.dsp.window.move({ workspace = tostring(workspace) })
 	)
-	utils.bind(
+	bind(
 		"SUPER + SHIFT + ALT + " .. key,
 		"Move window silently to workspace " .. workspace,
 		hl.dsp.window.move({ workspace = tostring(workspace), follow = false })
 	)
 end
 
-utils.bind("SUPER + S", "Toggle scratchpad", hl.dsp.workspace.toggle_special("scratchpad"))
-utils.bind(
+bind("SUPER + S", "Toggle scratchpad", hl.dsp.workspace.toggle_special("scratchpad"))
+bind(
 	"SUPER + ALT + S",
 	"Move window to scratchpad",
 	hl.dsp.window.move({ workspace = "special:scratchpad", follow = false })
 )
 
-utils.bind("SUPER + SHIFT + TAB", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
+bind("SUPER + SHIFT + TAB", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
 
-utils.bind("SUPER + SHIFT + ALT + LEFT", "Move workspace to left monitor", hl.dsp.workspace.move({ monitor = "l" }))
-utils.bind("SUPER + SHIFT + ALT + RIGHT", "Move workspace to right monitor", hl.dsp.workspace.move({ monitor = "r" }))
-utils.bind("SUPER + SHIFT + ALT + UP", "Move workspace to up monitor", hl.dsp.workspace.move({ monitor = "u" }))
-utils.bind("SUPER + SHIFT + ALT + DOWN", "Move workspace to down monitor", hl.dsp.workspace.move({ monitor = "d" }))
+bind("SUPER + SHIFT + ALT + LEFT", "Move workspace to left monitor", hl.dsp.workspace.move({ monitor = "l" }))
+bind("SUPER + SHIFT + ALT + RIGHT", "Move workspace to right monitor", hl.dsp.workspace.move({ monitor = "r" }))
+bind("SUPER + SHIFT + ALT + UP", "Move workspace to up monitor", hl.dsp.workspace.move({ monitor = "u" }))
+bind("SUPER + SHIFT + ALT + DOWN", "Move workspace to down monitor", hl.dsp.workspace.move({ monitor = "d" }))
 
-utils.bind("SUPER + SHIFT + LEFT", "Swap window to the left", hl.dsp.window.swap({ direction = "l" }))
-utils.bind("SUPER + SHIFT + RIGHT", "Swap window to the right", hl.dsp.window.swap({ direction = "r" }))
-utils.bind("SUPER + SHIFT + UP", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
-utils.bind("SUPER + SHIFT + DOWN", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
+bind("SUPER + SHIFT + LEFT", "Swap window to the left", hl.dsp.window.swap({ direction = "l" }))
+bind("SUPER + SHIFT + RIGHT", "Swap window to the right", hl.dsp.window.swap({ direction = "r" }))
+bind("SUPER + SHIFT + UP", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
+bind("SUPER + SHIFT + DOWN", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
 
-utils.bind("ALT + TAB", "Focus on next window", hl.dsp.window.cycle_next())
-utils.bind("ALT + SHIFT + TAB", "Focus on previous window", hl.dsp.window.cycle_next({ next = false }))
-utils.bind("ALT + TAB", "Reveal active window on top", hl.dsp.window.bring_to_top())
-utils.bind("ALT + SHIFT + TAB", "Reveal active window on top", hl.dsp.window.bring_to_top())
+bind("ALT + TAB", "Focus on next window", hl.dsp.window.cycle_next())
+bind("ALT + SHIFT + TAB", "Focus on previous window", hl.dsp.window.cycle_next({ next = false }))
+bind("ALT + TAB", "Reveal active window on top", hl.dsp.window.bring_to_top())
+bind("ALT + SHIFT + TAB", "Reveal active window on top", hl.dsp.window.bring_to_top())
 
-utils.bind("CTRL + ALT + TAB", "Focus on next monitor", hl.dsp.focus({ monitor = "+1" }))
-utils.bind("CTRL + ALT + SHIFT + TAB", "Focus on previous monitor", hl.dsp.focus({ monitor = "-1" }))
+bind("CTRL + ALT + TAB", "Focus on next monitor", hl.dsp.focus({ monitor = "+1" }))
+bind("CTRL + ALT + SHIFT + TAB", "Focus on previous monitor", hl.dsp.focus({ monitor = "-1" }))
 
-utils.bind("SUPER + code:20", "Expand window left", hl.dsp.window.resize({ x = -100, y = 0, relative = true }))
-utils.bind("SUPER + code:21", "Shrink window left", hl.dsp.window.resize({ x = 100, y = 0, relative = true }))
-utils.bind("SUPER + SHIFT + code:20", "Shrink window up", hl.dsp.window.resize({ x = 0, y = -100, relative = true }))
-utils.bind("SUPER + SHIFT + code:21", "Expand window down", hl.dsp.window.resize({ x = 0, y = 100, relative = true }))
+bind("SUPER + code:20", "Expand window left", hl.dsp.window.resize({ x = -100, y = 0, relative = true }))
+bind("SUPER + code:21", "Shrink window left", hl.dsp.window.resize({ x = 100, y = 0, relative = true }))
+bind("SUPER + SHIFT + code:20", "Shrink window up", hl.dsp.window.resize({ x = 0, y = -100, relative = true }))
+bind("SUPER + SHIFT + code:21", "Expand window down", hl.dsp.window.resize({ x = 0, y = 100, relative = true }))
 
-utils.bind(
-	"SUPER + ALT + code:20",
-	"Expand window left a little",
-	hl.dsp.window.resize({ x = -25, y = 0, relative = true })
-)
-utils.bind(
-	"SUPER + ALT + code:21",
-	"Shrink window left a little",
-	hl.dsp.window.resize({ x = 25, y = 0, relative = true })
-)
-utils.bind(
+bind("SUPER + ALT + code:20", "Expand window left a little", hl.dsp.window.resize({ x = -25, y = 0, relative = true }))
+bind("SUPER + ALT + code:21", "Shrink window left a little", hl.dsp.window.resize({ x = 25, y = 0, relative = true }))
+bind(
 	"SUPER + SHIFT + ALT + code:20",
 	"Shrink window up a little",
 	hl.dsp.window.resize({ x = 0, y = -25, relative = true })
 )
-utils.bind(
+bind(
 	"SUPER + SHIFT + ALT + code:21",
 	"Expand window down a little",
 	hl.dsp.window.resize({ x = 0, y = 25, relative = true })
 )
 
-utils.bind(
-	"SUPER + CTRL + code:20",
-	"Expand window left a lot",
-	hl.dsp.window.resize({ x = -300, y = 0, relative = true })
-)
-utils.bind(
-	"SUPER + CTRL + code:21",
-	"Shrink window left a lot",
-	hl.dsp.window.resize({ x = 300, y = 0, relative = true })
-)
-utils.bind(
+bind("SUPER + CTRL + code:20", "Expand window left a lot", hl.dsp.window.resize({ x = -300, y = 0, relative = true }))
+bind("SUPER + CTRL + code:21", "Shrink window left a lot", hl.dsp.window.resize({ x = 300, y = 0, relative = true }))
+bind(
 	"SUPER + CTRL + SHIFT + code:20",
 	"Shrink window up a lot",
 	hl.dsp.window.resize({ x = 0, y = -300, relative = true })
 )
-utils.bind(
+bind(
 	"SUPER + CTRL + SHIFT + code:21",
 	"Expand window down a lot",
 	hl.dsp.window.resize({ x = 0, y = 300, relative = true })
 )
 
-utils.bind("SUPER + mouse_down", "Scroll active workspace forward", hl.dsp.focus({ workspace = "e+1" }))
-utils.bind("SUPER + mouse_up", "Scroll active workspace backward", hl.dsp.focus({ workspace = "e-1" }))
+bind("SUPER + mouse_down", "Scroll active workspace forward", hl.dsp.focus({ workspace = "e+1" }))
+bind("SUPER + mouse_up", "Scroll active workspace backward", hl.dsp.focus({ workspace = "e-1" }))
 
-utils.bind("SUPER + mouse:272", "Move window", hl.dsp.window.drag(), { mouse = true })
-utils.bind("SUPER + mouse:273", "Resize window", hl.dsp.window.resize(), { mouse = true })
+bind("SUPER + mouse:272", "Move window", hl.dsp.window.drag(), { mouse = true })
+bind("SUPER + mouse:273", "Resize window", hl.dsp.window.resize(), { mouse = true })
 
-utils.bind("SUPER + G", "Toggle window grouping", hl.dsp.group.toggle())
-utils.bind("SUPER + ALT + G", "Move active window out of group", hl.dsp.window.move({ out_of_group = true }))
+bind("SUPER + G", "Toggle window grouping", hl.dsp.group.toggle())
+bind("SUPER + ALT + G", "Move active window out of group", hl.dsp.window.move({ out_of_group = true }))
 
-utils.bind("SUPER + ALT + LEFT", "Move window to group on left", hl.dsp.window.move({ into_group = "l" }))
-utils.bind("SUPER + ALT + RIGHT", "Move window to group on right", hl.dsp.window.move({ into_group = "r" }))
-utils.bind("SUPER + ALT + UP", "Move window to group on top", hl.dsp.window.move({ into_group = "u" }))
-utils.bind("SUPER + ALT + DOWN", "Move window to group on bottom", hl.dsp.window.move({ into_group = "d" }))
+bind("SUPER + ALT + LEFT", "Move window to group on left", hl.dsp.window.move({ into_group = "l" }))
+bind("SUPER + ALT + RIGHT", "Move window to group on right", hl.dsp.window.move({ into_group = "r" }))
+bind("SUPER + ALT + UP", "Move window to group on top", hl.dsp.window.move({ into_group = "u" }))
+bind("SUPER + ALT + DOWN", "Move window to group on bottom", hl.dsp.window.move({ into_group = "d" }))
 
-utils.bind("SUPER + ALT + TAB", "Next window in group", hl.dsp.group.next())
-utils.bind("SUPER + ALT + SHIFT + TAB", "Previous window in group", hl.dsp.group.prev())
+bind("SUPER + ALT + TAB", "Next window in group", hl.dsp.group.next())
+bind("SUPER + ALT + SHIFT + TAB", "Previous window in group", hl.dsp.group.prev())
 
-utils.bind("SUPER + CTRL + LEFT", "Move grouped window focus left", hl.dsp.group.prev())
-utils.bind("SUPER + CTRL + RIGHT", "Move grouped window focus right", hl.dsp.group.next())
+bind("SUPER + CTRL + LEFT", "Move grouped window focus left", hl.dsp.group.prev())
+bind("SUPER + CTRL + RIGHT", "Move grouped window focus right", hl.dsp.group.next())
 
-utils.bind("SUPER + ALT + mouse_down", "Next window in group", hl.dsp.group.next())
-utils.bind("SUPER + ALT + mouse_up", "Previous window in group", hl.dsp.group.prev())
+bind("SUPER + ALT + mouse_down", "Next window in group", hl.dsp.group.next())
+bind("SUPER + ALT + mouse_up", "Previous window in group", hl.dsp.group.prev())
 
 for index = 1, 5 do
-	utils.bind(
+	bind(
 		"SUPER + ALT + code:" .. tostring(index + 9),
 		"Switch to group window " .. index,
 		hl.dsp.group.active({ index = index })
 	)
 end
 
-utils.bind("SUPER + code:61", "Monitor scaling up", "omarchy-hyprland-monitor-scaling up")
-utils.bind("SUPER + ALT + code:61", "Monitor scaling down", "omarchy-hyprland-monitor-scaling down")
-
-utils.bind("SUPER + C", "Universal copy", utils.universal_clipboard_shortcut("CTRL", "C", "CTRL", "Insert"))
-utils.bind("SUPER + V", "Universal paste", utils.universal_clipboard_shortcut("CTRL", "V", "SHIFT", "Insert"))
-utils.bind("SUPER + X", "Universal cut", utils.send_shortcut_once("CTRL", "X"))
+bind("SUPER + code:61", "Monitor scaling up", "omarchy-hyprland-monitor-scaling up")
+bind("SUPER + ALT + code:61", "Monitor scaling down", "omarchy-hyprland-monitor-scaling down")

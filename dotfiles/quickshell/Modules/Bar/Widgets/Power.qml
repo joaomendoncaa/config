@@ -1,11 +1,15 @@
-import qs.Core
 import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import qs.Core
 
 Rectangle {
     id: root
+
+    property QtObject barWindow: null
+
+    signal toggle()
 
     Layout.preferredWidth: Config.buttonSize
     Layout.preferredHeight: Config.buttonSize
@@ -55,9 +59,9 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: function(mouse) {
             if (mouse.button === Qt.RightButton)
-                Quickshell.execDetached(["bash", "-c", "loginctl lock-session & omarchy-lock-screen"]);
+                Quickshell.execDetached(["qs-power-lock"])
             else
-                Quickshell.execDetached(["omarchy-menu", "system"]);
+                root.toggle()
         }
     }
 

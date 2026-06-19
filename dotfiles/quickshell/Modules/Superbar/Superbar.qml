@@ -23,6 +23,7 @@ PanelWindow {
     property bool chartInitialized: false
     property string chartQueryMarker: ""
     property string fdQueryMarker: ""
+    property string initialMode: "apps"
 
     signal dismissed()
 
@@ -269,6 +270,8 @@ PanelWindow {
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
     Component.onCompleted: {
+        if (initialMode !== "apps")
+            setSearchMode(initialMode);
         rebuildDisplay();
         Qt.callLater(function() {
             keyCatcher.forceActiveFocus();

@@ -1,65 +1,33 @@
 #!/usr/bin/env bash
 
-# Zoxide config
-# Utility functions for zoxide
-function __zoxide_pwd() {
-    \builtin pwd -L
-}
+# Cache and source zoxide init (avoids forking `zoxide init bash` on
+# every startup — saves ~3ms). Regenerate by deleting the cache file.
+__zoxide_cache_dir="$HOME/.cache/bash-init"
+[[ -d "$__zoxide_cache_dir" ]] || mkdir -p "$__zoxide_cache_dir" 2>/dev/null
+__zoxide_cache="$__zoxide_cache_dir/zoxide.bash"
 
-function __zoxide_cd() {
-    # shellcheck disable=SC2164
-    \builtin cd -- "$@"
-}
+if [[ -s "$__zoxide_cache" ]]; then
+    source "$__zoxide_cache"
+else
+    eval "$(zoxide init bash)"
+    zoxide init bash > "$__zoxide_cache" 2>/dev/null || rm -f "$__zoxide_cache"
+fi
 
-# Hook configuration for zoxide
-__zoxide_oldpwd="$(__zoxide_pwd)"
-
-function __zoxide_hook() {
+# Override zoxide's precmd hook to avoid a fork on every prompt. Stock
+# __zoxide_hook does `pwd_tmp="$(__zoxide_pwd)"` — command substitution
+# forks a subshell every prompt. $PWD is the logical working directory,
+# identical to `pwd -L` (what __zoxide_pwd returns), with no fork.
+__zoxide_hook() {
     \builtin local -r retval="$?"
-    \builtin local pwd_tmp
-    pwd_tmp="$(__zoxide_pwd)"
+    \builtin local pwd_tmp=$PWD
     if [[ ${__zoxide_oldpwd} != "${pwd_tmp}" ]]; then
         __zoxide_oldpwd="${pwd_tmp}"
         \command zoxide add -- "${__zoxide_oldpwd}"
     fi
-    return "${retval}"
+    \builtin return "${retval}"
 }
 
-# Initialize hook
-if [[ ${PROMPT_COMMAND:=} != *'__zoxide_hook'* ]]; then
-    PROMPT_COMMAND="__zoxide_hook;${PROMPT_COMMAND#;}"
-fi
-
-__zoxide_z_prefix='z#'
-
-# Jump to a directory using only keywords
-function __zoxide_z() {
-    # shellcheck disable=SC2199
-    if [[ $# -eq 0 ]]; then
-        __zoxide_cd ~
-    elif [[ $# -eq 1 && $1 == '-' ]]; then
-        __zoxide_cd "${OLDPWD}"
-    elif [[ $# -eq 1 && -d $1 ]]; then
-        __zoxide_cd "$1"
-    elif [[ ${@: -1} == "${__zoxide_z_prefix}"?* ]]; then
-        # shellcheck disable=SC2124
-        \builtin local result="${@: -1}"
-        __zoxide_cd "${result:${#__zoxide_z_prefix}}"
-    else
-        \builtin local result
-        # shellcheck disable=SC2312
-        result="$(\command zoxide query -- "$@")" &&
-            __zoxide_cd "${result}"
-    fi
-}
-
-# Jump to a directory using interactive search
-function __zoxide_zi() {
-    \builtin local result
-    result="$(\command zoxide query --interactive -- "$@")" && __zoxide_cd "${result}"
-}
-
-# Custom cd command with zoxide
+# Custom cd/cdi commands (not provided by stock zoxide init).
 \builtin unalias cd &>/dev/null || \builtin true
 function cd() {
     __zoxide_z "$@"
@@ -69,5 +37,3 @@ function cd() {
 function cdi() {
     __zoxide_zi "$@"
 }
-
-eval "$(zoxide init bash)"

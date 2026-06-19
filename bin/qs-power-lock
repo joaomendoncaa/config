@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+quickshell ipc -p ~/.config/quickshell call lock lock >/dev/null 2>&1 || true
+hyprctl switchxkblayout all 0 >/dev/null 2>&1

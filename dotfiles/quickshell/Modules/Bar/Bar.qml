@@ -3,6 +3,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import qs.Core
 import qs.Modules.Bar.Widgets
@@ -11,11 +12,25 @@ PanelWindow {
     id: bar
 
     property bool launcherOpen: false
+    property bool powerMenuOpen: false
 
     signal toggleLauncher()
+    signal togglePowerMenu()
+
+    property alias powerButtonItem: powerItem
+
+    property real powerMenuX: 0
+    property real powerMenuY: 0
+
+    function updatePowerMenuPosition() {
+        var pos = powerItem.mapToItem(null, 0, 0)
+        powerMenuX = pos.x + powerItem.width - 160
+        powerMenuY = pos.y + powerItem.height + Config.gapsOut + Config.borderSize
+    }
 
     implicitHeight: Config.height
     color: Config.background
+    WlrLayershell.layer: powerMenuOpen ? WlrLayer.Overlay : WlrLayer.Top
     anchors.top: true
     anchors.left: true
     anchors.right: true
@@ -106,6 +121,12 @@ PanelWindow {
         }
 
         Power {
+            id: powerItem
+            barWindow: bar
+            onToggle: {
+                bar.updatePowerMenuPosition()
+                bar.togglePowerMenu()
+            }
         }
 
     }

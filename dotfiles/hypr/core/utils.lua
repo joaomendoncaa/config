@@ -1,13 +1,6 @@
 M = {}
 
-local QUICKSHELL_CONFIG = "$(realpath ~/.config/quickshell)"
-local terminal_classes = {
-	alacritty = true,
-	["com.mitchellh.ghostty"] = true,
-	foot = true,
-	kitty = true,
-	wezterm = true,
-}
+local QUICKSHELL_CONFIG = "~/.config/quickshell"
 
 local function escape_single_quotes(value)
 	return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
@@ -121,12 +114,26 @@ function M.active_window_is_terminal()
 		return false
 	end
 
+	local terminal_classes = {
+		alacritty = true,
+		["com.mitchellh.ghostty"] = true,
+		foot = true,
+		kitty = true,
+		wezterm = true,
+	}
+
 	return terminal_classes[window.class:lower()] == true
 end
 
 function M.quickshell_ipc(target, method, ...)
 	local args = table.concat({ ... }, " ")
-	return "quickshell ipc -p " .. QUICKSHELL_CONFIG .. " call " .. target .. " " .. method .. (args ~= "" and " " .. args or "")
+	return "quickshell ipc -p "
+		.. QUICKSHELL_CONFIG
+		.. " call "
+		.. target
+		.. " "
+		.. method
+		.. (args ~= "" and " " .. args or "")
 end
 
 M.QUICKSHELL_CONFIG = QUICKSHELL_CONFIG
