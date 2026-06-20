@@ -3,3 +3,23 @@ gui:
   authorColors:
     'joaomendoncaa': '#ff0000'
 disableStartupPopups: true
+keybinding:
+  universal:
+    prevItem: <c-p>
+    prevItem-alt: k
+    nextItem: <c-n>
+    nextItem-alt: j
+    confirmMenu: <c-y>
+customCommands:
+  - key: "<c-a>"
+    description: "Pick AI commit (opencode)"
+    command: 'git commit -m "{{.Form.Msg}}"'
+    context: "files"
+    prompts:
+      - type: "menuFromCommand"
+        title: "Inferred commit messages"
+        key: "Msg"
+        command: "opencode-commit"
+        filter: '^(?P<number>[0-9]+)\. (?P<message>.+)$'
+        valueFormat: "{{ .message }}"
+        labelFormat: "{{ .number }}: {{ .message | green }}"
