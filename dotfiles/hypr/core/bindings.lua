@@ -191,9 +191,9 @@ hl.define_submap("ai", "reset", function()
 end)
 hl.bind("SUPER + A", hl.dsp.submap("ai"), { description = "Enter AI submap" })
 
-bind("XF86AudioRaiseVolume", "Volume up", "omarchy-audio-output-volume raise", { locked = true, repeating = true })
-bind("XF86AudioLowerVolume", "Volume down", "omarchy-audio-output-volume lower", { locked = true, repeating = true })
-bind("XF86AudioMute", "Mute", "omarchy-audio-output-volume mute-toggle", { locked = true })
+bind("XF86AudioRaiseVolume", "Volume up", "audio-output-volume raise", { locked = true, repeating = true })
+bind("XF86AudioLowerVolume", "Volume down", "audio-output-volume lower", { locked = true, repeating = true })
+bind("XF86AudioMute", "Mute", "audio-output-volume mute-toggle", { locked = true })
 bind("XF86AudioMicMute", "Mute microphone", "omarchy-audio-input-mute", { locked = true })
 bind("XF86MonBrightnessUp", "Brightness up", "omarchy-brightness-display +5%", { locked = true, repeating = true })
 bind("XF86MonBrightnessDown", "Brightness down", "omarchy-brightness-display 5%-", { locked = true, repeating = true })
@@ -229,13 +229,13 @@ bind("XF86TouchpadOff", "Disable touchpad", "omarchy-toggle-touchpad off", { loc
 bind(
 	"ALT + XF86AudioRaiseVolume",
 	"Volume up precise",
-	"omarchy-audio-output-volume +1",
+	"audio-output-volume +1",
 	{ locked = true, repeating = true }
 )
 bind(
 	"ALT + XF86AudioLowerVolume",
 	"Volume down precise",
-	"omarchy-audio-output-volume -1",
+	"audio-output-volume -1",
 	{ locked = true, repeating = true }
 )
 bind(
@@ -251,10 +251,10 @@ bind(
 	{ locked = true, repeating = true }
 )
 
-bind("XF86AudioNext", "Next track", "omarchy-shell media next", { locked = true })
-bind("XF86AudioPause", "Pause", "omarchy-shell media playPause", { locked = true })
-bind("XF86AudioPlay", "Play", "omarchy-shell media playPause", { locked = true })
-bind("XF86AudioPrev", "Previous track", "omarchy-shell media previous", { locked = true })
+bind("XF86AudioNext", "Next track", "swayosd-client --playerctl next", { locked = true })
+bind("XF86AudioPause", "Pause", "swayosd-client --playerctl play-pause", { locked = true })
+bind("XF86AudioPlay", "Play", "swayosd-client --playerctl play-pause", { locked = true })
+bind("XF86AudioPrev", "Previous track", "swayosd-client --playerctl prev", { locked = true })
 
 bind("SHIFT + XF86AudioMute", "Switch audio output", "omarchy-audio-output-switch", { locked = true })
 bind("SHIFT + XF86AudioPause", "Switch media source", "omarchy-audio-source-switch", { locked = true })

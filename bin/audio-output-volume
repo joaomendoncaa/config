@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+action="${1:-}"
+
+if [[ -z $action ]]; then
+    echo "Usage: audio-output-volume <raise|lower|mute-toggle|+N|-N>"
+    exit 1
+fi
+
+case "$action" in
+    raise)  action="+2" ;;
+    lower)  action="-2" ;;
+    mute-toggle|+*|-*) ;;
+    *)
+        echo "Unknown volume action: $action"
+        exit 1
+        ;;
+esac
+
+runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+debounce_file="$runtime_dir/audio-output-volume-mute-toggle.last"
+now=$(date +%s%3N)
+last=0
+if [[ $action == "mute-toggle" ]]; then
+    [[ -r $debounce_file ]] && read -r last < "$debounce_file" || true
+    if (( now - last < 250 )); then
+        exit 0
+    fi
+    printf '%s\n' "$now" > "$debounce_file"
+fi
+
+exec swayosd-client --output-volume "$action"
