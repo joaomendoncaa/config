@@ -23,7 +23,7 @@ bind("SUPER + CTRL + ALT + Z", "Reset zoom", function()
 end)
 
 hl.bind("SUPER + D", hl.dsp.exec_cmd("/home/joao/.local/bin/voxtype record toggle"), { description = "Voxtype toggle" })
-hl.bind("SUPER + F", hl.dsp.window.fullscreen(), { description = "Toggle Fullscreen" })
+bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
 hl.bind("SUPER + SHIFT + V", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle Float" })
 bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
 hl.bind(
@@ -264,7 +264,6 @@ bind("SUPER + W", "Close window", hl.dsp.window.close())
 bind("CTRL + ALT + DELETE", "Close all windows", "qs-power-window-close-all")
 
 bind("SUPER + T", "Toggle window floating/tiling", hl.dsp.window.float({ action = "toggle" }))
-bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
 bind("SUPER + CTRL + F", "Tiled full screen", "omarchy-hyprland-window-tiled-fullscreen-toggle")
 bind("SUPER + ALT + F", "Full width", hl.dsp.window.fullscreen({ mode = "maximized" }))
 bind("SUPER + O", "Pop window out (float & pin)", "omarchy-hyprland-window-pop")
