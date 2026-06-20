@@ -31,9 +31,6 @@ return {
         key('n', '<leader>cR', plugin.rename.rename_file, 'Rename File')
         key('n', '<leader>gb', plugin.gitbrowse.open, 'Git Browse')
         key('n', '<leader>gB', plugin.git.blame_line, 'Git Blame Line')
-        key('n', '<leader>gf', plugin.lazygit.log_file, 'Lazygit Current File History')
-        key('n', '<leader>gg', plugin.lazygit.open, 'Lazygit')
-        key('n', '<leader>gl', plugin.lazygit.log, 'Lazygit Log (cwd)')
         key('n', '<leader>rf', plugin.rename.rename_file, '[R]ename [F]ile')
         key('n', ']]', f(plugin.words.jump, vim.v.count1), 'Next Reference')
         key('n', '[[', f(plugin.words.jump, -vim.v.count1), 'Prev Reference')
@@ -44,14 +41,6 @@ return {
         local plugin = require 'snacks'
 
         plugin.setup(vim.tbl_extend('force', opts, {
-            lazygit = {
-                config = {
-                    os = {
-                        edit = '[ -z "$NVIM" ] && (nvim -- {{filename}}) || (nvim --server "$NVIM" --remote-send "q" && nvim --server "$NVIM" --remote {{filename}})',
-                        editAtLine = '[ -z "$NVIM" ] && (nvim +{{line}} -- {{filename}}) || (nvim --server "$NVIM" --remote-send "q" && nvim --server "$NVIM" --remote {{filename}} && nvim --server "$NVIM" --remote-send ":{{line}}<CR>")',
-                    },
-                },
-            },
             notifier = {
                 enabled = true,
                 timeout = 1500,
