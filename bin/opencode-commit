@@ -4,15 +4,16 @@ set -euo pipefail
 DIFF_FILE=$(mktemp)
 trap 'rm -f "$DIFF_FILE"' EXIT
 
-git diff --cached > "$DIFF_FILE" 2>/dev/null
+git diff --cached >"$DIFF_FILE" 2>/dev/null
 
 if [ ! -s "$DIFF_FILE" ]; then
-    echo "No staged changes found" >&2
-    exit 1
+	echo "No staged changes found" >&2
+	exit 1
 fi
 
 opencode run --file "$DIFF_FILE" --dangerously-skip-permissions \
-    "Generate 5 conventional commit messages for this diff.
+	--model opencode/deepseek-v4-flash-free \
+	"Answer with nothing but 5 CONVENTIONAL commit messages for this diff.
 Output ONLY a numbered list, one per line, like:
 1. type: subject
 2. type: subject
