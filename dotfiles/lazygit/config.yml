@@ -9,7 +9,7 @@ keybinding:
     prevItem-alt: k
     nextItem: <c-n>
     nextItem-alt: j
-    confirmMenu: <c-y>
+    confirmMenu: <enter>
 customCommands:
   - key: "<c-a>"
     description: "Pick AI commit (opencode)"
