@@ -89,10 +89,8 @@ Item {
         return false;
     }
 
-    function copySelectedPath() {
-        if (root.mode === "files")
-            root.copySelectedPath();
-
+    function copySelectedContent() {
+        root.copySelectedContent();
     }
 
     function handleBackspace() {
@@ -130,7 +128,7 @@ Item {
                 return root.activateSelected();
 
             if (event.key == Qt.Key_C)
-                return copySelectedPath();
+                return copySelectedContent();
 
             if (event.key == Qt.Key_P)
                 return itemPrevious();

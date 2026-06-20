@@ -67,6 +67,7 @@ PanelWindow {
                 "iconName": it.iconName || "",
                 "fullText": it.fullText || "",
                 "imagePath": it.imagePath || "",
+                "filePath": it.filePath || "",
                 "mime": it.mime || ""
             });
         }
@@ -164,6 +165,7 @@ PanelWindow {
                 "detail": entry.mime || "",
                 "fullText": "",
                 "imagePath": String(entry.path || ""),
+                "filePath": String(entry.path || ""),
                 "mime": String(entry.mime || "")
             };
 
@@ -171,10 +173,11 @@ PanelWindow {
                 return {
                 "type": "clipboard",
                 "label": entry.capturedAt || "Video",
-                "detail": entry.mime || "",
+                "detail": entry.mime || "video",
                 "fullText": "",
                 "imagePath": String(entry.thumbnail || entry.path || ""),
-                "mime": String(entry.mime || "")
+                "filePath": String(entry.path || ""),
+                "mime": "text/uri-list"
             };
 
             return {
@@ -202,6 +205,14 @@ PanelWindow {
         }];
     }
 
+    function buildClipboardCopyCommand(item) {
+        if (item.filePath && item.mime === "text/uri-list")
+            return "printf 'file://%s\\n' " + Lib.shellQuote(item.filePath) + " | wl-copy --type text/uri-list";
+        if (item.filePath)
+            return "wl-copy --type " + Lib.shellQuote(item.mime) + " < " + Lib.shellQuote(item.filePath);
+        return "wl-copy " + Lib.shellQuote(item.fullText);
+    }
+
     function activateSelected() {
         if (selectedIndex < 0 || selectedIndex >= displayModel.count)
             return ;
@@ -226,10 +237,8 @@ PanelWindow {
             dismiss();
         }
         if (item.type === "clipboard") {
-            if (item.imagePath)
-                Quickshell.execDetached(["bash", "-c", "wl-copy --type " + Lib.shellQuote(item.mime) + " < " + Lib.shellQuote(item.imagePath)]);
-            else
-                Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.fullText)]);
+            var pasteCmd = "; sleep 0.15; wtype -M ctrl -k v -m ctrl 2>/dev/null || true";
+            Quickshell.execDetached(["bash", "-c", buildClipboardCopyCommand(item) + pasteCmd]);
             dismiss();
         }
         if (item.type === "calc") {
@@ -238,14 +247,26 @@ PanelWindow {
         }
     }
 
-    function copySelectedPath() {
-        if (mode !== "files" || selectedIndex < 0)
+    function copySelectedContent() {
+        if (selectedIndex < 0 || selectedIndex >= displayModel.count)
             return ;
 
         var item = displayModel.get(selectedIndex);
-        if (item && item.type === "file")
+        switch (item.type) {
+        case "emoji":
+            Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.emojiChar)]);
+            break;
+        case "file":
             Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.label)]);
-
+            break;
+        case "clipboard":
+            Quickshell.execDetached(["bash", "-c", buildClipboardCopyCommand(item)]);
+            break;
+        case "calc":
+            Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.fullText)]);
+            break;
+        }
+        dismiss();
     }
 
     function resolveIcon(name) {

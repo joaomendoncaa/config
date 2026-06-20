@@ -4,7 +4,7 @@ HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=2000
 
-PS1='\W '
+PS1='\n\W '
 
 bind '"\C-b": backward-word'
 bind '"\C-f": forward-word'
