@@ -226,18 +226,8 @@ utils.omarchy_bind_toggle("XF86TouchpadToggle", "Toggle touchpad", "touchpad", {
 bind("XF86TouchpadOn", "Enable touchpad", "omarchy-toggle-touchpad on", { locked = true })
 bind("XF86TouchpadOff", "Disable touchpad", "omarchy-toggle-touchpad off", { locked = true })
 
-bind(
-	"ALT + XF86AudioRaiseVolume",
-	"Volume up precise",
-	"audio-output-volume +1",
-	{ locked = true, repeating = true }
-)
-bind(
-	"ALT + XF86AudioLowerVolume",
-	"Volume down precise",
-	"audio-output-volume -1",
-	{ locked = true, repeating = true }
-)
+bind("ALT + XF86AudioRaiseVolume", "Volume up precise", "audio-output-volume +1", { locked = true, repeating = true })
+bind("ALT + XF86AudioLowerVolume", "Volume down precise", "audio-output-volume -1", { locked = true, repeating = true })
 bind(
 	"ALT + XF86MonBrightnessUp",
 	"Brightness up precise",
@@ -349,8 +339,14 @@ bind(
 	hl.dsp.window.resize({ x = 0, y = 300, relative = true })
 )
 
-bind("SUPER + mouse_down", "Scroll active workspace forward", hl.dsp.focus({ workspace = "e+1" }))
-bind("SUPER + mouse_up", "Scroll active workspace backward", hl.dsp.focus({ workspace = "e-1" }))
+bind("SUPER + mouse_down", "Zoom in", function()
+	local zoom = hl.get_config("cursor.zoom_factor") or 1
+	hl.config({ cursor = { zoom_factor = zoom + 1.5 } })
+end)
+bind("SUPER + mouse_up", "Zoom out", function()
+	local zoom = hl.get_config("cursor.zoom_factor") or 1
+	hl.config({ cursor = { zoom_factor = 1 } })
+end)
 
 bind("SUPER + mouse:272", "Move window", hl.dsp.window.drag(), { mouse = true })
 bind("SUPER + mouse:273", "Resize window", hl.dsp.window.resize(), { mouse = true })
