@@ -229,7 +229,8 @@ PanelWindow {
             }
         }
         if (item.type === "emoji") {
-            Quickshell.execDetached(["bash", "-c", "wl-copy '" + item.emojiChar.replace(/'/g, "'\\''") + "'"]);
+            var pasteCmd = "; sleep 0.15; wtype -M ctrl -k v -m ctrl 2>/dev/null || true";
+            Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.emojiChar) + pasteCmd]);
             dismiss();
         }
         if (item.type === "file") {
