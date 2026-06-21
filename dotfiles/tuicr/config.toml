@@ -1,2 +1,4 @@
 theme = "default"
 transparent_background = true
+
+diff_view = "side-by-side"
