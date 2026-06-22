@@ -119,7 +119,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            color: "#000"
+            color: Config.backgroundColored
 
             Item {
                 anchors.fill: parent
@@ -141,9 +141,9 @@ Item {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 360
                         height: 50
-                        color: "#111"
+                        color: Config.backgroundColored
                         radius: Config.buttonBorderRadius
-                        border.color: root.authenticating ? "#111" : (root.failureMessage ? "#e94560" : "#333")
+                        border.color: root.authenticating ? Config.backgroundColored : (root.failureMessage ? "#e94560" : Config.foregroundSecondary)
                         border.width: Config.borderSize
                         clip: true
 
@@ -155,7 +155,7 @@ Item {
                             anchors.rightMargin: 16
                             anchors.topMargin: 6
                             anchors.bottomMargin: 6
-                            color: "white"
+                            color: Config.foreground
                             font.pixelSize: Config.fontSize
                             font.family: Config.fontFamily
                             font.letterSpacing: 4
@@ -185,14 +185,14 @@ Item {
 
                                 Rectangle {
                                     anchors.fill: parent
-                                    color: "white"
+                                    color: Config.foreground
                                     visible: !root.authenticating && pwInput.activeFocus && root.cursorBlink === 0
                                 }
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: root.spinnerFrames[root.spinnerIndex]
-                                    color: "white"
+                                    color: Config.foreground
                                     font.family: Config.fontFamily
                                     font.pixelSize: Config.fontSize
                                     font.letterSpacing: 0
