@@ -259,8 +259,6 @@ bind("SUPER + ALT + F", "Full width", hl.dsp.window.fullscreen({ mode = "maximiz
 bind("SUPER + O", "Pop window out (float & pin)", "omarchy-hyprland-window-pop")
 bind("SUPER + ALT + Home", "Save window width", "omarchy-hyprland-window-width save")
 bind("SUPER + Home", "Restore window width", "omarchy-hyprland-window-width restore")
-bind("SUPER + L", "Toggle workspace layout", "omarchy-hyprland-workspace-layout-toggle")
-
 bind("SUPER + LEFT", "Focus on left window", hl.dsp.focus({ direction = "l" }))
 bind("SUPER + RIGHT", "Focus on right window", hl.dsp.focus({ direction = "r" }))
 bind("SUPER + UP", "Focus on above window", hl.dsp.focus({ direction = "u" }))

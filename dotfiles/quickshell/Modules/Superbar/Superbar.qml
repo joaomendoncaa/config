@@ -10,7 +10,7 @@ import qs.Core
 PanelWindow {
     id: root
 
-    property var modes: ["apps", "emojis", "files", "clipboard", "calc", "chart"]
+    property var modes: ["apps", "emojis", "files", "clipboard", "calc", "chart", "theme"]
     property string mode: "apps"
     property string filterText: ""
     property int selectedIndex: 0
@@ -24,6 +24,7 @@ PanelWindow {
     property string chartQueryMarker: ""
     property string fdQueryMarker: ""
     property string initialMode: "apps"
+    property var themeList: []
 
     signal dismissed()
 
@@ -96,6 +97,8 @@ PanelWindow {
             return searchClipboard();
         case "calc":
             return searchCalc();
+        case "theme":
+            return searchThemes();
         }
         return [];
     }
@@ -205,6 +208,16 @@ PanelWindow {
         }];
     }
 
+    function searchThemes() {
+        var results = Lib.filterThemes(themeList, filterText, 100);
+        return results.map(function(name) {
+            return {
+                "type": "theme",
+                "label": name
+            };
+        });
+    }
+
     function buildClipboardCopyCommand(item) {
         if (item.filePath && item.mime === "text/uri-list")
             return "printf 'file://%s\\n' " + Lib.shellQuote(item.filePath) + " | wl-copy --type text/uri-list";
@@ -244,6 +257,10 @@ PanelWindow {
         }
         if (item.type === "calc") {
             Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.fullText)]);
+            dismiss();
+        }
+        if (item.type === "theme") {
+            Quickshell.execDetached(["bash", "-c", "theme apply " + Lib.shellQuote(item.label)]);
             dismiss();
         }
     }
@@ -310,6 +327,8 @@ PanelWindow {
         if (mode === "chart" && !chartInitialized)
             chartInitialized = true;
 
+        if (mode === "theme" && themeList.length === 0)
+            themeListProc.running = true;
     }
     onFilterTextChanged: {
         if (mode === "files")
@@ -569,6 +588,23 @@ PanelWindow {
             }
         }
 
+    }
+
+    Process {
+        id: themeListProc
+
+        command: [Quickshell.env("HOME") + "/.config.jmmm.sh/bin/theme", "list"]
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                var lines = String(text || "").trim().split("\n").filter(function(l) {
+                    return l.length > 0;
+                });
+                root.themeList = lines;
+                if (root.mode === "theme")
+                    root.rebuildDisplay();
+            }
+        }
     }
 
     Timer {

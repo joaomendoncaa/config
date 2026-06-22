@@ -197,6 +197,29 @@ function filterEmojis(emojis, query, limit) {
 }
 
 /**
+ * Filters a theme name list by a search query, limited to a maximum number of results.
+ * @param {Array<string>} themes - Array of theme name strings
+ * @param {string} query - Search query
+ * @param {number} limit - Maximum number of results
+ * @returns {Array<string>} Filtered theme names
+ */
+function filterThemes(themes, query, limit) {
+    var values = Array.isArray(themes) ? themes : []
+    var needle = String(query || '').trim().toLowerCase()
+    var max = Math.max(0, Number(limit) || 100)
+    if (max === 0) return []
+    var out = []
+    for (var i = 0; i < values.length; i++) {
+        var name = String(values[i] || '')
+        if (!needle || name.toLowerCase().indexOf(needle) >= 0) {
+            out.push(name)
+            if (out.length >= max) break
+        }
+    }
+    return out
+}
+
+/**
  * Parses a JSON string of clipboard history into an array.
  * @param {string} raw - Raw JSON string
  * @returns {Array} Parsed clipboard history array, or empty array on failure

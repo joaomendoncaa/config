@@ -15,8 +15,7 @@ QtObject {
     readonly property int cursorBlinkInterval: 530
     readonly property string fontFamily: "JetBrainsMonoNL Nerd Font"
     readonly property int shellPadding: 10
-    // Colors - computed from theme (not readonly so we can update them)
-    // All colors must be in 6-digit hex format (#RRGGBB) for proper alpha derivation
+
     property string foreground: "white"
     property string accent: "#509475"
     property int borderSize: 2
@@ -27,13 +26,8 @@ QtObject {
     property string background: "transparent"
     property string backgroundColored: "#000000"
     property string backgroundHovered: "#40FFFFFF"
-    // Process to run the extraction script
-    property var stdoutCollector
-    property var colorProcess
+    property var themeFile
 
-    // Combines a 6-digit hex color (#RRGGBB) with an alpha value
-    // Returns #AARRGGBB format for Qt Quick color property
-    // Assumes input is valid 6-digit hex (validated in parsing functions)
     function hexWithAlpha(hexColor, alphaHex) {
         if (!hexColor || hexColor.length !== 7 || !hexColor.startsWith("#")) {
             console.warn("[Config] Expected #RRGGBB format, got:", hexColor);
@@ -42,42 +36,26 @@ QtObject {
         return "#" + alphaHex + hexColor.substring(1);
     }
 
-    function applyColors(fore, selFore, back, acc, borderW, gaps) {
-        foreground = fore || "white";
-        background = "transparent";
-        backgroundColored = back || "#000000";
-        foregroundSelected = selFore || "black";
-        accent = acc || foreground;
-        borderSize = borderW || 2;
-        gapsOut = gaps || 10;
-        foregroundSecondary = hexWithAlpha(foreground, "60");
-        backgroundHovered = hexWithAlpha(foreground, "40");
-        console.log("[Config] Theme loaded - foreground:", foreground, "selected:", foregroundSelected, "accent:", accent, "borderSize:", borderSize, "gapsOut:", gapsOut, "backgroundColored:", backgroundColored);
-    }
-
-    function parseColorOutput() {
-        var output = stdoutCollector.text.trim();
-        console.log("[Config] Script output:", output);
+    function applyColors(raw) {
         try {
-            var colors = JSON.parse(output);
-            applyColors(colors.foreground, colors.selection_foreground, colors.background, colors.accent, colors.borderSize, colors.gapsOut);
+            var c = JSON.parse(String(raw || '{}'));
+            foreground = c.foreground || "white";
+            accent = c.accent || foreground;
+            background = "transparent";
+            backgroundColored = c.background || "#000000";
+            foregroundSelected = c.selection_foreground || "black";
+            foregroundSecondary = hexWithAlpha(foreground, "60");
+            backgroundHovered = hexWithAlpha(foreground, "40");
         } catch (e) {
-            console.warn("[Config] Failed to parse colors JSON:", e);
+            console.warn("[Config] Failed to parse colors.json:", e);
         }
     }
 
-    Component.onCompleted: {
-        console.log("[Config] Loading theme colors...");
-        colorProcess.running = true;
+    themeFile: FileView {
+        path: Quickshell.env("HOME") + "/.config/theme/colors.json"
+        watchChanges: true
+        onLoaded: applyColors(text())
+        onFileChanged: reload()
+        printErrors: false
     }
-
-    stdoutCollector: StdioCollector {
-        onStreamFinished: parseColorOutput()
-    }
-
-    colorProcess: Process {
-        command: [Quickshell.env("HOME") + "/.config.jmmm.sh/bin/omarchy-theme-get-colors"]
-        stdout: stdoutCollector
-    }
-
 }

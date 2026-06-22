@@ -2,6 +2,24 @@ M = {}
 
 local QUICKSHELL_CONFIG = "~/.config/quickshell"
 
+function M.read_theme()
+	local f = io.open(os.getenv('HOME') .. '/.config/theme/colors.json', 'r')
+	if not f then
+		return {}
+	end
+	local content = f:read('*a')
+	f:close()
+	local theme = {}
+	for key, value in content:gmatch('"([^"]+)"%s*:%s*"([^"]+)"') do
+		theme[key] = value
+	end
+	return theme
+end
+
+function M.color_strip(hex)
+	return hex and hex:gsub('^#', '')
+end
+
 local function escape_single_quotes(value)
 	return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
 end

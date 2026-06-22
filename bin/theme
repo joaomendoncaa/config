@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+THEME_DIR="$HOME/.config/theme"
+COLORS_JSON="$THEME_DIR/colors.json"
+
+# TODO kill the pest
+read_source_colors() {
+	local src="$HOME/.config/omarchy/current/theme/colors.toml"
+	local name_file="$HOME/.config/omarchy/current/theme.name"
+	[[ -f "$src" ]] || {
+		echo "No theme at $src" >&2
+		exit 1
+	}
+	local name
+	name=$(cat "$name_file" 2>/dev/null || echo "unknown")
+	awk -v name="$name" '
+		BEGIN { printf "{\"name\":\"%s\"", name }
+		/^[a-zA-Z_][a-zA-Z0-9_]*\s*=\s*"/ {
+			key = $0; sub(/\s*=.*/, "", key); gsub(/\s/, "", key)
+			val = $0; sub(/^[^=]*=\s*"/, "", val); sub(/".*/, "", val)
+			printf ",\"%s\":\"%s\"", key, val
+		}
+		END { print "}" }
+	' "$src"
+}
+
+generate_tuicr() {
+	local accent fg bg cursor muted
+	accent=$(cmd_get accent)
+	fg=$(cmd_get foreground)
+	bg=$(cmd_get background)
+	cursor=$(cmd_get cursor)
+	muted=$(cmd_get color8)
+	local tuicr_dir="$HOME/.config/tuicr/themes"
+	mkdir -p "$tuicr_dir"
+	cat >"$tuicr_dir/current.toml" <<EOF
+panel_bg = "$bg"
+bg_highlight = "$muted"
+fg_primary = "$fg"
+fg_secondary = "$fg"
+fg_dim = "$muted"
+border_focused = "$accent"
+border_unfocused = "$muted"
+cursor_color = "$cursor"
+cursor_line_bg = "$bg"
+status_bar_bg = "$bg"
+
+diff_add = "$(cmd_get color2)"
+diff_add_bg = "$bg"
+diff_del = "$(cmd_get color1)"
+diff_del_bg = "$bg"
+diff_context = "$fg"
+diff_hunk_header = "$(cmd_get color4)"
+expanded_context_fg = "$muted"
+
+syntax_add_bg = "$bg"
+syntax_del_bg = "$bg"
+
+file_added = "$(cmd_get color2)"
+file_modified = "$(cmd_get color3)"
+file_deleted = "$(cmd_get color1)"
+file_renamed = "$(cmd_get color5)"
+
+reviewed = "$(cmd_get color2)"
+pending = "$(cmd_get color3)"
+
+comment_note = "$(cmd_get color4)"
+comment_suggestion = "$(cmd_get color6)"
+comment_issue = "$(cmd_get color1)"
+comment_praise = "$(cmd_get color2)"
+
+message_info_fg = "$bg"
+message_info_bg = "$(cmd_get color6)"
+message_warning_fg = "$bg"
+message_warning_bg = "$(cmd_get color3)"
+message_error_fg = "$fg"
+message_error_bg = "$(cmd_get color1)"
+
+update_badge_fg = "$bg"
+update_badge_bg = "$(cmd_get color3)"
+
+mode_fg = "$bg"
+mode_bg = "$fg"
+
+branch_name = "$(cmd_get color6)"
+help_indicator = "$muted"
+EOF
+}
+
+cmd_sync() {
+	mkdir -p "$THEME_DIR"
+	read_source_colors >"$COLORS_JSON"
+	generate_tuicr
+	hyprctl reload 2>/dev/null || true
+}
+
+cmd_apply() {
+	local name="${1:-}"
+	if [[ -n "$name" ]]; then
+		omarchy theme set "$name"
+	else
+		cmd_sync
+	fi
+}
+
+cmd_get() {
+	[[ -f "$COLORS_JSON" ]] || cmd_sync
+	if [[ -z "${1:-}" ]]; then
+		cat "$COLORS_JSON"
+	else
+		grep -oP "\"$1\"\s*:\s*\"\K[^\"]+" "$COLORS_JSON" | head -1
+	fi
+}
+
+cmd_list() {
+	local dirs=("$HOME/.config/omarchy/themes" "${OMARCHY_PATH:-$HOME/.local/share/omarchy}/themes")
+	for dir in "${dirs[@]}"; do
+		[[ -d "$dir" ]] || continue
+		for d in "$dir"/*/; do
+			[[ -d "$d" ]] || continue
+			basename "$d"
+		done
+	done | sort -u
+}
+
+case "${1:-}" in
+apply)
+	shift
+	cmd_apply "$@"
+	;;
+sync) cmd_sync ;;
+get)
+	shift
+	cmd_get "$@"
+	;;
+list) cmd_list ;;
+*)
+	echo "Usage: theme {apply [name]|sync|get [key]|list}" >&2
+	exit 1
+	;;
+esac
