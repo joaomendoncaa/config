@@ -7,6 +7,7 @@ import Quickshell.Io
 import qs.Core
 import qs.Modules.Bar
 import qs.Modules.DictationOSD
+import qs.Modules.VolumeOSD
 import qs.Modules.Lock
 import qs.Modules.PowerMenu
 import qs.Modules.Superbar
@@ -21,6 +22,8 @@ Scope {
     Lock { id: lockService }
 
     DictationOSD { }
+
+    VolumeOSD { }
 
     IpcHandler {
         target: "launcher"

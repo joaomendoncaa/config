@@ -29,4 +29,27 @@ if [[ $action == "mute-toggle" ]]; then
 	printf '%s\n' "$now" >"$debounce_file"
 fi
 
-exec swayosd-client --output-volume "$action"
+state_dir="$runtime_dir/volume-osd"
+state_file="$state_dir/state"
+
+if [[ $action == "mute-toggle" ]]; then
+    wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle >/dev/null
+elif [[ $action == +* ]]; then
+    step="${action#+}"
+    wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 >/dev/null
+    wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ "${step}%+"
+elif [[ $action == -* ]]; then
+    step="${action#-}"
+    wpctl set-mute @DEFAULT_AUDIO_SINK@ 0 >/dev/null
+    wpctl set-volume @DEFAULT_AUDIO_SINK@ "${step}%-"
+fi
+
+volume_state=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+percent=$(echo "$volume_state" | awk '{ for (i=1; i<=NF; i++) if ($i ~ /^[0-9.]+$/) print int($i * 100) }')
+muted=false
+if echo "$volume_state" | grep -q MUTED; then
+    muted=true
+fi
+
+mkdir -p "$state_dir"
+echo "$percent $muted" > "$state_file"

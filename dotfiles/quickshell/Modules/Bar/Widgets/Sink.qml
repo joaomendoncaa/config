@@ -25,6 +25,16 @@ Rectangle {
         return Math.pow(value, 0.66);
     }
 
+    function writeVolumeState() {
+        if (!Pipewire.defaultAudioSink || !Pipewire.defaultAudioSink.audio)
+            return;
+
+        var percent = Math.round(Pipewire.defaultAudioSink.audio.volume * 100);
+        var muted = Pipewire.defaultAudioSink.audio.muted ? "true" : "false";
+        var stateDir = Quickshell.env("XDG_RUNTIME_DIR") + "/volume-osd";
+        Quickshell.execDetached(["sh", "-c", "mkdir -p " + stateDir + " && echo '" + percent + " " + muted + "' > " + stateDir + "/state"]);
+    }
+
     Layout.preferredWidth: Config.buttonSize
     Layout.preferredHeight: Config.buttonSize
     radius: Config.buttonBorderRadius
@@ -112,9 +122,10 @@ Rectangle {
         onClicked: function(mouse) {
             if (mouse.button === Qt.MiddleButton)
                 Quickshell.execDetached(["omarchy-launch-audio"]);
-            else if (mouse.button === Qt.RightButton)
-                Quickshell.execDetached(["pamixer", "-t"]);
-            else
+            else if (mouse.button === Qt.RightButton) {
+                Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
+                root.writeVolumeState();
+            } else
                 Quickshell.execDetached(["/home/joao/.config.jmmm.sh/bin/toggle-sink"]);
         }
         onWheel: function(wheel) {
@@ -129,6 +140,7 @@ Rectangle {
             else
                 newVol = Math.max(0, currentVol - step);
             Pipewire.defaultAudioSink.audio.volume = newVol;
+            root.writeVolumeState();
         }
     }
 

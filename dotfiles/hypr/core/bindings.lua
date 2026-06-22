@@ -241,10 +241,10 @@ bind(
 	{ locked = true, repeating = true }
 )
 
-bind("XF86AudioNext", "Next track", "swayosd-client --playerctl next", { locked = true })
-bind("XF86AudioPause", "Pause", "swayosd-client --playerctl play-pause", { locked = true })
-bind("XF86AudioPlay", "Play", "swayosd-client --playerctl play-pause", { locked = true })
-bind("XF86AudioPrev", "Previous track", "swayosd-client --playerctl prev", { locked = true })
+bind("XF86AudioNext", "Next track", "playerctl next", { locked = true })
+bind("XF86AudioPause", "Pause", "playerctl play-pause", { locked = true })
+bind("XF86AudioPlay", "Play", "playerctl play-pause", { locked = true })
+bind("XF86AudioPrev", "Previous track", "playerctl prev", { locked = true })
 
 bind("SHIFT + XF86AudioMute", "Switch audio output", "omarchy-audio-output-switch", { locked = true })
 bind("SHIFT + XF86AudioPause", "Switch media source", "omarchy-audio-source-switch", { locked = true })
