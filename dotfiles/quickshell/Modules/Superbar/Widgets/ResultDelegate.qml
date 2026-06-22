@@ -129,11 +129,7 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onContainsMouseChanged: {
-            if (containsMouse)
-                itemHovered(index);
-
-        }
+        onPositionChanged: itemHovered(index)
         onClicked: itemClicked(index)
     }
 

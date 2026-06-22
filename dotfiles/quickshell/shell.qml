@@ -2,9 +2,9 @@
 
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Core
+import qs.Modules.BlurMask
 import qs.Modules.Bar
 import qs.Modules.DictationOSD
 import qs.Modules.VolumeOSD
@@ -76,22 +76,18 @@ Scope {
 
     }
 
+    BlurMask {
+        visible: root.launcherOpen || root.powerMenuOpen
+    }
+
     Bar {
         id: barComponent
-        launcherOpen: root.launcherOpen
-        powerMenuOpen: root.powerMenuOpen
         onToggleLauncher: root.launcherOpen = !root.launcherOpen
         onTogglePowerMenu: root.powerMenuOpen = !root.powerMenuOpen
     }
 
     ClipboardCapture {
         id: clipboardCapture
-    }
-
-    HyprlandFocusGrab {
-        active: root.launcherOpen && launcherLoader.item !== null
-        windows: launcherLoader.item ? [launcherLoader.item] : []
-        onCleared: root.launcherOpen = false
     }
 
     LazyLoader {

@@ -11,9 +11,6 @@ import qs.Modules.Bar.Widgets
 PanelWindow {
     id: bar
 
-    property bool launcherOpen: false
-    property bool powerMenuOpen: false
-
     signal toggleLauncher()
     signal togglePowerMenu()
 
@@ -30,7 +27,8 @@ PanelWindow {
 
     implicitHeight: Config.height
     color: Config.background
-    WlrLayershell.layer: powerMenuOpen ? WlrLayer.Overlay : WlrLayer.Top
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.namespace: "shell-bar"
     anchors.top: true
     anchors.left: true
     anchors.right: true

@@ -302,9 +302,8 @@ PanelWindow {
         return Quickshell.iconPath(name, true);
     }
 
-    exclusiveZone: 0
     color: "transparent"
-    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "superbar"
     WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
     exclusionMode: ExclusionMode.Ignore
