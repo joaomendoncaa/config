@@ -1,4 +1,7 @@
+node_modules
 ./dotfiles/lazygit/state.yml
 .env
 .plans.md
 .repro
+spec
+spec.*
