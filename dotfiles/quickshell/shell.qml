@@ -85,7 +85,7 @@ Scope {
 
     Bar {
         id: barComponent
-        visible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen
         onToggleLauncher: root.launcherOpen = !root.launcherOpen
         onTogglePowerMenu: root.powerMenuOpen = !root.powerMenuOpen
     }

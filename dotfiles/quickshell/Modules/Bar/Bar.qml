@@ -19,6 +19,9 @@ PanelWindow {
     property real powerMenuX: 0
     property real powerMenuY: 0
 
+    property bool contentVisible: true
+    mask: contentVisible ? Qt.region(0, 0, bar.width, bar.height) : Qt.region()
+
     function updatePowerMenuPosition() {
         var pos = powerItem.mapToItem(null, 0, 0)
         powerMenuX = pos.x + powerItem.width - 160
@@ -34,11 +37,16 @@ PanelWindow {
     anchors.right: true
     margins.top: Config.shellPadding
 
-    RowLayout {
-        anchors.left: parent.left
-        anchors.leftMargin: Config.shellPadding
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: Config.gapInner
+    Item {
+        anchors.fill: parent
+        opacity: contentVisible ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+
+        RowLayout {
+            anchors.left: parent.left
+            anchors.leftMargin: Config.shellPadding
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Config.gapInner
 
         Rectangle {
             Layout.preferredWidth: Config.buttonSize
@@ -128,5 +136,7 @@ PanelWindow {
         }
 
     }
+
+}
 
 }
