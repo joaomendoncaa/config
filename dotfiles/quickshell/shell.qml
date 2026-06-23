@@ -2,6 +2,7 @@
 
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Core
 import qs.Modules.BlurMask
@@ -18,6 +19,8 @@ Scope {
     property bool launcherOpen: false
     property bool powerMenuOpen: false
     property string launcherMode: "apps"
+
+    readonly property bool fullscreen: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.hasFullscreen
 
     Lock { id: lockService }
 
@@ -82,6 +85,7 @@ Scope {
 
     Bar {
         id: barComponent
+        visible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen
         onToggleLauncher: root.launcherOpen = !root.launcherOpen
         onTogglePowerMenu: root.powerMenuOpen = !root.powerMenuOpen
     }
