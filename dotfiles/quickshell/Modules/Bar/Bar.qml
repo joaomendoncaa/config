@@ -22,7 +22,7 @@ PanelWindow {
     function updatePowerMenuPosition() {
         var pos = powerItem.mapToItem(null, 0, 0)
         powerMenuX = pos.x + powerItem.width - 160
-        powerMenuY = pos.y + powerItem.height + Config.gapsOut + Config.borderSize
+        powerMenuY = Config.shellPadding + Config.height + Config.gapsOut
     }
 
     implicitHeight: Config.height

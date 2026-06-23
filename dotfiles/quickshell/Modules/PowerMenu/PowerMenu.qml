@@ -50,7 +50,7 @@ PanelWindow {
         x: 0
         y: 0
         width: 160
-        height: 140
+        height: 112
         color: Config.hexWithAlpha(Config.backgroundColored, "CC")
         radius: Config.borderRadius
         focus: true
