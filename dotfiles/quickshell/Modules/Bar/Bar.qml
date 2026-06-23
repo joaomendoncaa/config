@@ -13,19 +13,32 @@ PanelWindow {
 
     signal toggleLauncher()
     signal togglePowerMenu()
+    signal toggleUpdatePanel()
 
     property alias powerButtonItem: powerItem
+    property alias updatePanelButtonItem: centerBar.updatesItem
 
     property real powerMenuX: 0
     property real powerMenuY: 0
 
+    property real updatePanelX: 0
+    property real updatePanelY: 0
+    readonly property int updatePanelWidth: 480
+    readonly property int updatePanelHeight: 420
+
     property bool contentVisible: true
-    mask: contentVisible ? Qt.region(0, 0, bar.width, bar.height) : Qt.region()
 
     function updatePowerMenuPosition() {
         var pos = powerItem.mapToItem(null, 0, 0)
         powerMenuX = pos.x + powerItem.width - 160
         powerMenuY = Config.shellPadding + Config.height + Config.gapsOut
+    }
+
+    function updateUpdatePanelPosition() {
+        var btn = centerBar.updatesItem
+        var pos = btn.mapToItem(null, 0, 0)
+        updatePanelX = pos.x + btn.width / 2 - bar.updatePanelWidth / 2
+        updatePanelY = Config.shellPadding + Config.height + Config.gapsOut
     }
 
     implicitHeight: Config.height
@@ -110,8 +123,13 @@ PanelWindow {
     }
 
     CenterBar {
+        id: centerBar
         anchors.centerIn: parent
         anchors.verticalCenter: parent.verticalCenter
+        updatesItem.onToggle: {
+            bar.updateUpdatePanelPosition()
+            bar.toggleUpdatePanel()
+        }
     }
 
     RowLayout {

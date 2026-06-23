@@ -10,6 +10,7 @@ Item {
     implicitHeight: Config.buttonSize
 
     property bool showAux: true
+    property alias updatesItem: updates
 
     RowLayout {
         id: row
@@ -18,6 +19,10 @@ Item {
 
         Recording { opacity: root.showAux ? 1 : 0; enabled: root.showAux }
         Clock { }
-        Updates { opacity: root.showAux ? 1 : 0; enabled: root.showAux }
+        Updates {
+            id: updates
+            opacity: root.showAux ? 1 : 0
+            enabled: root.showAux
+        }
     }
 }

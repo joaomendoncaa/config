@@ -11,6 +11,7 @@ import qs.Modules.DictationOSD
 import qs.Modules.VolumeOSD
 import qs.Modules.Lock
 import qs.Modules.PowerMenu
+import qs.Modules.UpdatePanel
 import qs.Modules.Superbar
 
 Scope {
@@ -18,6 +19,7 @@ Scope {
 
     property bool launcherOpen: false
     property bool powerMenuOpen: false
+    property bool updatePanelOpen: false
     property string launcherMode: "apps"
 
     readonly property bool fullscreen: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.hasFullscreen
@@ -79,15 +81,36 @@ Scope {
 
     }
 
+    IpcHandler {
+        target: "update-panel"
+
+        function toggle() {
+            if (!updatePanelOpen)
+                barComponent.updateUpdatePanelPosition()
+            updatePanelOpen = !updatePanelOpen
+        }
+
+        function open() {
+            barComponent.updateUpdatePanelPosition()
+            updatePanelOpen = true
+        }
+
+        function close() {
+            updatePanelOpen = false
+        }
+
+    }
+
     BlurMask {
-        visible: root.launcherOpen || root.powerMenuOpen
+        visible: root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen
     }
 
     Bar {
         id: barComponent
-        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen
         onToggleLauncher: root.launcherOpen = !root.launcherOpen
         onTogglePowerMenu: root.powerMenuOpen = !root.powerMenuOpen
+        onToggleUpdatePanel: root.updatePanelOpen = !root.updatePanelOpen
     }
 
     ClipboardCapture {
@@ -115,6 +138,20 @@ Scope {
             popupX: barComponent.powerMenuX
             popupY: barComponent.powerMenuY
             onDismissed: root.powerMenuOpen = false
+        }
+
+    }
+
+    LazyLoader {
+        id: updatePanelLoader
+
+        active: root.updatePanelOpen
+
+        UpdatePanel {
+            popupX: barComponent.updatePanelX
+            popupY: barComponent.updatePanelY
+            updatesItem: barComponent.updatePanelButtonItem
+            onDismissed: root.updatePanelOpen = false
         }
 
     }

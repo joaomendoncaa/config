@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+first=true
+echo "["
+
+__pkg_epoch() {
+    local pkg="$1"
+    local epoch
+    epoch=$(expac --timefmt='%s' '%e' "$pkg" 2>/dev/null)
+    if ! [[ "$epoch" =~ ^[0-9]+$ ]]; then
+        epoch=$(pacman -Qi "$pkg" 2>/dev/null | sed -n 's/^Install Date\s*: //p' | xargs -I{} date -d "{}" +%s 2>/dev/null || echo 0)
+    fi
+    echo "${epoch:-0}"
+}
+
+__pacman_list_json() {
+    while IFS=' ' read -r pkg curr arrow next; do
+        [ -z "$pkg" ] && continue
+        epoch=$(__pkg_epoch "$pkg")
+        $first || echo ","
+        first=false
+        printf '  {"name":"%s","currentVersion":"%s","newVersion":"%s","installEpoch":%s,"source":"pacman"}' "$pkg" "$curr" "$next" "$epoch"
+    done < <(pacman -Qu 2>/dev/null)
+}
+
+__aur_list_json() {
+    while IFS=' ' read -r pkg curr arrow next; do
+        [ -z "$pkg" ] && continue
+        clean_name="${pkg#*/}"
+        epoch=$(__pkg_epoch "$clean_name")
+        $first || echo ","
+        first=false
+        printf '  {"name":"%s","currentVersion":"%s","newVersion":"%s","installEpoch":%s,"source":"aur"}' "$clean_name" "$curr" "$next" "$epoch"
+    done < <(yay -Qua 2>/dev/null)
+}
+
+__flatpak_list_json() {
+    while IFS=$'\t' read -r appid version rest; do
+        [ -z "$appid" ] && continue
+        case "$appid" in
+            *.*) ;;  # looks like an app ID (has a dot)
+            *) continue ;;
+        esac
+        $first || echo ","
+        first=false
+        printf '  {"name":"%s","currentVersion":"?","newVersion":"%s","installEpoch":0,"source":"flatpak"}' "$appid" "${version:-?}"
+    done < <(flatpak remote-ls --updates --columns=app,version 2>/dev/null | tail -n +2)
+}
+
+__pacman_list_json
+__aur_list_json
+__flatpak_list_json
+
+echo ""
+echo "]"

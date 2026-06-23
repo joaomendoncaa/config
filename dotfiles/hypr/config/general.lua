@@ -11,6 +11,6 @@ return {
 	layout = 'dwindle',
 	col = {
 		active_border = 'rgb(' .. accent .. ')',
-		inactive_border = 'rgba(595959aa)',
+		inactive_border = 'rgba(59595900)',
 	},
 }
