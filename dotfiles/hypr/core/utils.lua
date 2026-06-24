@@ -3,11 +3,11 @@ M = {}
 local QUICKSHELL_CONFIG = "~/.config/quickshell"
 
 function M.read_theme()
-	local f = io.open(os.getenv('HOME') .. '/.config/theme/colors.json', 'r')
+	local f = io.open(os.getenv("HOME") .. "/.config/theme/colors.json", "r")
 	if not f then
 		return {}
 	end
-	local content = f:read('*a')
+	local content = f:read("*a")
 	f:close()
 	local theme = {}
 	for key, value in content:gmatch('"([^"]+)"%s*:%s*"([^"]+)"') do
@@ -16,8 +16,13 @@ function M.read_theme()
 	return theme
 end
 
+function M.is_window(window)
+	local w = hl.get_active_window()
+	return w and w.class == window
+end
+
 function M.color_strip(hex)
-	return hex and hex:gsub('^#', '')
+	return hex and hex:gsub("^#", "")
 end
 
 local function escape_single_quotes(value)

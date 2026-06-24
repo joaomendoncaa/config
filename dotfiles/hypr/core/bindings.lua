@@ -376,3 +376,19 @@ end
 
 bind("SUPER + code:61", "Monitor scaling up", "omarchy-hyprland-monitor-scaling up")
 bind("SUPER + ALT + code:61", "Monitor scaling down", "omarchy-hyprland-monitor-scaling down")
+
+bind("CTRL + N", "Helium: Down / Normal: Ctrl+N", function()
+	if utils.is_window("helium") then
+		utils.send_shortcut_once("", "Down")()
+	else
+		utils.send_shortcut_once("CTRL", "N")()
+	end
+end)
+
+bind("CTRL + P", "Helium: Up / Normal: Ctrl+P", function()
+	if utils.is_window("helium") then
+		utils.send_shortcut_once("", "Up")()
+	else
+		utils.send_shortcut_once("CTRL", "P")()
+	end
+end)
