@@ -383,7 +383,7 @@ bind("CTRL + N", "Helium: Down / Normal: Ctrl+N", function()
 	else
 		utils.send_shortcut_once("CTRL", "N")()
 	end
-end)
+end, { repeating = true })
 
 bind("CTRL + P", "Helium: Up / Normal: Ctrl+P", function()
 	if utils.is_window("helium") then
@@ -391,4 +391,4 @@ bind("CTRL + P", "Helium: Up / Normal: Ctrl+P", function()
 	else
 		utils.send_shortcut_once("CTRL", "P")()
 	end
-end)
+end, { repeating = true })
