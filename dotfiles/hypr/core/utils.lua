@@ -131,7 +131,7 @@ function M.send_shortcut_once(mods, key)
 	end
 end
 
-function M.active_window_is_terminal()
+function M.is_window_terminal()
 	local window = hl.get_active_window()
 	if not window or not window.class then
 		return false
@@ -163,7 +163,7 @@ M.QUICKSHELL_CONFIG = QUICKSHELL_CONFIG
 
 function M.universal_clipboard_shortcut(default_mods, default_key, terminal_mods, terminal_key)
 	return function()
-		if active_window_is_terminal() then
+		if is_window_terminal() then
 			M.send_shortcut_once(terminal_mods, terminal_key)()
 		else
 			M.send_shortcut_once(default_mods, default_key)()

@@ -299,7 +299,7 @@ bind("SUPER + SHIFT + UP", "Swap window up", hl.dsp.window.swap({ direction = "u
 bind("SUPER + SHIFT + DOWN", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
 
 bind("ALT + TAB", "Terminal: Tmux last-window / Normal: Cycle next window", function()
-	if utils.active_window_is_terminal() then
+	if utils.is_window_terminal() then
 		utils.send_shortcut_once("ALT", "Tab")()
 	else
 		hl.dispatch(hl.dsp.window.cycle_next())
@@ -307,7 +307,7 @@ bind("ALT + TAB", "Terminal: Tmux last-window / Normal: Cycle next window", func
 end)
 
 bind("ALT + SHIFT + TAB", "Terminal: Tmux last-window / Normal: Cycle prev window", function()
-	if utils.active_window_is_terminal() then
+	if utils.is_window_terminal() then
 		utils.send_shortcut_once("ALT", "Tab")()
 	else
 		hl.dispatch(hl.dsp.window.cycle_next({ next = false }))
