@@ -5,7 +5,7 @@ set -euo pipefail
 #  git-dirty check <path>   — spawns a background git status, writes * or '' to file
 #  git-dirty read  <path>   — reads the pre-computed file, prints ' *' or nothing
 # keyed by path (slashes -> dashes)
-# pidfile to have multiple consumers without staleness
+# pidfile to debounce git status calls
 
 mode="${1:?usage: git-dirty read|check <path>}"
 path="${2:?}"
