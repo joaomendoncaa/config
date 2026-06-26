@@ -388,18 +388,50 @@ end
 bind("SUPER + code:61", "Monitor scaling up", "omarchy-hyprland-monitor-scaling up")
 bind("SUPER + ALT + code:61", "Monitor scaling down", "omarchy-hyprland-monitor-scaling down")
 
-bind("CTRL + N", "Helium: Down / Normal: Ctrl+N", function()
-	if utils.is_window("helium") then
-		utils.send_shortcut_once("", "Down")()
-	else
-		utils.send_shortcut_once("CTRL", "N")()
-	end
-end, { repeating = true })
+-- Dynamic CTRL+N/P bindings: only intercept when helium is focused.
+-- Layer shell surfaces (Quickshell popups) would not receive forwarded keys
+-- via send_key_state("activewindow"), so we unbind when a layer opens.
+do
+	local helium_bound = false
 
-bind("CTRL + P", "Helium: Up / Normal: Ctrl+P", function()
-	if utils.is_window("helium") then
-		utils.send_shortcut_once("", "Up")()
-	else
-		utils.send_shortcut_once("CTRL", "P")()
+	local function bind_helium_nav()
+		if helium_bound then
+			return
+		end
+		hl.bind("CTRL + N", "Helium: Down", function()
+			utils.send_shortcut_once("", "Down")()
+		end, { repeating = true })
+		hl.bind("CTRL + P", "Helium: Up", function()
+			utils.send_shortcut_once("", "Up")()
+		end, { repeating = true })
+		helium_bound = true
 	end
-end, { repeating = true })
+
+	local function unbind_helium_nav()
+		if not helium_bound then
+			return
+		end
+		hl.unbind("CTRL + N")
+		hl.unbind("CTRL + P")
+		helium_bound = false
+	end
+
+	hl.on("window.active", function(window, _)
+		if window.class == "helium" then
+			bind_helium_nav()
+		else
+			unbind_helium_nav()
+		end
+	end)
+
+	hl.on("layer.opened", function(_)
+		unbind_helium_nav()
+	end)
+
+	hl.on("layer.closed", function(_)
+		local w = hl.get_active_window()
+		if w and w.class == "helium" then
+			bind_helium_nav()
+		end
+	end)
+end

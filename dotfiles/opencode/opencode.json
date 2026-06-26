@@ -13,6 +13,11 @@
             "path": "~/lab/voxtype",
             "description": "Use for patching voxtype"
         },
+        "hyprland": {
+            "repository": "github.com/hyprwm/Hyprland",
+            "branch": "main",
+            "description": "Use for updating hyprland configurations"
+        },
         "omarchy-4": {
             "repository": "github.com/basecamp/omarchy",
             "branch": "omarchy-shell",
