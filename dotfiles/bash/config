@@ -3,8 +3,9 @@
 HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=2000
+PROMPT_COMMAND=(__git_async_check)
 
-PS1='\n\W '
+PS1='\n\W$(__git_dirty_char) '
 
 bind '"\C-b": backward-word'
 bind '"\C-f": forward-word'

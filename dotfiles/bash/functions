@@ -212,6 +212,39 @@ wtprune() {
 	git worktree prune -v
 }
 
+# ── async git dirty check (shared by PS1 + tmux status-left) ───────────────────
+# Spawns a background job that writes * or empty to /tmp/git-dirty-<path>
+# (path with / replaced by -). Keyed by path, not pane — same repo in two
+# panes shares one file. tmux hooks call bin/git-dirty check, writing the
+# same file with a shared pidfile so a stale job from either trigger is killed
+# before a new one starts. Readers (PS1, tmux status-left via git-dirty read)
+# read the file synchronously (instant). Result is one cycle behind.
+
+__git_dirty_char() {
+    [[ -s "/tmp/git-dirty-${PWD//\//-}" ]] && printf ' *'
+}
+
+__git_async_check() {
+    local file="/tmp/git-dirty-${PWD//\//-}"
+    local pidfile="$file.pid"
+    [[ -f "$pidfile" ]] && kill "$(cat "$pidfile")" 2>/dev/null || true
+
+    (
+        cd "$PWD" 2>/dev/null || exit
+        git rev-parse --git-dir &>/dev/null || { : > "$file"; exit; }
+
+        local dirty
+        dirty=$(git status --porcelain 2>/dev/null)
+        if [[ -n "$dirty" ]]; then
+            printf '*' > "$file"
+        else
+            : > "$file"
+        fi
+    ) &>/dev/null &
+    echo $! > "$pidfile"
+    disown
+}
+
 # Quick compress pass on a video
 compress() {
 	f="$1"
