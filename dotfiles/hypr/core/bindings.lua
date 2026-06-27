@@ -392,6 +392,8 @@ bind("SUPER + ALT + code:61", "Monitor scaling down", "omarchy-hyprland-monitor-
 -- Layer shell surfaces (Quickshell popups) can't receive forwarded keys
 -- via send_key_state("activewindow"), so we unbind when a layer opens,
 -- letting the keystroke reach the surface natively.
+-- bind/unbind are deferred via hl.timer to avoid iterator invalidation
+-- if the event fires during CKeybindManager::handleKeybinds.
 do
 	local bound = false
 
@@ -399,10 +401,10 @@ do
 		if bound then
 			return
 		end
-		hl.bind("CTRL + N", "Helium: Down", function()
+		bind("CTRL + N", "Helium: Down", function()
 			utils.send_shortcut_once("", "Down")()
 		end, { repeating = true })
-		hl.bind("CTRL + P", "Helium: Up", function()
+		bind("CTRL + P", "Helium: Up", function()
 			utils.send_shortcut_once("", "Up")()
 		end, { repeating = true })
 		bound = true
@@ -419,20 +421,22 @@ do
 
 	hl.on("window.active", function(window)
 		if window and window.class == "helium" then
-			bind_nav()
+			hl.timer(bind_nav, { timeout = 1, type = "oneshot" })
 		else
-			unbind_nav()
+			hl.timer(unbind_nav, { timeout = 1, type = "oneshot" })
 		end
 	end)
 
 	hl.on("layer.opened", function()
-		unbind_nav()
+		hl.timer(unbind_nav, { timeout = 1, type = "oneshot" })
 	end)
 
 	hl.on("layer.closed", function()
-		local w = hl.get_active_window()
-		if w and w.class == "helium" then
-			bind_nav()
-		end
+		hl.timer(function()
+			local w = hl.get_active_window()
+			if w and w.class == "helium" then
+				bind_nav()
+			end
+		end, { timeout = 1, type = "oneshot" })
 	end)
 end
