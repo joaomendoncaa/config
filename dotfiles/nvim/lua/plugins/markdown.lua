@@ -25,7 +25,7 @@ return {
         ft = { 'markdown' },
 
         -- In the case npm is not installed the plugin has an utility to do so.
-        build = 'cd app && yarn install',
+        build = 'cd app && npm install --no-package-lock && npm install msgpack-lite --no-save --no-package-lock',
 
         -- Upon initializing the plugin, a temporary CSS file will be created in the
         -- /tmp directory. This file will be hashed from its contents so that it
