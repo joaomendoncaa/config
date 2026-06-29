@@ -14,6 +14,9 @@ alias lg='lazygit'
 alias nvl='nvim leet'
 alias yt-dlp-mp4='yt-dlp -S res,ext:mp4:m4a --recode mp4'
 alias oc='opencode'
+alias cb='cargo build'
+alias cr='cargo run'
+alias cbr='cargo build --release'
 
 if [ -x /usr/bin/dircolors ]; then
 	test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
