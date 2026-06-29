@@ -22,6 +22,11 @@
             "repository": "github.com/basecamp/omarchy",
             "branch": "omarchy-shell",
             "description": "Use for omarchy's migration to quickshell and lua-based hyprland"
+        },
+        "herdr": {
+            "repository": "https://github.com/ogulcancelik/herdr",
+            "branch": "master",
+            "description": "Use for any question regarding herdr"
         }
     }
 }
