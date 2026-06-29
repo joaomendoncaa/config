@@ -40,7 +40,12 @@ return {
         setup 'surround'
         setup 'trailspace'
         setup 'move'
-        setup 'diff'
+        setup('diff', {
+            view = {
+                style = 'sign',
+                signs = { add = '▎', change = '▎', delete = '▎' },
+            },
+        })
         setup 'comment'
         setup 'cursorword'
 
