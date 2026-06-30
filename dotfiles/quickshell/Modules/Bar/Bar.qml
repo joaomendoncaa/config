@@ -58,6 +58,8 @@ PanelWindow {
         RowLayout {
             anchors.left: parent.left
             anchors.leftMargin: Config.shellPadding
+            anchors.right: centerBar.left
+            anchors.rightMargin: Config.gapInner
             anchors.verticalCenter: parent.verticalCenter
             spacing: Config.gapInner
 

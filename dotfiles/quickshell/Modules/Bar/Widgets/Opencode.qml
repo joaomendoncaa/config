@@ -22,9 +22,26 @@ Rectangle {
     property string resetMonthly: ""
     property string balance: ""
     property string sessionState: "working"
+    property int spinnerFrame: 0
+    readonly property var spinnerChars: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+
+    ListModel {
+        id: sessionModel
+    }
 
     function fetchUsage() {
         usageProc.running = true;
+    }
+
+    function parseSessions(output) {
+        sessionModel.clear();
+        var trimmed = output.trim();
+        if (trimmed === '')
+            return;
+        var titles = trimmed.split('\n');
+        for (var i = 0; i < titles.length; i++) {
+            sessionModel.append({title: titles[i]});
+        }
     }
 
     function scaleForBar(value) {
@@ -58,10 +75,26 @@ Rectangle {
         }
     }
 
+    Layout.fillWidth: true
     Layout.preferredWidth: Config.buttonSize * 5
     Layout.preferredHeight: Config.buttonSize
     Layout.leftMargin: Config.gapOuter
     color: "transparent"
+
+    readonly property real defaultTitleWidth: 200
+    readonly property real minTitleWidth: 40
+    readonly property real perSessionTitleWidth: {
+        if (sessionModel.count === 0)
+            return 0;
+        var n = sessionModel.count;
+        var fixed = iconContainer.width + 4 + battery5h.width + 6 + 4;
+        var spinnerEstimate = Config.fontSize * 0.6;
+        var perSessionOverhead = spinnerEstimate + 3;
+        var interSession = (n - 1) * 8;
+        var available = width - fixed - (n * perSessionOverhead) - interSession;
+        var perTitle = available / n;
+        return Math.max(minTitleWidth, Math.min(defaultTitleWidth, perTitle));
+    }
 
     Item {
         id: iconContainer
@@ -124,6 +157,57 @@ Rectangle {
 
         }
 
+    }
+
+    Item {
+        id: sessionDisplay
+
+        anchors.left: battery5h.right
+        anchors.leftMargin: 6
+        anchors.right: parent.right
+        anchors.rightMargin: 4
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        visible: sessionModel.count > 0
+
+        Row {
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: 8
+
+            Repeater {
+                model: sessionModel
+
+                delegate: Item {
+                    required property string title
+
+                    width: spinnerText.implicitWidth + 3 + titleText.width
+                    height: sessionDisplay.height
+
+                    Text {
+                        id: spinnerText
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: parent.left
+                        text: spinnerChars[spinnerFrame]
+                        color: Config.foreground
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize
+                    }
+
+                    MarqueeText {
+                        id: titleText
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.left: spinnerText.right
+                        anchors.leftMargin: 3
+                        width: perSessionTitleWidth
+                        height: parent.height
+                        text: title
+                        textColor: Config.foreground
+                        fontFamily: Config.fontFamily
+                        fontSize: Config.fontSize
+                    }
+                }
+            }
+        }
     }
 
     MouseArea {
@@ -424,6 +508,55 @@ Rectangle {
             onStreamFinished: root.parseUsage(text)
         }
 
+    }
+
+    Timer {
+        id: spinnerTimer
+
+        interval: 100
+        running: sessionModel.count > 0
+        repeat: true
+        onTriggered: spinnerFrame = (spinnerFrame + 1) % spinnerChars.length
+    }
+
+    Timer {
+        id: sessionTimer
+
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: {
+            if (!sessionProc.running)
+                sessionProc.running = true;
+        }
+    }
+
+    Process {
+        id: sessionProc
+
+        command: [
+            "bash", "-c",
+            "source ~/.profile 2>/dev/null; " +
+            "db=\"${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db\"; " +
+            "sqlite3 \"$db\" \"SELECT s.title FROM session s " +
+            "WHERE s.time_archived IS NULL " +
+            "AND EXISTS (SELECT 1 FROM part p WHERE p.session_id = s.id) " +
+            "AND COALESCE(json_extract((SELECT p.data FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1), '$.type'), '') || '|' || " +
+            "COALESCE(json_extract((SELECT p.data FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1), '$.reason'), '') != 'step-finish|stop' " +
+            "AND s.time_updated > unixepoch('now', '-2 hours') * 1000 " +
+            "AND s.parent_id IS NULL " +
+            "ORDER BY s.time_updated DESC\" 2>/dev/null"
+        ]
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: root.parseSessions(text)
+        }
+
+    }
+
+    Component.onCompleted: {
+        sessionProc.running = true;
     }
 
 }

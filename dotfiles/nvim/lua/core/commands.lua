@@ -2,6 +2,11 @@ local commands = require 'utils.commands'
 local clipboard = require 'utils.clipboard'
 local git = require 'utils.git'
 
+local make_rust = function()
+    pcall(vim.api.nvim_del_augroup_by_name, 'RustCargoQuickFixHooks')
+    vim.bo.makeprg = 'cargo build --release'
+end
+
 local toggle_wrap = function()
     vim.cmd 'set wrap!'
 end
@@ -124,3 +129,40 @@ commands.auto({ 'VimLeavePre' }, {
     callback = git.kill_sync_timers,
     group = commands.augroup 'CleanupGitSyncTimers',
 })
+
+commands.auto('FileType', {
+    pattern = 'rust',
+    group = commands.augroup 'RustMake',
+    callback = make_rust,
+})
+
+local CARGO_EFM = [[%-G,%-Gerror: aborting %.%#,%-Gerror: Could not compile %.%#,%Eerror: %m,%Eerror[E%n]: %m,%Wwarning: %m,%Wwarning[E%n]: %m,%Inote: %m,%C %#--> %f:%l:%c,%C %#╭▸ %f:%l:%c,%E  left:%m,%C right:%m %f:%l:%c,%Z,%f:%l:%c: %t%*[^:]: %m,%f:%l:%c: %*\d:%*\d %t%*[^:]: %m,%-G%f:%l %s,%-G%*[ ]^,%-G%*[ ]^%*[~],%-G%*[ ]...,%-G\s%#Downloading%.%#,%-G\s%#Checking%.%#,%-G\s%#Compiling%.%#,%-G\s%#Finished%.%#,%-G\s%#error: Could not compile %.%#,%-G\s%#To learn more\,%.%#,%-G\s%#For more information about this error\,%.%#,%-Gnote: Run with `RUST_BACKTRACE=%.%#,%.%#panicked at \'%m\'\, %f:%l:%c]]
+
+commands.user('Make', function(opts)
+    make_rust()
+    local args = opts.args or ''
+    local cmd = 'cargo build --release'
+    if args ~= '' then
+        cmd = cmd .. ' ' .. args
+    end
+    local output = vim.fn.system(cmd .. ' 2>&1')
+    local ok = vim.v.shell_error == 0
+    local lines = vim.split(output, '\n')
+    if #lines > 0 and lines[#lines] == '' then
+        table.remove(lines)
+    end
+    if #lines == 0 then
+        vim.notify('Build successful', vim.log.levels.INFO)
+        return
+    end
+    local tmpfile = vim.fn.tempname()
+    vim.fn.writefile(lines, tmpfile)
+    local saved_efm = vim.bo.errorformat
+    vim.bo.errorformat = CARGO_EFM
+    vim.cmd('cfile ' .. tmpfile)
+    vim.bo.errorformat = saved_efm
+    vim.cmd 'botright copen'
+    if not ok then
+        vim.notify('Build failed', vim.log.levels.ERROR)
+    end
+end, { nargs = '*' })
