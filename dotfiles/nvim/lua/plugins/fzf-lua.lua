@@ -117,7 +117,7 @@ return {
             end
 
             key({ 'n', 'v' }, '<leader>sp', fzf.complete_path, '[S]earch [P]ath')
-            key('n', 'gr', fzf.lsp_references, '[G]oto [R]eferences')
+            key('n', 'gR', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
             key('n', 'gd', fzf.lsp_definitions, '[G]oto [D]efinition')
             key('n', 'gD', fzf.lsp_declarations, '[G]oto [D]eclaration')
             key('n', 'gI', fzf.lsp_implementations, '[G]oto [I]mplementation')
