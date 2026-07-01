@@ -3,7 +3,7 @@
     "autoshare": false,
     "autoupdate": true,
     "default_agent": "build",
-    "model": "opencode-go/deepseek-v4-flash",
+    "model": "opencode-go/deepseek-v4-flash-free",
     "references": {
         "config": {
             "path": "~/.config.jmmm.sh",
