@@ -14,6 +14,10 @@ return {
                 template = ' %d',
             },
         },
+        useLspFoldsWithTreesitterFallback = {
+            enabled = true,
+            foldmethodIfNeitherIsAvailable = 'indent', ---@type string|fun(bufnr: number): string
+        },
     },
 
     init = function()
@@ -23,6 +27,7 @@ return {
 
         key('n', 'zz', 'za', { noremap = true, silent = true })
         key('n', 'zr', 'zR', { noremap = true, silent = true })
+        key('n', 'zm', 'zM', { noremap = true, silent = true })
 
         commands.auto({ 'TextChanged', 'InsertLeave', 'LspAttach' }, {
             callback = function(opts)
