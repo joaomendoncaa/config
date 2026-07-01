@@ -1,5 +1,3 @@
 path = ~/lab/*:~/.config.jmmm.sh
 
-hide-hints-footer = true
-
-bad-config-key
+daemon-timeout = 100
