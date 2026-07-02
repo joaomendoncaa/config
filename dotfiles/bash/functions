@@ -245,6 +245,16 @@ __git_async_check() {
     disown
 }
 
+# Auto-discover rust release binaries in ~/lab and ~/lab/worktrees
+command_not_found_handle() {
+  for dir in "$HOME/lab"/*/target/release "$HOME/lab/worktrees"/*/target/release; do
+    if [[ -x "$dir/$1" ]]; then
+      exec "$dir/$1" "${@:2}"
+    fi
+  done
+  return 127
+}
+
 # Quick compress pass on a video
 compress() {
 	f="$1"
