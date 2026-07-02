@@ -182,10 +182,6 @@ hl.layer_rule({ match = { namespace = "^(shell-bar|superbar|power-menu)$" }, no_
 
 hl.window_rule({ match = { class = "(Alacritty|kitty|foot)" }, scroll_touchpad = 1.5 })
 hl.window_rule({ match = { class = "com.mitchellh.ghostty" }, scroll_touchpad = 0.2 })
-hl.window_rule({ match = { initial_class = "zen" }, tag = "-firefox-based-browser" })
-hl.window_rule({ match = { initial_class = "zen" }, float = true })
-hl.window_rule({ match = { initial_class = "zen" }, size = { 500, 800 } })
-hl.window_rule({ match = { initial_class = "zen" }, center = true })
 hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, float = true })
 hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, size = { 600, 800 } })
 hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, move = { 1947, 47 } })
