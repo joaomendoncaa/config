@@ -22,6 +22,8 @@ Scope {
     property bool updatePanelOpen: false
     property string launcherMode: "apps"
 
+    property bool zenActive: false
+
     readonly property bool fullscreen: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.hasFullscreen
 
     Lock { id: lockService }
@@ -107,10 +109,13 @@ Scope {
 
     Bar {
         id: barComponent
+        zenActive: root.zenActive
         contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen
         onToggleLauncher: root.launcherOpen = !root.launcherOpen
         onTogglePowerMenu: root.powerMenuOpen = !root.powerMenuOpen
         onToggleUpdatePanel: root.updatePanelOpen = !root.updatePanelOpen
+        onToggleZen: root.zenActive = true
+        onZenDismissed: root.zenActive = false
     }
 
     ClipboardCapture {

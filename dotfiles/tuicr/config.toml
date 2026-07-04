@@ -1,4 +1,5 @@
 theme = "current"
 transparent_background = true
+leader = "space"
 
 diff_view = "side-by-side"
