@@ -69,7 +69,21 @@ return {
             qmlls = {},
             cssls = {},
             gopls = {},
-            rust_analyzer = {},
+            rust_analyzer = {
+                settings = {
+                    checkOnSave = false,
+                    cargo = {
+                        allFeatures = false,
+                        loadOutDirsFromCheck = false,
+                        buildScripts = {
+                            enable = false,
+                        },
+                    },
+                    procMacro = {
+                        enable = false,
+                    },
+                },
+            },
             glsl_analyzer = {},
             tailwindcss = {},
             stylua = {},
