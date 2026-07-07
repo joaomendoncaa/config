@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell"
+
+case "${1:-}" in
+  add|watch)
+    if [[ $# -ne 2 ]]; then
+      echo "usage: qs-token $1 <solana-mint-address>" >&2
+      exit 1
+    fi
+    quickshell ipc -p "$CONFIG_DIR" call token add "$2"
+    ;;
+  rm|remove)
+    if [[ $# -ne 2 ]]; then
+      echo "usage: qs-token $1 <solana-mint-address>" >&2
+      exit 1
+    fi
+    quickshell ipc -p "$CONFIG_DIR" call token remove "$2"
+    ;;
+  ls|list)
+    quickshell ipc -p "$CONFIG_DIR" call token list
+    ;;
+  *)
+    echo "usage: qs-token (add|remove|list) [solana-mint-address]" >&2
+    exit 1
+    ;;
+esac

@@ -29,6 +29,8 @@ PanelWindow {
     signal toggleZen()
     signal zenDismissed()
 
+    required property var priceLabels
+
     function updatePowerMenuPosition() {
         var pos = powerItem.mapToItem(null, 0, 0);
         powerMenuX = pos.x + powerItem.width - 160;
@@ -149,6 +151,14 @@ PanelWindow {
             anchors.rightMargin: Config.shellPadding
             anchors.verticalCenter: parent.verticalCenter
             spacing: Config.gapInner
+
+            Repeater {
+                model: bar.priceLabels.trackedTokens
+                delegate: PriceLabel {
+                    mint: modelData
+                    priceData: bar.priceLabels.tokenData[modelData]
+                }
+            }
 
             Monitor {
             }
