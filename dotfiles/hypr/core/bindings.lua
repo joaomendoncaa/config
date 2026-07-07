@@ -167,29 +167,26 @@ hl.define_submap("comms", "reset", function()
 end)
 hl.bind("SUPER + C", hl.dsp.submap("comms"), { description = "Enter comms submap" })
 
-hl.define_submap("ai", "reset", function()
-	hl.bind("A", function()
-		hl.dispatch(
-			hl.dsp.exec_cmd(
-				'omarchy-launch-webapp "https://chatgpt.com" & omarchy-launch-webapp "https://grok.com" & omarchy-launch-webapp "https://www.perplexity.ai"'
-			)
-		)
-		hl.dispatch(hl.dsp.submap("reset"))
-	end, { description = "Launch all AI apps" })
-	hl.bind("C", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://chatgpt.com"'))
-		hl.dispatch(hl.dsp.submap("reset"))
-	end, { description = "ChatGPT" })
-	hl.bind("G", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://grok.com"'))
-		hl.dispatch(hl.dsp.submap("reset"))
-	end, { description = "Grok" })
-	hl.bind("P", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://www.perplexity.ai"'))
-		hl.dispatch(hl.dsp.submap("reset"))
-	end, { description = "Perplexity" })
-end)
-hl.bind("SUPER + A", hl.dsp.submap("ai"), { description = "Enter AI submap" })
+hl.window_rule({
+	name = "opencode-panel",
+	match = { class = "com\\.mitchellh\\.ghostty\\.opencode" },
+	float = true,
+	size = "300 monitor_h",
+	move = "monitor_w-300 0",
+})
+
+hl.bind("SUPER + A", function()
+	local current = hl.get_active_workspace()
+	if not current then return end
+	local wins = hl.get_windows({ class = "com\\.mitchellh\\.ghostty\\.opencode", workspace = current.name })
+	if #wins > 0 then
+		for _, win in ipairs(wins) do
+			hl.dispatch(hl.dsp.window.close({ window = win }))
+		end
+	else
+		hl.dispatch(hl.dsp.exec_cmd("ghostty --class=com.mitchellh.ghostty.opencode --working-directory=/home/joao/lab/chat -e /home/joao/.opencode/bin/opencode"))
+	end
+end, { description = "Toggle AI assistant panel" })
 
 bind("XF86AudioRaiseVolume", "Volume up", "audio-output-volume raise", { locked = true, repeating = true })
 bind("XF86AudioLowerVolume", "Volume down", "audio-output-volume lower", { locked = true, repeating = true })
