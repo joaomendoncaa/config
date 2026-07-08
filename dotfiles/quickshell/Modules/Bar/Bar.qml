@@ -152,8 +152,19 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Config.gapInner
 
+            Text {
+                text: "Updating prices..."
+                visible: bar.priceLabels.loading
+                color: Config.foreground
+                font.pixelSize: Config.fontSize - 2
+                font.family: Config.fontFamily
+                Layout.preferredHeight: Config.buttonSize
+                Layout.preferredWidth: implicitWidth + Config.gapInner * 2
+                verticalAlignment: Text.AlignVCenter
+            }
+
             Repeater {
-                model: bar.priceLabels.trackedTokens
+                model: bar.priceLabels.loading ? [] : bar.priceLabels.trackedTokens
                 delegate: PriceLabel {
                     mint: modelData
                     priceData: bar.priceLabels.tokenData[modelData]

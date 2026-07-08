@@ -33,10 +33,21 @@ Scope {
         property var tokenData: ({})
 
         property int _retryDelay: 2000
+        property bool loading: true
 
         onTrackedTokensChanged: {
             if (root.priceLabels.trackedTokens.length > 0)
                 root.priceLabels._kick()
+        }
+
+        function _checkReady(): void {
+            if (!root.priceLabels.loading) return
+            for (var i = 0; i < root.priceLabels.trackedTokens.length; i++) {
+                var m = root.priceLabels.trackedTokens[i]
+                var d = root.priceLabels.tokenData[m]
+                if (!d || d.usdPrice === undefined || d.usdPrice === null) return
+            }
+            root.priceLabels.loading = false
         }
 
         function addToken(mint: string): void {
@@ -55,6 +66,7 @@ Scope {
             var data = JSON.parse(JSON.stringify(root.priceLabels.tokenData))
             delete data[mint]
             root.priceLabels.tokenData = data
+            root.priceLabels._checkReady()
         }
 
         function loadTokens(arr: var): void {
@@ -133,6 +145,7 @@ Scope {
                     }
                     if (!found) throw new Error('no data')
                     root.priceLabels.tokenData = data
+                    root.priceLabels._checkReady()
                 }, true)
             }
         }
@@ -158,6 +171,8 @@ Scope {
                     for (var mint in byMint)
                         (data[mint] || (data[mint] = {})).symbol = byMint[mint].sym
                     root.priceLabels.tokenData = data
+                    root.persistTokens()
+                    root.priceLabels._checkReady()
                 }, false)
             }
         }
@@ -211,7 +226,18 @@ Scope {
         }
 
         onLoaded: {
-            root.priceLabels.loadTokens(storage.get('tokens'))
+            var tokens = storage.get('tokens')
+            var syms = storage.get('tokenSymbols')
+            if (syms && Array.isArray(tokens)) {
+                var data = {}
+                for (var mint in syms) {
+                    if (tokens.indexOf(mint) >= 0)
+                        data[mint] = { symbol: syms[mint] }
+                }
+                root.priceLabels.tokenData = data
+            }
+            root.priceLabels.loadTokens(Array.isArray(tokens) ? tokens : [])
+            root.priceLabels._checkReady()
         }
     }
 
@@ -314,6 +340,13 @@ Scope {
 
     function persistTokens() {
         storage.set('tokens', root.priceLabels.trackedTokens)
+        var syms = {}
+        for (var i = 0; i < root.priceLabels.trackedTokens.length; i++) {
+            var m = root.priceLabels.trackedTokens[i]
+            var d = root.priceLabels.tokenData[m]
+            if (d && d.symbol) syms[m] = d.symbol
+        }
+        storage.set('tokenSymbols', syms)
     }
 
     BlurMask {
