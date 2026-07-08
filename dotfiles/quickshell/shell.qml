@@ -127,7 +127,7 @@ Scope {
                         if (json[mint] && json[mint].usdPrice !== undefined) {
                             found = true
                             var sym = data[mint] && data[mint].symbol
-                            data[mint] = json[mint]
+                            data[mint] = { usdPrice: json[mint].usdPrice }
                             if (sym) data[mint].symbol = sym
                         }
                     }
@@ -148,8 +148,11 @@ Scope {
                     var byMint = {}
                     for (var i = 0; i < json.pairs.length; i++) {
                         var p = json.pairs[i]
-                        if (!byMint[p.baseToken.address] || byMint[p.baseToken.address].liq < (p.liquidity.usd || 0))
-                            byMint[p.baseToken.address] = { sym: p.baseToken.symbol, liq: p.liquidity.usd || 0 }
+                        if (!p || !p.baseToken || !p.baseToken.address) continue
+                        var liq = p.liquidity ? (p.liquidity.usd || 0) : 0
+                        var addr = p.baseToken.address
+                        if (!byMint[addr] || byMint[addr].liq < liq)
+                            byMint[addr] = { sym: p.baseToken.symbol, liq: liq }
                     }
                     var data = JSON.parse(JSON.stringify(root.priceLabels.tokenData))
                     for (var mint in byMint)
