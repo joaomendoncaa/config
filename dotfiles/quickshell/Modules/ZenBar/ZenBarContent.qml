@@ -6,7 +6,7 @@ Item {
     id: root
 
     property bool active: false
-    property int countdownInitial: 60 * 37
+    property int countdownInitial: 60 * 60 * 3
     property real countdownCurrent: 0
 
     signal dismissed()
