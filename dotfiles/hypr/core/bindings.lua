@@ -93,10 +93,26 @@ hl.bind("SUPER + SHIFT + L", hl.dsp.window.swap({ direction = "r" }), { descript
 hl.bind("SUPER + SHIFT + K", hl.dsp.window.swap({ direction = "u" }), { description = "Swap Up" })
 hl.bind("SUPER + SHIFT + J", hl.dsp.window.swap({ direction = "d" }), { description = "Swap Down" })
 
-hl.bind("SUPER + CTRL + H", hl.dsp.window.resize({ x = -80, y = 0, relative = true }), { description = "Resize Left", repeating = true })
-hl.bind("SUPER + CTRL + L", hl.dsp.window.resize({ x = 80, y = 0, relative = true }), { description = "Resize Right", repeating = true })
-hl.bind("SUPER + CTRL + K", hl.dsp.window.resize({ x = 0, y = -80, relative = true }), { description = "Resize Up", repeating = true })
-hl.bind("SUPER + CTRL + J", hl.dsp.window.resize({ x = 0, y = 80, relative = true }), { description = "Resize Down", repeating = true })
+hl.bind(
+	"SUPER + CTRL + H",
+	hl.dsp.window.resize({ x = -80, y = 0, relative = true }),
+	{ description = "Resize Left", repeating = true }
+)
+hl.bind(
+	"SUPER + CTRL + L",
+	hl.dsp.window.resize({ x = 80, y = 0, relative = true }),
+	{ description = "Resize Right", repeating = true }
+)
+hl.bind(
+	"SUPER + CTRL + K",
+	hl.dsp.window.resize({ x = 0, y = -80, relative = true }),
+	{ description = "Resize Up", repeating = true }
+)
+hl.bind(
+	"SUPER + CTRL + J",
+	hl.dsp.window.resize({ x = 0, y = 80, relative = true }),
+	{ description = "Resize Down", repeating = true }
+)
 
 hl.bind("SUPER + TAB", hl.dsp.focus({ workspace = "previous" }), { description = "Switch to last visited workspace" })
 hl.bind("SUPER + CTRL + TAB", hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
@@ -175,7 +191,9 @@ hl.window_rule({
 
 hl.bind("SUPER + A", function()
 	local current = hl.get_active_workspace()
-	if not current then return end
+	if not current then
+		return
+	end
 	local wins = hl.get_windows({ class = "com\\.mitchellh\\.ghostty\\.opencode", workspace = current.name })
 	if #wins > 0 then
 		for _, win in ipairs(wins) do
@@ -183,7 +201,11 @@ hl.bind("SUPER + A", function()
 		end
 	else
 		hl.dispatch(hl.dsp.layout("preselect r"))
-		hl.dispatch(hl.dsp.exec_cmd("ghostty --class=com.mitchellh.ghostty.opencode --working-directory=/home/joao/lab/chat -e /home/joao/.opencode/bin/opencode"))
+		hl.dispatch(
+			hl.dsp.exec_cmd(
+				"ghostty --class=com.mitchellh.ghostty.opencode --working-directory=/home/joao/lab/chat -e /home/joao/.opencode/bin/opencode"
+			)
+		)
 	end
 end, { description = "Toggle AI assistant panel" })
 
@@ -274,13 +296,6 @@ for workspace = 1, 10 do
 		hl.dsp.window.move({ workspace = tostring(workspace), follow = false })
 	)
 end
-
-bind("SUPER + S", "Toggle scratchpad", hl.dsp.workspace.toggle_special("scratchpad"))
-bind(
-	"SUPER + ALT + S",
-	"Move window to scratchpad",
-	hl.dsp.window.move({ workspace = "special:scratchpad", follow = false })
-)
 
 bind("SUPER + SHIFT + TAB", "Previous workspace", hl.dsp.focus({ workspace = "e-1" }))
 
