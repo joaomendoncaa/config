@@ -134,7 +134,9 @@ local function apply_highlights()
 	hi NeoTreeNormalNC guibg=none
 	hi NeoTreeEndOfBuffer guibg=none
 	hi NeoTreeTabActive guibg=none
-	hi NeoTreeTabSeparatorActive guibg=none
+        hi NeoTreeTabSeparatorActive guibg=none
+        hi Visual guibg=#0000ff guifg=NONE
+	hi Comment cterm=NONE gui=NONE guifg=#04FF00
     ]]
 end
 
