@@ -71,60 +71,6 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Config.gapInner
 
-            Rectangle {
-                Layout.preferredWidth: Config.buttonSize
-                Layout.preferredHeight: Config.buttonSize
-                radius: Config.buttonBorderRadius
-                color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
-
-                Item {
-                    id: iconContainer
-
-                    anchors.centerIn: parent
-                    width: Config.buttonSize * 0.7
-                    height: Config.buttonSize * 0.7
-
-                    Image {
-                        id: maskImage
-
-                        anchors.fill: parent
-                        source: "../../Assets/search.svg"
-                        sourceSize.width: width
-                        sourceSize.height: height
-                        smooth: true
-                        visible: false
-                    }
-
-                    Rectangle {
-                        id: fgColor
-
-                        anchors.fill: parent
-                        color: Config.foreground
-                        visible: false
-                    }
-
-                    // TODO make a component for these buttons
-                    // this is how we correctly color those icons
-                    OpacityMask {
-                        anchors.fill: parent
-                        source: fgColor
-                        maskSource: maskImage
-                    }
-
-                }
-
-                MouseArea {
-                    id: mouseArea
-
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton
-                    onClicked: bar.toggleLauncher()
-                }
-
-            }
-
             Workspaces {
             }
 
