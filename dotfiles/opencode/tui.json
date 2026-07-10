@@ -3,6 +3,9 @@
     "theme": "system",
     "keybinds": {
         "messages_line_up": "ctrl+alt+p",
-        "messages_line_down": "ctrl+alt+n"
+        "messages_line_down": "ctrl+alt+n",
+        "model_cycle_favorite": "f2",
+        "model_cycle_favorite_reverse": "f1",
+        "model_cycle_recent": "none"
     }
 }
