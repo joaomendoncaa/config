@@ -1,6 +1,6 @@
 {
     "$schema": "https://opencode.ai/config.json",
-    "autoshare": false,
+    "share": "manual",
     "autoupdate": true,
     "default_agent": "build",
     "model": "opencode-go/deepseek-v4-flash-free",
