@@ -27,6 +27,11 @@
             "repository": "https://github.com/ogulcancelik/herdr",
             "branch": "master",
             "description": "Use for any question regarding herdr"
+        },
+        "oil": {
+            "repository": "https://github.com/stevearc/oil.nvim",
+            "branch": "master",
+            "description": "Use for any question regarding {oil,oil.nvim}"
         }
     }
 }
