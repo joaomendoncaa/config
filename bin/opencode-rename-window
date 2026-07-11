@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TTY="${1:-}"
+WINDOW_ID="${2:-}"
+[ -n "$TTY" ] && [ -n "$WINDOW_ID" ] || exit 0
+TTY="${TTY#/dev/}"
+
+PID=$(pgrep -t "$TTY" -x opencode 2>/dev/null | head -1) || exit 0
+[ -n "$PID" ] || exit 0
+
+DB="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db"
+LOG="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/log/opencode.log"
+[ -f "$DB" ] || exit 0
+command -v sqlite3 &>/dev/null || exit 0
+
+CWD=$(readlink "/proc/$PID/cwd" 2>/dev/null) || exit 0
+[ -n "$CWD" ] || exit 0
+
+HZ=$(getconf CLK_TCK 2>/dev/null)
+BOOT=$(awk '/^btime/ {print $2}' /proc/stat 2>/dev/null) || exit 0
+TICKS=$(awk '{print $22}' "/proc/$PID/stat" 2>/dev/null) || exit 0
+START_EPOCH=$(( BOOT + TICKS / HZ ))
+
+TITLE=""
+
+if [ -f "$LOG" ]; then
+    RUN_ID=$(TZ=UTC awk -v dir="$CWD" -v start="$START_EPOCH" '
+        /message="creating instance"/ && $0 ~ "directory=" dir {
+            ts = $0; sub(/^timestamp=/, "", ts); sub(/ .*/, "", ts)
+            gsub(/[-T:]/, " ", ts); gsub(/\..*Z/, "", ts)
+            epoch = mktime(ts)
+            diff = epoch - start; if (diff < 0) diff = -diff
+            if (best == "" || diff < bestdiff) { bestdiff = diff; best = $0 }
+        }
+        END { if (best) { match(best, /run=[a-f0-9]+/); print substr(best, RSTART+4, RLENGTH-4) } }
+    ' "$LOG" 2>/dev/null) || RUN_ID=""
+
+    if [ -n "$RUN_ID" ]; then
+        SESSION_ID=$(grep "run=$RUN_ID" "$LOG" 2>/dev/null | grep -oP 'session\.id=\K\S+' | tail -1) || SESSION_ID=""
+        if [ -n "$SESSION_ID" ]; then
+            TITLE=$(sqlite3 -separator ' ' "$DB" "SELECT title FROM session WHERE id = '$SESSION_ID' AND time_archived IS NULL" 2>/dev/null) || TITLE=""
+        fi
+    fi
+fi
+
+if [ -z "$TITLE" ]; then
+    TITLE=$(sqlite3 -separator ' ' "$DB" "
+        SELECT s.title FROM session s
+        WHERE s.time_archived IS NULL AND s.parent_id IS NULL AND s.directory = '$CWD'
+        ORDER BY s.time_updated DESC LIMIT 1
+    " 2>/dev/null) || TITLE=""
+fi
+
+[ -n "$TITLE" ] || exit 0
+case "$TITLE" in
+    "New session"*) TITLE="opencode" ;;
+esac
+TITLE="${TITLE:0:100}"
+
+NAME=$(tmux display-message -t "$WINDOW_ID" -p '#{window_name}' 2>/dev/null) || exit 0
+[ "$NAME" != "$TITLE" ] || exit 0
+tmux rename-window -t "$WINDOW_ID" "$TITLE" 2>/dev/null || true

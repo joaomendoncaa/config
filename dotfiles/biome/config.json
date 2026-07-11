@@ -1,55 +1,56 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
-  "assist": {
-    "enabled": true,
-    "actions": {
-      "source": {
-        "organizeImports": "on"
-      }
-    }
-  },
-  "files": {
-    "includes": ["**", "!**/node_modules/**", "!.next/**", "!.git/**"]
-  },
-  "formatter": {
-    "enabled": true,
-    "formatWithErrors": true,
-    "indentStyle": "space",
-    "indentWidth": 4
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "recommended": true,
-      "security": {
-        "noDangerouslySetInnerHtml": "off"
-      },
-      "suspicious": {
-        "noExplicitAny": "error",
-        "noArrayIndexKey": "off"
-      },
-      "correctness": {
-        "noUnusedImports": "error"
-      },
-      "nursery": {
-        "useSortedClasses": "error"
-      }
-    }
-  },
-  "javascript": {
+    "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+    "assist": {
+        "enabled": true,
+        "actions": {
+            "source": {
+                "organizeImports": "on"
+            }
+        }
+    },
+    "files": {
+        "includes": ["**", "!**/node_modules/**", "!.next/**", "!.git/**"]
+    },
     "formatter": {
-      "bracketSameLine": true
+        "enabled": true,
+        "formatWithErrors": true,
+        "indentStyle": "space",
+        "indentWidth": 4
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "security": {
+                "noDangerouslySetInnerHtml": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "error",
+                "noArrayIndexKey": "off"
+            },
+            "correctness": {
+                "noUnusedImports": "error"
+            },
+            "nursery": {
+                "useSortedClasses": "error"
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "bracketSameLine": true
+        }
+    },
+    "html": {
+        "formatter": {
+            "enabled": true,
+            "lineWidth": 120
+        }
+    },
+    "json": {
+        "parser": {
+            "allowComments": true,
+            "allowTrailingCommas": true
+        }
     }
-  },
-  "html": {
-    "formatter": {
-      "lineWidth": 40
-    }
-  },
-  "json": {
-    "parser": {
-      "allowComments": true,
-      "allowTrailingCommas": true
-    }
-  }
 }
