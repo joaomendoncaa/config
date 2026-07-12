@@ -67,10 +67,8 @@ utils.window({ tag = "pop" }, { rounding = 8 })
 -- Prevent idle while open.
 utils.window({ tag = "noidle" }, { idle_inhibit = "always" })
 
--- 1Password.
 utils.window("^(1[p|P]assword)$", { no_screen_share = true, tag = "+floating-window" })
 
--- Battle.net.
 utils.window(
 	{ class = "^steam_app_battlenet$", title = "^Battle\\.net$" },
 	{ float = true, center = true, size = { 1280, 800 } }
@@ -80,30 +78,24 @@ utils.window(
 	{ decorate = false, no_blur = true, no_shadow = true }
 )
 
--- Bitwarden.
 utils.window("^(Bitwarden)$", { no_screen_share = true, tag = "+floating-window" })
 utils.window("chrome-nngceckbapebfimnlniiiahkandclblb-Default", { no_screen_share = true, tag = "+floating-window" })
 
--- DaVinci Resolve.
+utils.window("^(Emulator)$", { float = true })
+
 utils.window(".*[Rr]esolve.*", { float = true, stay_focused = true })
 
--- GeForce NOW.
 utils.window("GeForceNOW", { idle_inhibit = "fullscreen" })
 
--- Hyprshot.
 hl.layer_rule({ match = { namespace = "selection" }, no_anim = true, animation = "none" })
 
--- JetBrains IDEs.
 utils.window("^(jetbrains-.*)$", { no_follow_mouse = true })
 
--- LocalSend.
 utils.window("(Share|localsend)", { float = true, center = true })
 utils.window("localsend", { size = { 1100, 700 } })
 
--- Moonlight.
 utils.window("com.moonlight_stream.Moonlight", { fullscreen = true, idle_inhibit = "fullscreen" })
 
--- Omarchy shell surfaces.
 hl.layer_rule({ match = { namespace = "omarchy-bar" }, no_anim = true, animation = "none" })
 hl.layer_rule({
 	match = {
@@ -137,32 +129,25 @@ utils.window({ tag = "chromium-based-browser", title = "^Meet - .+" }, {
 	move = { "(monitor_w-window_w-40)", "(monitor_h-window_h-40)" },
 })
 
--- QEMU.
 utils.window("qemu", { tag = "-default-opacity", opacity = "1 1" })
 
--- RetroArch.
 utils.window(
 	"com.libretro.RetroArch",
 	{ fullscreen = true, tag = "-default-opacity", opacity = "1 1", idle_inhibit = "fullscreen" }
 )
 
--- Steam.
 utils.window("steam", { float = true, idle_inhibit = "fullscreen" })
 utils.window({ class = "steam", title = "Steam" }, { center = true, size = { 1100, 700 } })
 utils.window("steam.*", { tag = "-default-opacity", opacity = "1 1" })
 utils.window({ class = "steam", title = "Friends List" }, { size = { 460, 800 } })
 
--- Telegram.
 utils.window("org.telegram.desktop", { focus_on_activate = false })
 
--- Terminals.
 utils.window("(Alacritty|kitty|com.mitchellh.ghostty|foot|wezterm)", { tag = "+terminal" })
 utils.window({ tag = "terminal" }, { tag = "-default-opacity", opacity = "0.97 0.9" })
 
--- Typora.
 utils.window({ class = "^Typora$", title = "^Print$" }, { float = true, center = true })
 
--- Webcam overlay.
 utils.window({ title = "WebcamOverlay" }, {
 	tag = "-default-opacity",
 	float = true,
