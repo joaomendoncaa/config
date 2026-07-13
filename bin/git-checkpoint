@@ -3,34 +3,39 @@ set -euo pipefail
 
 # git-checkpoint: stage all → generate commit msg → commit → push
 # Error rollback: step 1/2/3 fail → unstage; step 4 fail → commit stays
+# All output suppressed — only communicates via notify-send.
 
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
-if [[ -z "$REPO_ROOT" ]]; then
-    tmux display-message "git-checkpoint: not a git repository"
+LOCKFILE="/tmp/git-checkpoint.lock"
+
+# --- concurrency guard ---
+if [[ -f "$LOCKFILE" ]] && kill -0 "$(cat "$LOCKFILE")" 2>/dev/null; then
+    notify-send -a git-checkpoint "already running"
     exit 1
 fi
+echo "$$" >"$LOCKFILE"
+trap 'rm -f "$LOCKFILE"' EXIT
+
+# --- helpers ---
+notif() { notify-send -a git-checkpoint -t 5000 "$1" 2>/dev/null || true; }
 
 ERRFILE=$(mktemp)
-trap 'rm -f "$ERRFILE"' EXIT
+trap 'rm -f "$LOCKFILE" "$ERRFILE"' EXIT
 
-notif() { notify-send -a git-checkpoint "$1" 2>/dev/null || true; }
-
-# Full undo of `git add -A`: unstage tracked + remove newly-added files from index
 undo_stage() {
     git reset --quiet HEAD -- :/ 2>/dev/null || true
     git diff --cached --name-only --diff-filter=A --no-renames 2>/dev/null \
         | xargs -r git rm --cached --quiet 2>/dev/null || true
 }
 
-# --- Step 1: stage everything ---
+# --- Step 1: stage ---
 if ! git add -A 2>"$ERRFILE"; then
-    notif "failed to stage: $(head -1 "$ERRFILE" | tr -d '\n')"
+    notif "failed to stage: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
     exit 1
 fi
 
 # --- Step 2: generate commit message ---
 DIFF_FILE=$(mktemp)
-trap 'rm -f "$DIFF_FILE" "$ERRFILE"' EXIT
+trap 'rm -f "$LOCKFILE" "$DIFF_FILE" "$ERRFILE"' EXIT
 
 git diff --cached >"$DIFF_FILE" 2>/dev/null
 if [[ ! -s "$DIFF_FILE" ]]; then
@@ -56,7 +61,7 @@ Keep both fields extremely concise, matching the style above." \
         --model opencode/deepseek-v4-flash-free \
     2>"$ERRFILE") || {
     undo_stage
-    notif "failed to generate commit message: $(head -1 "$ERRFILE" | tr -d '\n')"
+    notif "failed to generate commit message: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
     exit 1
 }
 
@@ -71,23 +76,23 @@ fi
 
 # --- Step 3: commit ---
 if [[ -n "$DESC" ]]; then
-    if ! git commit -m "$TITLE" -m "$DESC" 2>"$ERRFILE"; then
+    if ! git commit -m "$TITLE" -m "$DESC" >/dev/null 2>"$ERRFILE"; then
         undo_stage
-        notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n')"
+        notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
         exit 1
     fi
 else
-    if ! git commit -m "$TITLE" 2>"$ERRFILE"; then
+    if ! git commit -m "$TITLE" >/dev/null 2>"$ERRFILE"; then
         undo_stage
-        notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n')"
+        notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
         exit 1
     fi
 fi
 
 # --- Step 4: push ---
-if ! git push 2>"$ERRFILE"; then
-    notif "push failed: $(head -1 "$ERRFILE" | tr -d '\n')"
+if ! git push >/dev/null 2>"$ERRFILE"; then
+    notif "push failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
     exit 1
 fi
 
-notif "Pushed ✓"
+notif "Pushed"
