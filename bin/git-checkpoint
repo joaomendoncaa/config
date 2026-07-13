@@ -2,6 +2,7 @@
 set -euo pipefail
 
 LOCKFILE="/tmp/git-checkpoint.lock"
+MODEL="opencode-go/deepseek-v4-flash"
 
 if [[ -f "$LOCKFILE" ]] && kill -0 "$(cat "$LOCKFILE")" 2>/dev/null; then
 	notify-send -a git-checkpoint -t 5000 "already running"
@@ -21,10 +22,10 @@ undo_stage() {
 		xargs -r git rm --cached --quiet 2>/dev/null || true
 }
 
-# Retry git add up to 5 times to avoid index.lock races with git porcelain
 for i in 1 2 3 4 5; do
 	if git add -A 2>"$ERRFILE"; then
-		STAGED=true; break
+		STAGED=true
+		break
 	fi
 	ERR=$(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)
 	if [[ "$ERR" != *"index.lock"* ]]; then
@@ -61,7 +62,7 @@ Recent commits for style reference are in the attached log file." \
 	--file "$LOG_FILE" \
 	--file "$DIFF_FILE" \
 	--dangerously-skip-permissions \
-	--model opencode/deepseek-v4-flash-free \
+	--model "$MODEL" \
 	2>"$ERRFILE" |
 	python3 -c "
 import sys, json
