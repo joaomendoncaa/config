@@ -157,11 +157,9 @@ return {
                         return pick_formatter(vim.fn.getcwd()) == 'biome'
                     end,
 
-                    prepend_args = {
-                        'check',
-                        '--unsafe',
-                        '--write',
-                    },
+                    args = function(self, ctx)
+                        return { 'check', '--stdin-file-path', ctx.filename, '--write', '--unsafe' }
+                    end,
                 },
                 prettier = {
                     condition = function()
