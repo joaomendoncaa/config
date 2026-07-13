@@ -1,0 +1,23 @@
+{
+  "HTML meta template": {
+    "prefix": "htmlmeta",
+    "body": [
+      "<!DOCTYPE html>",
+      "<html lang=\"en\">",
+      "    <head>",
+      "        <meta property=\"og:title\" content=\"${1:[PH] Lorem Ipsum}\">",
+      "        <meta name=\"date\" content=\"${2:9999-99-99}\">",
+      "        <meta name=\"slug\" content=\"${3:lorem-ipsum}\">",
+      "        <meta",
+      "            property=\"og:description\"",
+      "            content=\"${4:[PH] Lorem Ipsum is simply dummy text of the printing and typesetting industry.}\"",
+      "        >",
+      "    </head>",
+      "    <body>",
+      "        $0",
+      "    </body>",
+      "</html>"
+    ],
+    "description": "HTML template with OG meta tags (title, date, slug, description)"
+  }
+}
