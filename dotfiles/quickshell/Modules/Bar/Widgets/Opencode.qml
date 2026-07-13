@@ -543,7 +543,7 @@ Rectangle {
             "AND EXISTS (SELECT 1 FROM part p WHERE p.session_id = s.id) " +
             "AND COALESCE(json_extract((SELECT p.data FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1), '$.type'), '') || '|' || " +
             "COALESCE(json_extract((SELECT p.data FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1), '$.reason'), '') != 'step-finish|stop' " +
-            "AND s.time_updated > unixepoch('now', '-2 hours') * 1000 " +
+            "AND (SELECT p.time_created FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1) > unixepoch('now', '-30 minutes') * 1000 " +
             "AND s.parent_id IS NULL " +
             "ORDER BY s.time_updated DESC\" 2>/dev/null"
         ]
