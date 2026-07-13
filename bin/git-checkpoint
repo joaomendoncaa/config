@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# git-checkpoint: stage all → generate commit msg → commit → push
+# Error rollback: step 1/2/3 fail → unstage; step 4 fail → commit stays
+
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [[ -z "$REPO_ROOT" ]]; then
+    tmux display-message "git-checkpoint: not a git repository"
+    exit 1
+fi
+
+ERRFILE=$(mktemp)
+trap 'rm -f "$ERRFILE"' EXIT
+
+notif() { notify-send -a git-checkpoint "$1" 2>/dev/null || true; }
+
+# Full undo of `git add -A`: unstage tracked + remove newly-added files from index
+undo_stage() {
+    git reset --quiet HEAD -- :/ 2>/dev/null || true
+    git diff --cached --name-only --diff-filter=A --no-renames 2>/dev/null \
+        | xargs -r git rm --cached --quiet 2>/dev/null || true
+}
+
+# --- Step 1: stage everything ---
+if ! git add -A 2>"$ERRFILE"; then
+    notif "failed to stage: $(head -1 "$ERRFILE" | tr -d '\n')"
+    exit 1
+fi
+
+# --- Step 2: generate commit message ---
+DIFF_FILE=$(mktemp)
+trap 'rm -f "$DIFF_FILE" "$ERRFILE"' EXIT
+
+git diff --cached >"$DIFF_FILE" 2>/dev/null
+if [[ ! -s "$DIFF_FILE" ]]; then
+    undo_stage
+    notif "nothing to commit"
+    exit 1
+fi
+
+LOG=$(git log --oneline -20 2>/dev/null || true)
+
+RESPONSE=$(timeout 30 \
+    opencode run \
+        "Here are recent commits from this repo for style reference:
+$LOG
+
+Generate a conventional commit message for the attached diff.
+Return ONLY valid JSON with two fields:
+- \"title\": a conventional commit line, e.g. \"feat: add frobnicator\"
+- \"desc\": a VERY brief description of what changed and why, ONLY if the change warrants extra context. Use an empty string if not needed.
+Keep both fields extremely concise, matching the style above." \
+        --file "$DIFF_FILE" \
+        --dangerously-skip-permissions \
+        --model opencode/deepseek-v4-flash-free \
+    2>"$ERRFILE") || {
+    undo_stage
+    notif "failed to generate commit message: $(head -1 "$ERRFILE" | tr -d '\n')"
+    exit 1
+}
+
+TITLE=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('title',''))" 2>/dev/null || true)
+DESC=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('desc',''))" 2>/dev/null || true)
+
+if [[ -z "$TITLE" ]]; then
+    undo_stage
+    notif "failed to generate commit message (unexpected response)"
+    exit 1
+fi
+
+# --- Step 3: commit ---
+if [[ -n "$DESC" ]]; then
+    if ! git commit -m "$TITLE" -m "$DESC" 2>"$ERRFILE"; then
+        undo_stage
+        notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n')"
+        exit 1
+    fi
+else
+    if ! git commit -m "$TITLE" 2>"$ERRFILE"; then
+        undo_stage
+        notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n')"
+        exit 1
+    fi
+fi
+
+# --- Step 4: push ---
+if ! git push 2>"$ERRFILE"; then
+    notif "push failed: $(head -1 "$ERRFILE" | tr -d '\n')"
+    exit 1
+fi
+
+notif "Pushed ✓"
