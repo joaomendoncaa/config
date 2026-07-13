@@ -119,4 +119,4 @@ if ! git push >/dev/null 2>"$ERRFILE"; then
 	exit 0
 fi
 
-notif "Pushed $TITLE"
+notif "Pushed\n\n $TITLE"
