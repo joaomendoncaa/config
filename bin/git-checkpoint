@@ -36,19 +36,17 @@ if [[ ! -s "$DIFF_FILE" ]]; then
 	exit 0
 fi
 
-LOG=$(git log --oneline -20 2>/dev/null || true)
+LOG_FILE=$(mktemp)
+trap 'rm -f "$LOCKFILE" "$DIFF_FILE" "$ERRFILE" "$LOG_FILE"' EXIT
+git log --oneline -20 >"$LOG_FILE" 2>/dev/null
 
 RAW=$(timeout 30 \
 	opencode run \
 	--format json \
-	"Here are recent commits from this repo for style reference:
-$LOG
-
-Generate a conventional commit message for the attached diff.
-The first line should be the title in conventional commit format,
-e.g. \"feat: add frobnicator\". If the change is complex, add a
-blank line then a brief description.
-Keep both extremely concise, matching the style above." \
+	--agent "Git Commit" \
+	"Generate a conventional commit message for the attached diff.
+Recent commits for style reference are in the attached log file." \
+	--file "$LOG_FILE" \
 	--file "$DIFF_FILE" \
 	--dangerously-skip-permissions \
 	--model opencode/deepseek-v4-flash-free \
@@ -95,6 +93,13 @@ if [[ -z "$TITLE" ]]; then
 	exit 0
 fi
 
+# Validate conventional commit format
+if ! echo "$TITLE" | grep -qiE '^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\([^)]*\))?!?: '; then
+	undo_stage
+	notif "bad commit format: $TITLE"
+	exit 0
+fi
+
 if [[ -n "$DESC" ]]; then
 	if ! git commit -m "$TITLE" -m "$DESC" >/dev/null 2>"$ERRFILE"; then
 		undo_stage
@@ -114,6 +119,4 @@ if ! git push >/dev/null 2>"$ERRFILE"; then
 	exit 0
 fi
 
-notif "Pushed"
-
-# TEST
+notif "Pushed $TITLE"
