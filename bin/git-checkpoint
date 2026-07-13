@@ -39,9 +39,9 @@ fi
 LOG=$(git log --oneline -20 2>/dev/null || true)
 
 RAW=$(timeout 30 \
-    opencode run \
-        --format json \
-        "Here are recent commits from this repo for style reference:
+	opencode run \
+	--format json \
+	"Here are recent commits from this repo for style reference:
 $LOG
 
 Generate a conventional commit message for the attached diff.
@@ -49,11 +49,11 @@ The first line should be the title in conventional commit format,
 e.g. \"feat: add frobnicator\". If the change is complex, add a
 blank line then a brief description.
 Keep both extremely concise, matching the style above." \
-        --file "$DIFF_FILE" \
-        --dangerously-skip-permissions \
-        --model opencode/deepseek-v4-flash-free \
-    2>"$ERRFILE" \
-    | python3 -c "
+	--file "$DIFF_FILE" \
+	--dangerously-skip-permissions \
+	--model opencode/deepseek-v4-flash-free \
+	2>"$ERRFILE" |
+	python3 -c "
 import sys, json
 
 last = ''
@@ -80,19 +80,19 @@ body = '\n'.join(l.strip() for l in lines[1:] if l.strip())
 print(title)
 print(body)
 " 2>/dev/null) || {
-    undo_stage
-    ERR=$(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)
-    notif "failed to generate commit message${ERR:+: $ERR}"
-    exit 0
+	undo_stage
+	ERR=$(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)
+	notif "failed to generate commit message${ERR:+: $ERR}"
+	exit 0
 }
 
 TITLE=$(echo "$RAW" | sed -n '1p')
 DESC=$(echo "$RAW" | sed -n '2p')
 
 if [[ -z "$TITLE" ]]; then
-    undo_stage
-    notif "failed to generate commit message"
-    exit 0
+	undo_stage
+	notif "failed to generate commit message"
+	exit 0
 fi
 
 if [[ -n "$DESC" ]]; then
@@ -115,3 +115,5 @@ if ! git push >/dev/null 2>"$ERRFILE"; then
 fi
 
 notif "Pushed"
+
+# TEST
