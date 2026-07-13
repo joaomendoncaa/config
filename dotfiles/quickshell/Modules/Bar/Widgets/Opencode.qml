@@ -544,6 +544,7 @@ Rectangle {
             "AND COALESCE(json_extract((SELECT p.data FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1), '$.type'), '') || '|' || " +
             "COALESCE(json_extract((SELECT p.data FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1), '$.reason'), '') != 'step-finish|stop' " +
             "AND (SELECT p.time_created FROM part p WHERE p.session_id = s.id ORDER BY p.time_created DESC, p.id DESC LIMIT 1) > unixepoch('now', '-30 minutes') * 1000 " +
+            "AND (s.agent IS NULL OR s.agent != 'Git Commit') " +
             "AND s.parent_id IS NULL " +
             "ORDER BY s.time_updated DESC\" 2>/dev/null"
         ]
