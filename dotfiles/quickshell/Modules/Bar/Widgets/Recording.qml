@@ -2,7 +2,6 @@ import qs.Core
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 
 Rectangle {
     id: root
@@ -55,14 +54,6 @@ Rectangle {
                 duration: 800
                 easing.type: Easing.InOutSine
             }
-        }
-    }
-
-    IpcHandler {
-        target: "recording"
-
-        function setRecording(active: bool): void {
-            root.isRecording = active;
         }
     }
 

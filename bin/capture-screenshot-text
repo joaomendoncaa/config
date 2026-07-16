@@ -7,7 +7,7 @@
 # Keep hyprpicker alive until after grim captures so the screenshot sees the
 # frozen overlay rather than live content shifting during teardown.
 cleanup_freeze() {
-  [[ -n $PID ]] && kill $PID 2>/dev/null
+	[[ -n $PID ]] && kill $PID 2>/dev/null
 }
 trap cleanup_freeze EXIT
 
@@ -23,4 +23,4 @@ TEXT=$(grim -g "$SELECTION" - | tesseract stdin stdout --oem 1 --psm 6 -l "${OMA
 [[ -z $TEXT ]] && exit 1
 
 printf "%s" "$TEXT" | wl-copy
-notify-send "󰴑    Copied text from selection to clipboard"
+fyi "Copied text from selection to clipboard" "" low 2

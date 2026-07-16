@@ -439,8 +439,8 @@ PanelWindow {
                                     iconResolver: function(name) {
                                         return root.resolveIcon(name);
                                     }
-                                    onItemHovered: root.selectedIndex = index
-                                    onItemClicked: {
+                                    onItemHovered: function(index) { root.selectedIndex = index }
+                                    onItemClicked: function(index) {
                                         root.selectedIndex = index;
                                         root.activateSelected();
                                     }

@@ -8,6 +8,7 @@ import Quickshell.Wayland
 import qs.Core
 import qs.Modules.Bar.Widgets
 import qs.Modules.ZenBar
+import qs.Modules.Notifications
 
 PanelWindow {
     id: bar
@@ -22,6 +23,9 @@ PanelWindow {
     readonly property int updatePanelHeight: 420
     property bool contentVisible: true
     property bool zenActive: false
+    property bool isRecording: false
+
+    readonly property alias notificationCenterOpen: notifButton.popupOpen
 
     signal toggleLauncher()
     signal togglePowerMenu()
@@ -30,6 +34,7 @@ PanelWindow {
     signal zenDismissed()
 
     required property var priceLabels
+    required property var notificationService
 
     function updatePowerMenuPosition() {
         var pos = powerItem.mapToItem(null, 0, 0);
@@ -83,6 +88,9 @@ PanelWindow {
         CenterBar {
             id: centerBar
 
+            notificationService: bar.notificationService
+            isRecording: bar.isRecording
+
             anchors.centerIn: parent
             anchors.verticalCenter: parent.verticalCenter
             updatesItem.onToggle: {
@@ -121,6 +129,12 @@ PanelWindow {
             }
 
             Sink {
+            }
+
+            NotificationButton {
+                id: notifButton
+                barWindow: bar
+                notificationService: bar.notificationService
             }
 
             Power {

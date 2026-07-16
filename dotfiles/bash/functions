@@ -25,7 +25,7 @@ function t() {
 
 # Notify.
 function notify() {
-	notify-send -i "applications-internet" -a "${2:-script}" "$1"
+	fyi "$1" "" low
 }
 
 # Wait for hyprland window to open.

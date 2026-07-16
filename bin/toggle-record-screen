@@ -8,7 +8,7 @@ PID_FILE="/tmp/gpu-screen-recorder.pid"
 OUTPUT_DIR="${OMARCHY_SCREENRECORD_DIR:-${XDG_VIDEOS_DIR:-$HOME/Videos/screen-recordings/}}"
 
 if [[ ! -d "$OUTPUT_DIR" ]]; then
-    notify-send "Screen recording directory does not exist: $OUTPUT_DIR" -u critical -t 3000
+    fyi "Screen recording directory does not exist: $OUTPUT_DIR" "" critical
     exit 1
 fi
 

@@ -90,6 +90,7 @@ Rectangle {
         color: Config.foreground
         font.pixelSize: Config.fontSize - 2
         font.family: Config.fontFamily
+        font.weight: Font.Bold
     }
 
 }

@@ -5,13 +5,13 @@ LOCKFILE="/tmp/git-checkpoint.lock"
 MODEL="opencode-go/deepseek-v4-flash"
 
 if [[ -f "$LOCKFILE" ]] && kill -0 "$(cat "$LOCKFILE")" 2>/dev/null; then
-	notify-send -a git-checkpoint -t 5000 "already running"
+	fyi "already running" "" low
 	exit 0
 fi
 echo "$$" >"$LOCKFILE"
 trap 'rm -f "$LOCKFILE"' EXIT
 
-notif() { notify-send -a git-checkpoint -t 5000 "$1" 2>/dev/null || true; }
+notif() { fyi "$1" "" low 2>/dev/null || true; }
 
 ERRFILE=$(mktemp)
 trap 'rm -f "$LOCKFILE" "$ERRFILE"' EXIT

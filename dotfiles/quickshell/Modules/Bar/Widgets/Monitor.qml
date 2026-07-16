@@ -1,7 +1,7 @@
-import qs.Core
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Core
 
 Rectangle {
     id: root
@@ -15,7 +15,6 @@ Rectangle {
     radius: Config.buttonBorderRadius
     color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
     Component.onCompleted: {
-        console.log("[Monitor] Component loaded, statFile.loaded:", statFile.loaded, "meminfoFile.loaded:", meminfoFile.loaded, "gpuFile.loaded:", gpuFile.loaded);
         if (statFile.loaded && meminfoFile.loaded) {
             var cpu = internal.parseCpuUsage();
             var ram = internal.parseRamUsage();

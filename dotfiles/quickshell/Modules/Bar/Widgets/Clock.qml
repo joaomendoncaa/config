@@ -6,6 +6,8 @@ import qs.Core
 Rectangle {
     id: root
 
+    required property var notificationService
+
     implicitWidth: clockText.implicitWidth + Config.gapInner * 4
     Layout.preferredWidth: implicitWidth
     Layout.preferredHeight: Config.buttonSize
@@ -34,7 +36,7 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: Quickshell.execDetached(["notify-send", "TODO: integrate calendar"])
+        onClicked: root.notificationService.fyi("Calendar integration coming soon", "", "low", 5)
     }
 
 }

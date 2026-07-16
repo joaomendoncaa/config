@@ -89,7 +89,7 @@
     "return-type": "json",
     "interval": 60,
     "tooltip": false,
-    "on-click": "notify-send -u low \"$(omarchy-weather-status)\""
+    "on-click": "fyi \"$(omarchy-weather-status)\" \"\" low"
   },
   "network": {
     "format-icons": ["󰤯", "󰤟", "󰤢", "󰤥", "󰤨"],
@@ -118,7 +118,7 @@
     "tooltip-format-charging": "{power:>1.0f}W↑ {capacity}%",
     "interval": 5,
     "on-click": "omarchy-menu power",
-    "on-click-right": "notify-send -u low \"$(omarchy-battery-status)\"",
+    "on-click-right": "fyi \"$(omarchy-battery-status)\" \"\" low",
     "states": {
       "warning": 20,
       "critical": 10,

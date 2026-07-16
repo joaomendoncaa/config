@@ -104,7 +104,7 @@ function M.omarchy_bind_toggle(keys, description, toggle, options)
 end
 
 function M.notify(message)
-	return "notify-send -u low " .. escape_single_quotes(message)
+	return "fyi " .. escape_single_quotes(message)
 end
 
 function M.window(match, rules)

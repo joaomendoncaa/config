@@ -6,6 +6,9 @@ import qs.Modules.Bar.Widgets
 Item {
     id: root
 
+    required property var notificationService
+
+    property bool isRecording: false
     property bool showAux: true
     property alias updatesItem: updates
     property alias zenmodeItem: zenmode
@@ -20,15 +23,18 @@ Item {
         spacing: Config.gapInner
 
         Recording {
+            isRecording: root.isRecording
             opacity: root.showAux ? 1 : 0
             enabled: root.showAux
         }
 
         Clock {
+            notificationService: root.notificationService
         }
 
         Updates {
             id: updates
+            notificationService: root.notificationService
 
             opacity: root.showAux ? 1 : 0
             enabled: root.showAux

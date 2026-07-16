@@ -11,7 +11,7 @@ OUTPUT_DIR="${OMARCHY_SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}}"
 
 if [[ ! -d $OUTPUT_DIR ]]; then
 	mkdir -p "$OUTPUT_DIR"
-	notify-send "Created screenshot directory: $OUTPUT_DIR" -u normal -t 2000
+	fyi "Created screenshot directory" "$OUTPUT_DIR" normal 2
 fi
 
 pkill slurp && exit 0
@@ -133,8 +133,13 @@ slurp)
 	wl-copy <"$FILEPATH"
 
 	(
-		ACTION=$(notify-send "Screenshot saved to clipboard and file" "Edit with Super + Alt + , (or click this)" -t 10000 -i "$FILEPATH" -A "default=edit")
-		[[ $ACTION == "default" ]] && open_editor "$FILEPATH"
+		printf -v SAFE_PATH '%q' "$FILEPATH"
+		if [[ $SCREENSHOT_EDITOR == "satty" ]]; then
+			FYI_CMD="satty --filename $SAFE_PATH --output-filename $SAFE_PATH --actions-on-enter save-to-clipboard --save-after-copy --copy-command 'wl-copy'"
+		else
+			FYI_CMD="$SCREENSHOT_EDITOR $SAFE_PATH"
+		fi
+		fyi "Screenshot saved to clipboard and file" "Edit with Super + Alt + , (or click this)" low 3 "$FYI_CMD"
 	) >/dev/null 2>&1 &
 	;;
 copy)

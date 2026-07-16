@@ -7,6 +7,8 @@ import qs.Core
 Rectangle {
     id: root
 
+    required property var notificationService
+
     property int updateCount: 0
     property var packages: []
     property var lastUpdated: new Date(0)
@@ -195,8 +197,9 @@ Rectangle {
                 if (output.length > 0) {
                     var lower = output.toLowerCase();
                     if (lower.indexOf("error:") >= 0 || lower.indexOf("failed:") >= 0 || lower.indexOf("==> error") >= 0) {
-                        var escaped = output.replace(/'/g, "'\\''");
-                        Quickshell.execDetached(["bash", "-c", 'notify-send "Update failed" "$(echo \'' + escaped + '\' | tail -10)"']);
+                        var lines = output.split('\n');
+                        var tail = lines.slice(-10).join('\n');
+                        root.notificationService.fyi("Update failed", tail, 2);
                     }
                 }
                 root.upgrading = false;

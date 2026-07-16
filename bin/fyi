@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# fyi — send a notification via quickshell's native notification service
+# Usage: fyi <summary> [body] [urgency] [expiry] [command]
+#   urgency: low, normal (default), critical
+#   expiry:  seconds until auto-dismiss from pending backlog (0 = never, default)
+#   command: shell command to run when the notification is clicked
+
+set -euo pipefail
+
+QS_CONFIG="${HOME}/.config/quickshell"
+SUMMARY="${1:-}"
+BODY="${2:-}"
+URGENCY="${3:-normal}"
+EXPIRY="${4:-0}"
+COMMAND="${5:-}"
+
+if [[ -z "$SUMMARY" ]]; then
+    echo "Usage: fyi <summary> [body] [urgency] [expiry] [command]" >&2
+    exit 1
+fi
+
+exec quickshell ipc -p "$QS_CONFIG" call notifications fyi "$SUMMARY" "$BODY" "$URGENCY" "$EXPIRY" "$COMMAND"

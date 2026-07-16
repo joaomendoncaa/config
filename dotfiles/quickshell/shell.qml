@@ -13,6 +13,7 @@ import qs.Modules.Lock
 import qs.Modules.PowerMenu
 import qs.Modules.UpdatePanel
 import qs.Modules.Superbar
+import qs.Modules.Notifications
 
 Scope {
     id: root
@@ -23,6 +24,7 @@ Scope {
     property string launcherMode: "apps"
 
     property bool zenActive: false
+    property bool isRecording: false
 
     property var priceLabels: priceLabelsItem
 
@@ -91,8 +93,12 @@ Scope {
                 return
             }
             try {
-                handler(JSON.parse(text))
-                if (backoff) root.priceLabels._resetBackoff()
+                var result = handler(JSON.parse(text))
+                if (result === false) {
+                    if (backoff) root.priceLabels._backoff()
+                } else {
+                    if (backoff) root.priceLabels._resetBackoff()
+                }
             } catch (e) {
                 console.warn("[token] fetch:", e)
                 if (backoff) root.priceLabels._backoff()
@@ -143,7 +149,7 @@ Scope {
                             if (sym) data[mint].symbol = sym
                         }
                     }
-                    if (!found) throw new Error('no data')
+                    if (!found) return false
                     root.priceLabels.tokenData = data
                     root.priceLabels._checkReady()
                 }, true)
@@ -249,6 +255,8 @@ Scope {
 
     VolumeOSD { }
 
+    NotificationService { id: notificationService }
+
     IpcHandler {
         target: "launcher"
 
@@ -277,6 +285,14 @@ Scope {
 
         function ping() {
             return "pong"
+        }
+    }
+
+    IpcHandler {
+        target: "recording"
+
+        function setRecording(active: bool): void {
+            root.isRecording = active
         }
     }
 
@@ -350,19 +366,21 @@ Scope {
     }
 
     BlurMask {
-        visible: root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen
+        visible: root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen || barComponent.notificationCenterOpen
     }
 
     Bar {
         id: barComponent
         zenActive: root.zenActive
-        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen
+        isRecording: root.isRecording
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen || barComponent.notificationCenterOpen
         onToggleLauncher: root.launcherOpen = !root.launcherOpen
         onTogglePowerMenu: root.powerMenuOpen = !root.powerMenuOpen
         onToggleUpdatePanel: root.updatePanelOpen = !root.updatePanelOpen
         onToggleZen: root.zenActive = true
         onZenDismissed: root.zenActive = false
         priceLabels: root.priceLabels
+        notificationService: notificationService
     }
 
     ClipboardCapture {
