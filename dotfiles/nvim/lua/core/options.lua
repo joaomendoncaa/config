@@ -46,6 +46,7 @@ o.foldlevelstart = 99
 o.foldenable = true
 o.guicursor = { 'n-v-c-sm:block', 'i-ci-ve:block', 'r-cr-o:block' }
 o.virtualedit = 'all'
+o.autoread = true
 
 version('>=0.12.0', function()
     require('vim._core.ui2').enable { enable = true }

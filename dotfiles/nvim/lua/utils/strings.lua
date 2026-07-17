@@ -2,6 +2,40 @@ local M = {}
 
 ---@alias HighlightedChunks table<string, string>[]
 
+---`'<,'>left`  and  `'<,'>!par`  gets  the  range
+---manually due to unknown issues with using '<,'>
+---then exists visual mode otherwise the selection
+---would stay in place
+function M.par()
+    local start_line = vim.fn.line 'v'
+    local end_line = vim.fn.line '.'
+    if start_line > end_line then
+        start_line, end_line = end_line, start_line
+    end
+
+    local cols = vim.bo.textwidth
+    if cols == 0 then
+        cols = vim.fn.input 'Par columns: '
+    end
+    cols = type(cols) == 'string' and vim.trim(cols) or cols
+    if not tonumber(cols) then
+        return
+    end
+
+    for line = start_line, end_line do
+        vim.fn.setline(line, vim.fn.getline(line):match '^%s*(.*)')
+    end
+
+    local lines = vim.fn.getline(start_line, end_line)
+    local result = vim.fn.system('par ' .. cols .. 'j', table.concat(lines, '\n'))
+    local result_lines = vim.split(result, '\n', {})
+    if #result_lines > 0 and result_lines[#result_lines] == '' then
+        table.remove(result_lines)
+    end
+    vim.api.nvim_buf_set_lines(0, start_line - 1, end_line, false, result_lines)
+    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'n', false)
+end
+
 ---Facade for `vim.api.nvim_echo`
 function M.echo(chunks, async, opts)
     async = async or false
@@ -17,7 +51,7 @@ end
 ---             length - The maximum allowed length of the string
 ---             separator - The separator to insert in the middle of the truncated string
 ---@return string string The truncated string
----TODO: be able to choose the position of the separator (left, right, center)
+---TODO be able to choose the position of the separator (left, right, center)
 function M.truncateString(str, opts)
     opts = opts or {}
 
@@ -38,8 +72,8 @@ end
 ---             separator - The separator to insert in the middle of the truncated string
 ---             separator_hg - The highlight group to use for the separator
 ---@return HighlightedChunks chunks The truncated chunks
----TODO: be able to choose the position of the separator (left, right, center)
----TODO: support chunks nesting
+---TODO be able to choose the position of the separator (left, right, center)
+---TODO support chunks nesting
 function M.truncateChunks(chunks, opts)
     opts = opts or {}
 

@@ -1,10 +1,12 @@
 local clipboard = require 'utils.clipboard'
 local misc = require 'utils.misc'
 local snippets = require 'core.snippets'
+local strings = require 'utils.strings'
 
 local key = require('utils.misc').key
 local f = require('utils.misc').func
 
+key('x', '<leader>j', strings.par, '[J]ustify text with Par')
 key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
 key('n', '<leader>q', vim.diagnostic.open_float, '[Q]uickly show diagnostic error messages')
 key('n', '<leader>Q', vim.diagnostic.setloclist, 'Open diagnostic [Q]uickfix list')
