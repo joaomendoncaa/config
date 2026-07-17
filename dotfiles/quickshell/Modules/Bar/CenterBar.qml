@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Core
-import qs.Modules.Bar.Widgets
+import "Widgets"
 
 Item {
     id: root

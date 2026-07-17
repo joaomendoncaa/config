@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.Core
-
 Rectangle {
     id: root
 
@@ -273,12 +272,13 @@ Rectangle {
         running: true
         repeat: true
         onTriggered: {
+            Profiler.begin("monitorPoll", "monitor")
             statFile.reload();
             meminfoFile.reload();
             netdevFile.reload();
             if (internal.gpuAvailable && !nvidiaSmiProc.running)
                 nvidiaSmiProc.running = true;
-
+            Profiler.end("monitorPoll")
         }
     }
 

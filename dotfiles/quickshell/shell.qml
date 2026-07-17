@@ -5,15 +5,15 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
 import qs.Core
-import qs.Modules.BlurMask
-import qs.Modules.Bar
-import qs.Modules.DictationOSD
-import qs.Modules.VolumeOSD
-import qs.Modules.Lock
-import qs.Modules.PowerMenu
-import qs.Modules.UpdatePanel
-import qs.Modules.Superbar
-import qs.Modules.Notifications
+import "Modules/BlurMask"
+import "Modules/Bar"
+import "Modules/DictationOSD"
+import "Modules/VolumeOSD"
+import "Modules/Lock"
+import "Modules/PowerMenu"
+import "Modules/UpdatePanel"
+import "Modules/Superbar"
+import "Modules/Notifications"
 
 Scope {
     id: root
@@ -82,14 +82,18 @@ Scope {
         }
 
         function _kick(): void {
+            Profiler.begin("tokenPoll", "network")
             root.priceLabels.pollTokenPrices()
             root.priceLabels.fetchMissingSymbols()
+            Profiler.end("tokenPoll")
         }
 
         function handleFetch(proc, handler, backoff) {
+            Profiler.begin("handleFetch-" + (proc === tokenFetcher ? "price" : "symbol"), "network")
             var text = proc.stdout.text.trim()
             if (!text) {
                 if (backoff) root.priceLabels._backoff()
+                Profiler.end("handleFetch-" + (proc === tokenFetcher ? "price" : "symbol"))
                 return
             }
             try {
@@ -103,6 +107,7 @@ Scope {
                 console.warn("[token] fetch:", e)
                 if (backoff) root.priceLabels._backoff()
             }
+            Profiler.end("handleFetch-" + (proc === tokenFetcher ? "price" : "symbol"))
         }
 
         function _backoff() {
@@ -114,10 +119,12 @@ Scope {
         }
 
         function pollTokenPrices() {
+            Profiler.begin("pollTokenPrices", "network")
             var mints = root.priceLabels.trackedTokens.join(',')
-            if (!mints) return
+            if (!mints) { Profiler.end("pollTokenPrices"); return }
             tokenFetcher.command = ["curl", "-s", "https://api.jup.ag/price/v3?ids=" + mints]
             tokenFetcher.running = true
+            Profiler.end("pollTokenPrices")
         }
 
         function fetchMissingSymbols() {
@@ -188,10 +195,15 @@ Scope {
             interval: root.priceLabels._retryDelay
             running: root.priceLabels.trackedTokens.length > 0
             repeat: true
-            onTriggered: {
-                root.priceLabels.pollTokenPrices()
-                root.priceLabels.fetchMissingSymbols()
-            }
+            onTriggered: root.priceLabels._kick()
+        }
+
+        Timer {
+            id: profilerFlushTimer
+            interval: 5000
+            running: Profiler.enabled
+            repeat: true
+            onTriggered: Profiler.flush()
         }
     }
 

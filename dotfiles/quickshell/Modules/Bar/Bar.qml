@@ -6,9 +6,9 @@ import Quickshell.Hyprland
 import Quickshell.Services.Pipewire
 import Quickshell.Wayland
 import qs.Core
-import qs.Modules.Bar.Widgets
-import qs.Modules.ZenBar
-import qs.Modules.Notifications
+import "Widgets"
+import "../ZenBar"
+import "../Notifications"
 
 PanelWindow {
     id: bar

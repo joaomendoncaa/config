@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Launches quickshell with profiling environment variables
+# Provides QV4_PROFILE_WRITE_PERF_MAP=1 so perf data shows JS function names
+# Use with: QUICKSHELL_PROFILE=1 quickshell  (or symlink this as quickshell in PATH)
+
+export QV4_PROFILE_WRITE_PERF_MAP=1
+export QSG_RENDER_TIMING=1
+
+exec quickshell "$@"

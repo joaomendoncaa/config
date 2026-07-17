@@ -4,7 +4,7 @@ import Quickshell.Io
 import Quickshell.Services.Pam
 import Quickshell.Wayland
 import qs.Core
-import qs.Modules.Bar
+import "../Bar"
 
 Item {
     id: root

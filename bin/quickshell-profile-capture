@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Capture perf data + QML instrumentation trace from quickshell
+# Usage: quickshell-profile-capture [duration_seconds]
+# Produces perf.data + copies /tmp/quickshell-trace.json (CTF format)
+
+DURATION="${1:-30}"
+PID=$(pgrep -x quickshell)
+
+if [ -z "$PID" ]; then
+    echo "error: quickshell not running" >&2
+    exit 1
+fi
+
+echo "Capturing perf data from quickshell (PID $PID) for ${DURATION}s..."
+
+# Use explicit events (not AMD raw PMU) so Qt Creator recognizes them
+perf record \
+    -e cycles -e instructions \
+    --call-graph dwarf \
+    --pid "$PID" \
+    -F 99 \
+    --output perf.data \
+    -- sleep "$DURATION"
+
+echo ""
+echo "perf.data captured ($(ls -lh perf.data | awk '{print $5}'))."
+
+# Copy QML instrumentation trace if it exists
+if [ -f /tmp/quickshell-trace.json ]; then
+    cp /tmp/quickshell-trace.json "quickshell-trace-$(date +%s).json"
+    echo "QML trace copied from /tmp/quickshell-trace.json"
+fi
+
+echo ""
+echo "=== VIEWING OPTIONS ==="
+echo ""
+echo "CPU flame graph (recommended):"
+echo "  perf script -i perf.data | /tmp/FlameGraph/stackcollapse-perf.pl | /tmp/FlameGraph/flamegraph.pl > flame.svg"
+echo "  xdg-open flame.svg"
+echo ""
+echo "QML instrumentation trace (Chrome Trace Format):"
+echo "  # Open in Chrome:  chrome://tracing  → Load"
+echo "  # Or in Qt Creator: Analyze → Chrome Trace Format Viewer → Load JSON File"
+echo ""
+echo "perf TUI (interactive):"
+echo "  perf report --tui -i perf.data"
+echo ""
+echo "KDAB hotspot (best perf GUI, needs sudo to install):"
+echo "  yay -S hotspot  &&  hotspot perf.data"

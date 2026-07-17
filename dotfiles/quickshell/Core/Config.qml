@@ -28,6 +28,28 @@ QtObject {
     property string backgroundColoredSecondary: "#131313"
     property string backgroundColoredTertiary: "#262626"
     property string backgroundHovered: "#40FFFFFF"
+    property var env: ({})
+
+    function parseEnv(raw) {
+        var lines = String(raw || '').split('\n');
+        var result = {};
+        for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (line === '' || line[0] === '#')
+                continue;
+            var eq = line.indexOf('=');
+            if (eq > 0)
+                result[line.substring(0, eq)] = line.substring(eq + 1).trim();
+        }
+        env = result;
+    }
+
+    property var envFile: FileView {
+        path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/bash/.env"
+        onLoaded: parseEnv(text())
+        printErrors: false
+    }
+
     property var themeFile
 
     function hexToRgb(hexColor) {

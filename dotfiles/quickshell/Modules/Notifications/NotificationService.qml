@@ -86,7 +86,9 @@ Item {
     }
 
     function getRef(id) {
-        return _refs[id] || null
+        var r = _refs[id]
+        if (r === undefined) return null
+        return r
     }
 
     function removeRef(id) {
@@ -441,18 +443,22 @@ Item {
         var entry = popupModel.get(index)
         var ref = entry ? getRef(entry.id) : null
         var invoked = false
-        var logParts = ["app=" + (entry ? entry.app : "?")]
-        if (ref && ref.actions) {
-            logParts.push("actions_count=" + ref.actions.length)
-            for (var i = 0; i < ref.actions.length; i++) {
-                var action = ref.actions[i]
-                if (action && action.identifier === "default") {
-                    try { action.invoke(); invoked = true } catch (e) { logParts.push("invoke_error=" + e) }
-                    break
+        var logParts = ["app=" + (entry ? entry.app : "?"), "id=" + (entry ? entry.id : "?")]
+        if (ref) {
+            if (ref.actions) {
+                logParts.push("actions_count=" + ref.actions.length)
+                for (var i = 0; i < ref.actions.length; i++) {
+                    var action = ref.actions[i]
+                    if (action && action.identifier === "default") {
+                        try { action.invoke(); invoked = true } catch (e) { logParts.push("invoke_error=" + e) }
+                        break
+                    }
                 }
+            } else {
+                logParts.push("ref_exists_no_actions")
             }
         } else {
-            logParts.push("no_ref_or_actions")
+            logParts.push("ref_null")
         }
         if (!invoked) {
             var cmd = entry ? String(entry._clickCommand || "") : ""
@@ -473,6 +479,9 @@ Item {
             logParts.push("handled_by_action")
         }
         logParts.push("invoked=" + invoked)
+        var refKeys = Object.keys(_refs)
+        logParts.push("refs_count=" + refKeys.length)
+        logParts.push("ref_keys=[" + refKeys.join(",") + "]")
         debugProc.command = ["sh", "-c", "echo '" + logParts.join(" | ") + "' >> /tmp/notif-debug.log"]
         debugProc.running = true
         dismissPopup(index)

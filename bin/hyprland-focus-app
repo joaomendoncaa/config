@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Focus a Hyprland window by application class
 # Tries: exact match → prefix match → contains match (case-insensitive)
+# Also tries space→dot and space→dash variants (e.g. "Telegram Desktop" → "telegram.desktop")
 # Usage: hyprland-focus-app <app-name>
 
 set -euo pipefail
@@ -8,10 +9,18 @@ set -euo pipefail
 app="${1:-}"
 [[ -n $app ]] || exit 1
 
+name_lower="${app,,}"
+name_dots="${name_lower// /.}"
+name_dashes="${name_lower// /-}"
+
 address=$(
   hyprctl clients -j 2>/dev/null |
-    jq -r --arg name "${app,,}" \
-      '[.[] | select((.class // "") | ascii_downcase | (. == $name or startswith($name) or contains($name)))] | first.address // empty'
+    jq -r --arg name "$name_lower" --arg dots "$name_dots" --arg dashes "$name_dashes" \
+      '[.[] | select((.class // "") | ascii_downcase | (
+        . == $name or startswith($name) or contains($name) or
+        . == $dots or startswith($dots) or contains($dots) or
+        . == $dashes or startswith($dashes) or contains($dashes)
+      ))] | first.address // empty'
 )
 
 [[ -n $address ]] || exit 1
