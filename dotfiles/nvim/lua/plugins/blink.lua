@@ -1,19 +1,55 @@
 return {
     'saghen/blink.cmp',
 
-    version = '1.*',
     dependencies = {
-        'moyiz/blink-emoji.nvim',
+        'saghen/blink.lib',
         'rafamadriz/friendly-snippets',
     },
 
+    build = function()
+        -- build the fuzzy matcher, optionally add a timeout to `pwait(timeout_ms)`
+        -- you can use `gb` in `:Lazy` to rebuild the plugin as needed
+        require('blink.cmp').build():pwait()
+    end,
+
     config = function()
         local plugin = require 'blink.cmp'
+
+        -- HACK: blink.cmp's Neovim 0.13 compat layer has wrong argument order for vim.pos API
+        if vim.fn.has 'nvim-0.13' == 1 then
+            local utils = require 'blink.cmp.lib.utils'
+            utils.get_vim_pos_cursor = function(buf, pos)
+                if pos then
+                    if buf == 0 then
+                        buf = vim.api.nvim_get_current_buf()
+                    end
+                else
+                    local win = buf
+                    if win == 0 then
+                        win = vim.api.nvim_get_current_win()
+                    end
+                    buf = vim.api.nvim_win_get_buf(win)
+                    pos = vim.api.nvim_win_get_cursor(win)
+                end
+                return vim.pos.cursor(pos, { buf = buf })
+            end
+            utils.get_vim_pos = function(buf, row, col)
+                return vim.pos(row, col, { buf = buf })
+            end
+            utils.vim_pos_to_cursor = function(pos)
+                return { pos:to_cursor() }
+            end
+        end
+
         local key = require('utils.misc').key
         local commands = require 'utils.commands'
         local disabled_filetypes = { '', 'NvimTree', 'DressingInput', 'SnacksInput', 'TelescopePrompt' }
 
         local handle_enabling = function()
+            local ok, neocodeium = pcall(require, 'neocodeium')
+            if ok and neocodeium.visible() then
+                return false
+            end
             return not vim.tbl_contains(disabled_filetypes, vim.bo.filetype)
         end
 
@@ -43,6 +79,7 @@ return {
 
             keymap = {
                 preset = 'default',
+                ['<C-.>'] = { 'show' },
                 ['<A-1>'] = {
                     function(cmp)
                         cmp.accept { index = 1 }
@@ -91,7 +128,9 @@ return {
             },
 
             completion = {
+                documentation = { auto_show = false },
                 menu = {
+                    auto_show = true,
                     draw = {
                         columns = { { 'item_idx' }, { 'kind_icon' }, { 'label', 'label_description', gap = 1 } },
                         components = {
@@ -105,6 +144,12 @@ return {
                 },
             },
 
+            cmdline = {
+                completion = {
+                    menu = { auto_show = true },
+                },
+            },
+
             enabled = handle_enabling,
 
             sources = {
@@ -114,10 +159,10 @@ return {
                     end
 
                     if vim.bo.filetype == 'markdown' then
-                        return { 'markdown', 'emoji', 'path' }
+                        return { 'markdown', 'path' }
                     end
 
-                    return { 'lsp', 'path', 'snippets', 'buffer', 'markdown', 'emoji' }
+                    return { 'lsp', 'path', 'snippets', 'buffer', 'markdown' }
                 end,
 
                 providers = {
@@ -131,12 +176,6 @@ return {
                         name = 'CodeCompanion',
                         module = 'codecompanion.providers.completion.blink',
                         enabled = true,
-                    },
-                    emoji = {
-                        module = 'blink-emoji',
-                        name = 'Emoji',
-                        score_offset = 15,
-                        opts = { insert = true },
                     },
                 },
             },
