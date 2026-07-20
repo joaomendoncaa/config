@@ -32,6 +32,9 @@
             "repository": "https://github.com/stevearc/oil.nvim",
             "branch": "master",
             "description": "Use for any question regarding {oil,oil.nvim}"
+        },
+        "incorrupt": {
+            "repository": "$HOME/lab/gilly"
         }
     }
 }

@@ -40,8 +40,25 @@ Item {
     }
 
     property int _fyiSeq: 0
+    property var _fyiGroups: ({})
 
-    function fyi(summary, body, urgency, expireTimeout, command) {
+    function fyi(summary, body, urgency, expireTimeout, command, group) {
+        group = String(group || "")
+        if (group) {
+            var oldId = service._fyiGroups[group]
+            if (oldId !== undefined) {
+                service.dismissPendingByOriginalId(oldId)
+                for (var pi = 0; pi < popupModel.count; pi++) {
+                    var pe = popupModel.get(pi)
+                    if (pe && pe.originalId === oldId) {
+                        service.dismissPopup(pi)
+                        break
+                    }
+                }
+                delete service._fyiGroups[group]
+            }
+        }
+
         var id = --service._fyiSeq
         var snapshot = {
             id: id,
@@ -68,6 +85,9 @@ Item {
                 if (service.popupsBlocked) return
                 upsertPopup(snapshot)
             })
+        }
+        if (group) {
+            service._fyiGroups[group] = id
         }
     }
 
@@ -795,14 +815,14 @@ Item {
             return hit ? "ok" : "none"
         }
 
-        function fyi(summary: string, body: string, urgency: string, expiry: string, command: string): string {
+        function fyi(summary: string, body: string, urgency: string, expiry: string, command: string, group: string): string {
             var u = NotificationUrgency.Normal
             var urg = String(urgency || "").toLowerCase()
             if (urg === "low" || urg === "0") u = NotificationUrgency.Low
             else if (urg === "critical" || urg === "2") u = NotificationUrgency.Critical
             var e = Number(expiry || 0)
             if (!isFinite(e) || e < 0) e = 0
-            service.fyi(summary, body, u, e, command)
+            service.fyi(summary, body, u, e, command, group)
             return "ok"
         }
 

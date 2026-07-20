@@ -23,9 +23,14 @@ function t() {
 	fi
 }
 
-# Notify.
+# Notify — ephemeral notification (auto-dismisses after 5s).
+# Usage: notify <summary> [body] [group]
+#   group: group key; replaces any existing notification with the same group
 function notify() {
-	fyi "$1" "" low
+	local summary="$1"
+	local body="${2:-}"
+	local group="${3:-}"
+	fyi "$summary" "$body" low 5 "" "$group"
 }
 
 # Wait for hyprland window to open.
@@ -50,8 +55,9 @@ function launch_app() {
 	local url_or_cmd="$2"
 	local class_pattern="$3"
 	local app_name="${4:-launcher}"
+	local group="launch:$name"
 
-	notify "Launching $name..." "$app_name"
+	notify "Launching $name..." "" "$group"
 
 	if [[ "$class_pattern" == "cmd:"* ]]; then
 		class_pattern="${class_pattern#cmd:}"
@@ -61,9 +67,9 @@ function launch_app() {
 	fi
 
 	if wait_for_window "$class_pattern"; then
-		notify "$name: Launched successfully" "$app_name"
+		notify "$name: Launched successfully" "" "$group"
 	else
-		notify "$name: Failed to launch" "$app_name"
+		notify "$name: Failed to launch" "" "$group"
 		return 1
 	fi
 }
