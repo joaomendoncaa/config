@@ -6,7 +6,7 @@ pragma Singleton
 QtObject {
     id: profiler
 
-    property bool enabled: true
+    property bool enabled: false
     property string outputPath: "/tmp/quickshell-trace.json"
     property var _events: []
     property int _pid: 1

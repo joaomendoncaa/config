@@ -61,7 +61,7 @@ Rectangle {
     onPopupOpenChanged: {
         if (popupOpen && root.notificationService) {
             root.notificationService.popupsBlocked = true
-            root.notificationService.clearPopups()
+            root.notificationService.clearPopupsSoft()
         } else {
             if (root.notificationService) root.notificationService.popupsBlocked = false
         }

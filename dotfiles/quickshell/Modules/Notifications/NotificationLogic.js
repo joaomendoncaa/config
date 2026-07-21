@@ -80,6 +80,13 @@ function snapshotOf(notification, timestamp) {
     var id = n.id || 0
     var expireTimeout = Number(n.expireTimeout || 0)
     if (!isFinite(expireTimeout) || expireTimeout < 0) expireTimeout = 0
+    // freedesktop expire_timeout is milliseconds; the service tracks seconds
+    if (expireTimeout > 0) expireTimeout = expireTimeout / 1000
+    var de = ""
+    try {
+        if (n.hints && n.hints["desktop-entry"] !== undefined)
+            de = String(n.hints["desktop-entry"])
+    } catch (e) {}
     var snap = {
         id: id,
         originalId: id,
@@ -91,7 +98,8 @@ function snapshotOf(notification, timestamp) {
         glyph: glyphFromHints(n.hints),
         urgency: n.urgency,
         expireTimeout: expireTimeout,
-        timestamp: timestamp === undefined ? Date.now() : timestamp
+        timestamp: timestamp === undefined ? Date.now() : timestamp,
+        _desktopEntry: de
     }
     snap.contentHash = contentHash(snap)
     return snap

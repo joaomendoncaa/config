@@ -120,6 +120,10 @@ Rectangle {
                     onCloseRequested: {
                         if (root.notificationService) root.notificationService.dismissPending(index)
                     }
+                    onCardClicked: {
+                        if (root.notificationService) root.notificationService.invokePendingDefault(index)
+                        root.dismissed()
+                    }
                 }
             }
         }

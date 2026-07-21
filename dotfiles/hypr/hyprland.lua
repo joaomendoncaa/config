@@ -12,8 +12,8 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("dbus-update-activation-environment --systemd --all")
 	hl.exec_cmd("uwsm app -- walker --gapplication-service")
 	hl.exec_cmd("numlockx on")
-	-- Ensure mako is dead so quickshell's NotificationServer gets the DBus name
-	hl.exec_cmd("pkill mako 2>/dev/null")
+	-- Ensure mako is stopped so quickshell's NotificationServer gets the DBus name
+	hl.exec_cmd("systemctl --user stop mako.service 2>/dev/null")
 	-- Profiling: replace with quickshell-profile for JS symbol names in perf
 	hl.exec_cmd("quickshell")
 end)

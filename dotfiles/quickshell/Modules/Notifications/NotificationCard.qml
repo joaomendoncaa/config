@@ -19,6 +19,8 @@ Rectangle {
     property int cornerRadius: 5
     property int duplicateCount: 1
     property bool showCloseButton: false
+    property bool dismissing: false
+    property real popupProgress: -1
     property int iconSize: 40
     property real titleFontSize: Config.fontSize
     property real bodyFontSize: Config.fontSize
@@ -94,7 +96,13 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.cardClicked()
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: {
+            if (mouse.button === Qt.RightButton)
+                root.closeRequested()
+            else
+                root.cardClicked()
+        }
     }
 
     ColumnLayout {
@@ -226,10 +234,10 @@ Rectangle {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         height: 3
-        visible: root.expireTimeout > 0
+        visible: !root.dismissing && (root.popupProgress >= 0 || root.expireTimeout > 0)
         z: 1
         color: Config.foreground
-        width: root.width * root._expiryProgress
+        width: root.width * (root.popupProgress >= 0 ? root.popupProgress : root._expiryProgress)
         bottomLeftRadius: root.cornerRadius
         bottomRightRadius: root.cornerRadius
         topLeftRadius: 0

@@ -34,20 +34,15 @@ Rectangle {
     }
 
     function parseSessions(output) {
-        console.log("[Opencode] parseSessions called, raw length:", output.length);
         sessionModel.clear();
         var trimmed = output.trim();
-        console.log("[Opencode] parseSessions trimmed length:", trimmed.length);
         if (trimmed === '') {
-            console.log("[Opencode] parseSessions — empty result, no sessions found");
             return;
         }
         var titles = trimmed.split('\n');
-        console.log("[Opencode] parseSessions — found", titles.length, "sessions:", JSON.stringify(titles));
         for (var i = 0; i < titles.length; i++) {
             sessionModel.append({title: titles[i]});
         }
-        console.log("[Opencode] parseSessions — sessionModel.count:", sessionModel.count);
     }
 
     function scaleForBar(value) {
@@ -58,10 +53,8 @@ Rectangle {
     }
 
     function parseUsage(output) {
-        console.log("[Opencode] parseUsage called, output length:", output.length);
         try {
             var data = JSON.parse(output);
-            console.log("[Opencode] parseUsage parsed data:", JSON.stringify(data).substring(0, 200));
             usageData = data;
             balance = data.billing && data.billing.balance ? data.billing.balance : "";
             if (data.usage) {
@@ -79,7 +72,7 @@ Rectangle {
                 }
             }
         } catch (e) {
-            console.warn("[Opencode] Failed to parse usage:", e);
+            console.warn("[Opencode] parseUsage failed:", e);
         }
     }
 
@@ -252,8 +245,7 @@ Rectangle {
 
             }
             Component.onCompleted: {
-                console.log("[Opencode] PopupWindow Component.onCompleted — fetching usage");
-                if (root.barWindow) {
+        if (root.barWindow) {
                     var pos = root.mapToItem(root.barWindow.contentItem, 0, 0);
                     anchor.rect.x = pos.x;
                     anchor.rect.y = pos.y + root.height + Config.gapsOut + Config.borderSize;
@@ -512,19 +504,14 @@ Rectangle {
         running: false
 
         stdout: StdioCollector {
-            onStreamFinished: {
-                console.log("[Opencode] usageProc stdout length:", text.length, "preview:", text.substring(0, 100));
-                root.parseUsage(text);
-            }
+            onStreamFinished: root.parseUsage(text)
         }
 
         stderr: StdioCollector {
-            onStreamFinished: console.log("[Opencode] usageProc stderr:", text)
+            onStreamFinished: console.warn("[Opencode] usageProc stderr:", text)
         }
 
-        onExited: function(exitCode, exitStatus) {
-            console.log("[Opencode] usageProc exited with code:", exitCode, "status:", exitStatus);
-        }
+        onExited: function(exitCode, exitStatus) {}
 
     }
 
@@ -544,9 +531,7 @@ Rectangle {
         running: true
         repeat: true
         onTriggered: {
-            console.log("[Opencode] sessionTimer triggered, sessionProc.running =", sessionProc.running);
             if (!sessionProc.running) {
-                console.log("[Opencode] sessionTimer — launching sessionProc");
                 sessionProc.running = true;
             }
         }
@@ -571,28 +556,19 @@ Rectangle {
         running: false
 
         stdout: StdioCollector {
-            onStreamFinished: {
-                console.log("[Opencode] sessionProc stdout length:", text.length, "content:", JSON.stringify(text.substring(0, 200)));
-                root.parseSessions(text);
-            }
+            onStreamFinished: root.parseSessions(text)
         }
 
         stderr: StdioCollector {
-            onStreamFinished: console.log("[Opencode] sessionProc stderr:", text)
+            onStreamFinished: console.warn("[Opencode] sessionProc stderr:", text)
         }
 
-        onExited: function(exitCode, exitStatus) {
-            console.log("[Opencode] sessionProc exited with code:", exitCode, "status:", exitStatus);
-        }
+        onExited: function(exitCode, exitStatus) {}
 
     }
 
     Component.onCompleted: {
-        console.log("[Opencode] Component.onCompleted — starting sessionProc");
         sessionProc.running = true;
-        console.log("[Opencode] sessionProc.running =", sessionProc.running);
-        console.log("[Opencode] workspaceId =", root.workspaceId);
-        console.log("[Opencode] QUICKSHELL_OPENCODE_WORKSPACE_ID =", Quickshell.env("QUICKSHELL_OPENCODE_WORKSPACE_ID"));
         fetchUsage();
     }
 

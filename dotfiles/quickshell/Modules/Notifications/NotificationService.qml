@@ -42,7 +42,7 @@ Item {
     property int _fyiSeq: 0
     property var _fyiGroups: ({})
 
-    function fyi(summary, body, urgency, expireTimeout, command, group) {
+    function fyi(summary, body, urgency, expireTimeout, command, group, desktopEntry) {
         group = String(group || "")
         if (group) {
             var oldId = service._fyiGroups[group]
@@ -63,7 +63,7 @@ Item {
         var snapshot = {
             id: id,
             originalId: id,
-            app: "fyi",
+            app: String(summary || ""),
             appIcon: "",
             summary: String(summary || ""),
             body: String(body || ""),
@@ -72,14 +72,16 @@ Item {
             urgency: typeof urgency === "number" ? urgency : NotificationUrgency.Normal,
             expireTimeout: typeof expireTimeout === "number" ? expireTimeout : 0,
             timestamp: Date.now(),
-            _clickCommand: String(command || "")
+            _clickCommand: String(command || ""),
+            _desktopEntry: String(desktopEntry || "")
         }
         snapshot.contentHash = N.contentHash(snapshot)
         snapshot.duplicateCount = 1
+        if (snapshot.expireTimeout <= 0)
+            snapshot.expireTimeout = service.defaultExpirySeconds(snapshot.urgency)
         setRef(id, null)
         addToPending(snapshot)
-        if (snapshot.expireTimeout > 0)
-            schedulePendingExpiry(snapshot.contentHash, id, snapshot.expireTimeout)
+        schedulePendingExpiry(snapshot.contentHash, id, snapshot.expireTimeout)
         if (!service.doNotDisturb) {
             Qt.callLater(function() {
                 if (service.popupsBlocked) return
@@ -125,7 +127,7 @@ Item {
     function durationFor(urgency, expireTimeout) {
         switch (urgency) {
         case NotificationUrgency.Critical:
-            return 0
+            return Math.min(maxPopupDuration, Math.max(normalPopupDuration, requestedDuration(expireTimeout)))
         case NotificationUrgency.Low:
             return Math.min(maxPopupDuration, Math.max(lowPopupDuration, requestedDuration(expireTimeout)))
         default:
@@ -137,6 +139,10 @@ Item {
         var seconds = Number(expireTimeout || 0)
         if (!isFinite(seconds) || seconds <= 0) return 0
         return Math.round(seconds * 1000)
+    }
+
+    function defaultExpirySeconds(urgency) {
+        return durationFor(urgency, 0) / 1000
     }
 
     function shouldBypassDnd(notification) {
@@ -163,6 +169,8 @@ Item {
                 merged.timestamp = snapshot.timestamp
                 merged.duplicateCount = (row.duplicateCount || 1) + 1
                 merged._clickCommand = snapshot._clickCommand || row._clickCommand || ""
+                merged._desktopEntry = snapshot._desktopEntry || row._desktopEntry || ""
+                merged.expireTimeout = snapshot.expireTimeout || 0
                 removeRef(oldId)
                 setRef(merged.id, newRef)
                 pendingModel.set(i, merged)
@@ -183,7 +191,8 @@ Item {
             timestamp: snapshot.timestamp,
             contentHash: hash,
             duplicateCount: snapshot.duplicateCount || 1,
-            _clickCommand: snapshot._clickCommand || ""
+            _clickCommand: snapshot._clickCommand || "",
+            _desktopEntry: snapshot._desktopEntry || ""
         }
         setRef(fresh.id, newRef)
         pendingModel.insert(0, fresh)
@@ -198,7 +207,7 @@ Item {
         var newRef = getRef(snapshot.id)
         for (var i = 0; i < popupModel.count; i++) {
             var row = popupModel.get(i)
-            if (row && row.contentHash === hash) {
+            if (row && row.contentHash === hash && row.closing !== true) {
                 var oldRef = getRef(row.id)
                 var merged = service.snapshotFromRow(row)
                 var oldId = merged.id
@@ -208,6 +217,8 @@ Item {
                 merged.expireTimeout = snapshot.expireTimeout || 0
                 merged.duplicateCount = (row.duplicateCount || 1) + 1
                 merged._clickCommand = snapshot._clickCommand || row._clickCommand || ""
+                merged._desktopEntry = snapshot._desktopEntry || row._desktopEntry || ""
+                merged.closing = false
                 removeRef(oldId)
                 setRef(merged.id, newRef)
                 popupModel.set(i, merged)
@@ -231,7 +242,9 @@ Item {
             timestamp: snapshot.timestamp,
             contentHash: hash,
             duplicateCount: snapshot.duplicateCount || 1,
-            _clickCommand: snapshot._clickCommand || ""
+            closing: false,
+            _clickCommand: snapshot._clickCommand || "",
+            _desktopEntry: snapshot._desktopEntry || ""
         }
         setRef(fresh.id, newRef)
         popupModel.insert(0, fresh)
@@ -258,7 +271,10 @@ Item {
             return
         }
 
+        if (snapshot.expireTimeout <= 0)
+            snapshot.expireTimeout = service.defaultExpirySeconds(snapshot.urgency)
         addToPending(snapshot)
+        schedulePendingExpiry(snapshot.contentHash, snapshot.id, snapshot.expireTimeout)
         maybeCacheImage(snapshot)
 
         if (service.doNotDisturb && !shouldBypassDnd(notification)) {
@@ -299,7 +315,8 @@ Item {
             timestamp: row.timestamp,
             contentHash: row.contentHash || N.contentHash(row),
             duplicateCount: row.duplicateCount || 1,
-            _clickCommand: row._clickCommand || ""
+            _clickCommand: row._clickCommand || "",
+            _desktopEntry: row._desktopEntry || ""
         }
     }
 
@@ -345,13 +362,17 @@ Item {
         removePopup(index, "expire")
     }
 
-    function removePopup(index, reason) {
+    // Marks the popup row as closing; the delegate animates out and calls
+    // finalizePopupClose() to actually remove the row once invisible.
+    function removePopup(index, reason, soft) {
         if (index < 0 || index >= popupModel.count) return
         var entry = popupModel.get(index)
-        var ref = entry ? getRef(entry.id) : null
-        var originalId = entry ? entry.originalId : -1
-        popupModel.remove(index)
-        if (entry) removeRef(entry.id)
+        if (!entry) return
+        if (entry.closing === true) return
+        popupModel.setProperty(index, "closing", true)
+        var ref = getRef(entry.id)
+        var originalId = entry.originalId
+        removeRef(entry.id)
         if (ref) {
             try {
                 if (ref.tracked) {
@@ -360,11 +381,24 @@ Item {
                 }
             } catch (e) {}
         }
-        if (originalId >= 0) markSeenByOriginalId(originalId)
+        if (!soft) markSeenByOriginalId(originalId)
+    }
+
+    // Called by the delegate when its close animation finishes. The index is
+    // live and always tracks the delegate's row; the closing guard makes sure
+    // we never remove a row that isn't animating out.
+    function finalizePopupClose(index) {
+        if (index < 0 || index >= popupModel.count) return
+        var row = popupModel.get(index)
+        if (row && row.closing === true) popupModel.remove(index)
     }
 
     function clearPopups() {
-        while (popupModel.count > 0) dismissPopup(0)
+        for (var i = 0; i < popupModel.count; i++) dismissPopup(i)
+    }
+
+    function clearPopupsSoft() {
+        for (var i = 0; i < popupModel.count; i++) removePopup(i, "dismiss", true)
     }
 
     function dismissPending(index) {
@@ -492,8 +526,8 @@ Item {
                 fyiActionProc.running = true
                 invoked = true
             } else {
-                logParts.push("focusApp")
-                focusApp(entry)
+                logParts.push("launchApp")
+                launchApp(entry)
             }
         } else {
             logParts.push("handled_by_action")
@@ -507,17 +541,78 @@ Item {
         dismissPopup(index)
     }
 
-    function focusApp(entry) {
-        if (!entry || !entry.app) return
-        var home = Quickshell.env("HOME")
-        focusAppProc.command = [
-            home + "/.config.jmmm.sh/bin/hyprland-focus-app",
-            String(entry.app)
-        ]
-        focusAppProc.running = true
+    function invokePendingDefault(index) {
+        if (index < 0 || index >= pendingModel.count) return
+        var entry = pendingModel.get(index)
+        var ref = entry ? getRef(entry.id) : null
+        var invoked = false
+        if (ref && ref.actions) {
+            for (var i = 0; i < ref.actions.length; i++) {
+                var action = ref.actions[i]
+                if (action && action.identifier === "default") {
+                    try { action.invoke(); invoked = true } catch (e) {}
+                    break
+                }
+            }
+        }
+        if (!invoked) {
+            var cmd = entry ? String(entry._clickCommand || "") : ""
+            if (cmd) {
+                var home = Quickshell.env("HOME")
+                fyiActionProc.command = [
+                    "sh", "-c",
+                    "PATH=" + home + "/.config.jmmm.sh/bin:/usr/local/bin:/usr/bin:/bin; " + cmd
+                ]
+                fyiActionProc.running = true
+            } else {
+                launchApp(entry)
+            }
+        }
+        dismissPending(index)
     }
 
-    Process { id: focusAppProc; running: false }
+    function launchApp(entry) {
+        if (!entry || !entry.app) return
+        var home = Quickshell.env("HOME")
+        var de = String(entry._desktopEntry || "")
+        var app = String(entry.app || "")
+        var focusApp = home + "/.config.jmmm.sh/bin/hyprland-focus-app"
+        var safeApp = "'" + app.replace(/'/g, "'\\''") + "'"
+
+        var script = "exec 2>/tmp/notif-launch-strace.log; set -x; "
+        script += "if " + focusApp + " " + safeApp + "; then exit 0; fi; "
+
+        var lower = app.toLowerCase()
+        var firstWord = app.split(/ +/)[0]
+        var firstWordLow = firstWord.toLowerCase()
+        var dashes = lower.replace(/ /g, '-')
+
+        var gtkTries = [lower.replace(/ /g, '.'), dashes, lower.replace(/ /g, ''), lower, app]
+        if (de) gtkTries.unshift(de)
+
+        for (var ti = 0; ti < gtkTries.length; ti++) {
+            var t = gtkTries[ti]
+            if (!t || t.indexOf("'") >= 0) continue
+            script += "if gtk-launch '" + t + "' 2>/dev/null; then exit 0; fi; "
+        }
+
+        var seen = {}
+        var addCmd = function(s) {
+            if (s && !seen[s]) { seen[s] = true; script += "'" + s + "' &>/dev/null & disown; "; }
+        }
+        addCmd(firstWord)
+        addCmd(firstWordLow)
+        addCmd(dashes)
+        addCmd(de)
+
+        script += "sleep 1; " + focusApp + " " + safeApp
+        debugProc.command = ["sh", "-c", "echo 'LAUNCH_SCRIPT: " + script.replace(/'/g, "'\\''") + "' >> /tmp/notif-debug.log"]
+        debugProc.running = true
+        launchAppProc.command = ["bash", "-l", "-c", script]
+        launchAppProc.running = true
+    }
+
+    Process { id: launchAppProc; running: false }
     Process { id: fyiActionProc; running: false }
     Process { id: debugProc; running: false }
 
@@ -815,14 +910,14 @@ Item {
             return hit ? "ok" : "none"
         }
 
-        function fyi(summary: string, body: string, urgency: string, expiry: string, command: string, group: string): string {
+        function fyi(summary: string, body: string, urgency: string, expiry: string, command: string, group: string, desktopEntry: string): string {
             var u = NotificationUrgency.Normal
             var urg = String(urgency || "").toLowerCase()
             if (urg === "low" || urg === "0") u = NotificationUrgency.Low
             else if (urg === "critical" || urg === "2") u = NotificationUrgency.Critical
             var e = Number(expiry || 0)
             if (!isFinite(e) || e < 0) e = 0
-            service.fyi(summary, body, u, e, command, group)
+            service.fyi(summary, body, u, e, command, group, desktopEntry)
             return "ok"
         }
 
@@ -890,6 +985,7 @@ Item {
                         required property double expireTimeout
                         required property double timestamp
                         required property int duplicateCount
+                        required property bool closing
 
                         Layout.preferredWidth: card.implicitWidth
                         Layout.alignment: Qt.AlignRight
@@ -899,7 +995,7 @@ Item {
                             ? Math.round(cardSlot.expireTimeout * 1000)
                             : service.durationFor(cardSlot.urgency, cardSlot.expireTimeout)
                         property real remainingLifetime: 1.0
-                        readonly property bool ticking: cardSlot.lifetime > 0 && !card.hovered
+                        readonly property bool ticking: !cardSlot.closing && cardSlot.lifetime > 0 && !card.hovered
                         property bool _stopped: false
 
                         onDuplicateCountChanged: {
@@ -907,12 +1003,39 @@ Item {
                                 cardSlot.remainingLifetime = 1.0
                         }
 
+                        // Animate out before the row is removed: destroying the
+                        // delegate mid-frame lets context properties reset in
+                        // undefined order, which shows textless/glitchy frames.
+                        onClosingChanged: {
+                            if (cardSlot.closing) {
+                                card.dismissing = true
+                                closeAnimation.restart()
+                            }
+                        }
+
+                        SequentialAnimation {
+                            id: closeAnimation
+
+                            ParallelAnimation {
+                                NumberAnimation {
+                                    target: card
+                                    property: "height"
+                                    to: 0
+                                    duration: 100
+                                    easing.type: Easing.InOutQuad
+                                }
+                            }
+                            ScriptAction {
+                                script: service.finalizePopupClose(cardSlot.index)
+                            }
+                        }
+
                         Timer {
                             interval: 50
                             repeat: true
                             running: cardSlot.ticking
                             onTriggered: {
-                                if (cardSlot._stopped || popupModel.count <= cardSlot.index) return
+                                if (cardSlot._stopped || cardSlot.closing || popupModel.count <= cardSlot.index) return
                                 if (cardSlot.lifetime <= 0) return
                                 cardSlot.remainingLifetime -= 50.0 / cardSlot.lifetime
                                 if (cardSlot.remainingLifetime <= 0) {
@@ -937,12 +1060,15 @@ Item {
                             duplicateCount: cardSlot.duplicateCount
                             cornerRadius: service.cornerRadius
                             glyph: cardSlot.glyph
+                            popupProgress: cardSlot.lifetime > 0 ? cardSlot.remainingLifetime : -1
 
                             onCloseRequested: {
+                                if (cardSlot.closing) return
                                 cardSlot._stopped = true
                                 service.dismissPopup(cardSlot.index)
                             }
                             onCardClicked: {
+                                if (cardSlot.closing) return
                                 cardSlot._stopped = true
                                 service.invokePopupDefault(cardSlot.index)
                             }
