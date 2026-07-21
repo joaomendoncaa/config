@@ -13,12 +13,17 @@ Item {
     property int volumePercent: 0
     property bool isMuted: false
     readonly property string statePath: Quickshell.env("XDG_RUNTIME_DIR") + "/volume-osd/state"
-
     readonly property string iconChar: {
-        if (root.isMuted || root.volumePercent === 0) return "\uf026"
-        if (root.volumePercent < 50) return "\uf027"
-        return "\uf028"
+        if (root.isMuted || root.volumePercent === 0)
+            return "\uf026";
+
+        if (root.volumePercent < 50)
+            return "\uf027";
+
+        return "\uf028";
     }
+
+    Component.onCompleted: Quickshell.execDetached(["rm", "-f", root.statePath])
 
     FileView {
         id: stateFile
@@ -28,12 +33,12 @@ Item {
         onLoaded: {
             var content = text().trim();
             if (!content || content === root.prevState)
-                return;
+                return ;
 
             root.prevState = content;
             var parts = content.split(" ");
             if (parts.length < 2)
-                return;
+                return ;
 
             root.volumePercent = parseInt(parts[0]) || 0;
             root.isMuted = parts[1] === "true";
@@ -41,7 +46,8 @@ Item {
             hideTimer.restart();
         }
         onFileChanged: stateFile.reload()
-        onLoadFailed: function(err) {}
+        onLoadFailed: function(err) {
+        }
     }
 
     Timer {
@@ -53,6 +59,7 @@ Item {
 
     Timer {
         id: hideTimer
+
         interval: 1200
         onTriggered: root.showOsd = false
     }
@@ -76,7 +83,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             radius: Config.borderRadius
-            color: Config.hexWithAlpha(Config.foreground, "10")
+            color: Config.hexWithAlpha(Config.backgroundColored, "80")
 
             RowLayout {
                 anchors.fill: parent
@@ -106,6 +113,7 @@ Item {
                         radius: 3
                         color: root.isMuted ? Config.foregroundSecondary : Config.accent
                     }
+
                 }
 
                 Text {
@@ -115,7 +123,11 @@ Item {
                     color: Config.foreground
                     Layout.alignment: Qt.AlignVCenter
                 }
+
             }
+
         }
+
     }
+
 }
