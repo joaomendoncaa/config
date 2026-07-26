@@ -55,4 +55,6 @@ add_to_path "$ANDROID_HOME/platform-tools"
 add_to_path "$ANDROID_HOME/emulator"
 add_to_path "/home/joao/.opencode/bin"
 
+add_to_path_rs_builds
+
 if shopt -q login_shell 2>/dev/null; then t; fi

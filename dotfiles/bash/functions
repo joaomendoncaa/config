@@ -2,16 +2,20 @@
 
 WT_DIR="/home/joao/lab"
 
-# Code-gen a `.gitignore`.
 function gi() {
 	curl -sL "https://www.toptal.com/developers/gitignore/api/$@"
 }
 
-# Add a directory to $PATH.
 function add_to_path() {
 	if [[ ":$PATH:" != *":$1:"* ]]; then
 		export PATH="$1:$PATH"
 	fi
+}
+
+function add_to_path_rs_builds() {
+	for dir in "$HOME"/lab/*/target/release "$HOME"/lab/worktrees/*/target/release; do
+		[ -d "$dir" ] && add_to_path "$dir"
+	done
 }
 
 # Open tmux by attaching to existing session or creating a new one.
@@ -227,38 +231,41 @@ wtprune() {
 # read the file synchronously (instant). Result is one cycle behind.
 
 __git_dirty_char() {
-    [[ -s "/tmp/git-dirty-${PWD//\//-}" ]] && printf ' *'
+	[[ -s "/tmp/git-dirty-${PWD//\//-}" ]] && printf ' *'
 }
 
 __git_async_check() {
-    local file="/tmp/git-dirty-${PWD//\//-}"
-    local pidfile="$file.pid"
-    [[ -f "$pidfile" ]] && kill "$(cat "$pidfile")" 2>/dev/null || true
+	local file="/tmp/git-dirty-${PWD//\//-}"
+	local pidfile="$file.pid"
+	[[ -f "$pidfile" ]] && kill "$(cat "$pidfile")" 2>/dev/null || true
 
-    (
-        cd "$PWD" 2>/dev/null || exit
-        git rev-parse --git-dir &>/dev/null || { : > "$file"; exit; }
+	(
+		cd "$PWD" 2>/dev/null || exit
+		git rev-parse --git-dir &>/dev/null || {
+			: >"$file"
+			exit
+		}
 
-        local dirty
-        dirty=$(git status --porcelain 2>/dev/null)
-        if [[ -n "$dirty" ]]; then
-            printf '*' > "$file"
-        else
-            : > "$file"
-        fi
-    ) &>/dev/null &
-    echo $! > "$pidfile"
-    disown
+		local dirty
+		dirty=$(git status --porcelain 2>/dev/null)
+		if [[ -n "$dirty" ]]; then
+			printf '*' >"$file"
+		else
+			: >"$file"
+		fi
+	) &>/dev/null &
+	echo $! >"$pidfile"
+	disown
 }
 
 # Auto-discover rust release binaries in ~/lab and ~/lab/worktrees
 command_not_found_handle() {
-  for dir in "$HOME/lab"/*/target/release "$HOME/lab/worktrees"/*/target/release; do
-    if [[ -x "$dir/$1" ]]; then
-      exec "$dir/$1" "${@:2}"
-    fi
-  done
-  return 127
+	for dir in "$HOME/lab"/*/target/release "$HOME/lab/worktrees"/*/target/release; do
+		if [[ -x "$dir/$1" ]]; then
+			exec "$dir/$1" "${@:2}"
+		fi
+	done
+	return 127
 }
 
 # Quick compress pass on a video
