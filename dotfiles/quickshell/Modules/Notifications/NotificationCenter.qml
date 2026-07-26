@@ -78,7 +78,6 @@ Rectangle {
     property string historyFilter: "all" // "all", "today", "hour", "week"
 
     implicitWidth: 400
-    implicitHeight: 540
     radius: Config.borderRadius
     color: Config.backgroundColored
     clip: true

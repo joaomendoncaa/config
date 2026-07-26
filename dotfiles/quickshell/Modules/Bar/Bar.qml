@@ -14,22 +14,22 @@ PanelWindow {
     id: bar
 
     property alias powerButtonItem: powerItem
-    property alias updatePanelButtonItem: centerBar.updatesItem
     property real powerMenuX: 0
     property real powerMenuY: 0
-    property real updatePanelX: 0
-    property real updatePanelY: 0
-    readonly property int updatePanelWidth: 480
-    readonly property int updatePanelHeight: 420
     property bool contentVisible: true
     property bool zenActive: false
     property bool isRecording: false
 
-    readonly property alias notificationCenterOpen: notifButton.popupOpen
+    property alias notificationCenterOpen: notifButton.popupOpen
+
+    Updates {
+        id: barUpdates
+        notificationService: bar.notificationService
+        visible: false
+    }
 
     signal toggleLauncher()
     signal togglePowerMenu()
-    signal toggleUpdatePanel()
     signal toggleZen()
     signal zenDismissed()
 
@@ -40,13 +40,6 @@ PanelWindow {
         var pos = powerItem.mapToItem(null, 0, 0);
         powerMenuX = pos.x + powerItem.width - 160;
         powerMenuY = Config.shellPadding + Config.height + Config.gapsOut;
-    }
-
-    function updateUpdatePanelPosition() {
-        var btn = centerBar.updatesItem;
-        var pos = btn.mapToItem(null, 0, 0);
-        updatePanelX = pos.x + btn.width / 2 - bar.updatePanelWidth / 2;
-        updatePanelY = Config.shellPadding + Config.height + Config.gapsOut;
     }
 
     implicitHeight: Config.height
@@ -93,10 +86,6 @@ PanelWindow {
 
             anchors.centerIn: parent
             anchors.verticalCenter: parent.verticalCenter
-            updatesItem.onToggle: {
-                bar.updateUpdatePanelPosition();
-                bar.toggleUpdatePanel();
-            }
             zenmodeItem.onActivated: bar.toggleZen()
         }
 
@@ -135,6 +124,7 @@ PanelWindow {
                 id: notifButton
                 barWindow: bar
                 notificationService: bar.notificationService
+                updatesItem: barUpdates
             }
 
             Power {
