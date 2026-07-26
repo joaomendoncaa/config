@@ -10,7 +10,6 @@ Item {
 
     property bool isRecording: false
     property bool showAux: true
-    property alias updatesItem: updates
     property alias zenmodeItem: zenmode
 
     implicitWidth: row.implicitWidth
@@ -30,14 +29,6 @@ Item {
 
         Clock {
             notificationService: root.notificationService
-        }
-
-        Updates {
-            id: updates
-            notificationService: root.notificationService
-
-            opacity: root.showAux ? 1 : 0
-            enabled: root.showAux
         }
 
         Zen {

@@ -11,7 +11,6 @@ import "Modules/DictationOSD"
 import "Modules/VolumeOSD"
 import "Modules/Lock"
 import "Modules/PowerMenu"
-import "Modules/UpdatePanel"
 import "Modules/Superbar"
 import "Modules/Notifications"
 
@@ -20,7 +19,6 @@ Scope {
 
     property bool launcherOpen: false
     property bool powerMenuOpen: false
-    property bool updatePanelOpen: false
     property string launcherMode: "apps"
 
     property bool zenActive: false
@@ -332,18 +330,15 @@ Scope {
         target: "update-panel"
 
         function toggle() {
-            if (!updatePanelOpen)
-                barComponent.updateUpdatePanelPosition()
-            updatePanelOpen = !updatePanelOpen
+            barComponent.notificationCenterOpen = !barComponent.notificationCenterOpen
         }
 
         function open() {
-            barComponent.updateUpdatePanelPosition()
-            updatePanelOpen = true
+            barComponent.notificationCenterOpen = true
         }
 
         function close() {
-            updatePanelOpen = false
+            barComponent.notificationCenterOpen = false
         }
 
     }
@@ -378,17 +373,16 @@ Scope {
     }
 
     BlurMask {
-        visible: root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen || barComponent.notificationCenterOpen
+        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen
     }
 
     Bar {
         id: barComponent
         zenActive: root.zenActive
         isRecording: root.isRecording
-        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || root.updatePanelOpen || barComponent.notificationCenterOpen
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen
         onToggleLauncher: root.launcherOpen = !root.launcherOpen
         onTogglePowerMenu: root.powerMenuOpen = !root.powerMenuOpen
-        onToggleUpdatePanel: root.updatePanelOpen = !root.updatePanelOpen
         onToggleZen: root.zenActive = true
         onZenDismissed: root.zenActive = false
         priceLabels: root.priceLabels
@@ -420,20 +414,6 @@ Scope {
             popupX: barComponent.powerMenuX
             popupY: barComponent.powerMenuY
             onDismissed: root.powerMenuOpen = false
-        }
-
-    }
-
-    LazyLoader {
-        id: updatePanelLoader
-
-        active: root.updatePanelOpen
-
-        UpdatePanel {
-            popupX: barComponent.updatePanelX
-            popupY: barComponent.updatePanelY
-            updatesItem: barComponent.updatePanelButtonItem
-            onDismissed: root.updatePanelOpen = false
         }
 
     }

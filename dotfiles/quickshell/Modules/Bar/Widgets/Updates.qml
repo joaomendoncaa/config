@@ -23,6 +23,8 @@ Rectangle {
     signal toggle()
     signal upgradeStarted()
     signal upgradeFinished()
+    signal packagesUpdated()
+    signal upgradeError(string message)
 
     function refresh() {
         root.listProcess.running = true;
@@ -182,6 +184,7 @@ Rectangle {
                 } catch (e) {
                     console.warn("[Updates] Failed to parse package list:", e);
                 }
+                root.packagesUpdated();
             }
         }
 
@@ -200,6 +203,7 @@ Rectangle {
                         var lines = output.split('\n');
                         var tail = lines.slice(-10).join('\n');
                         root.notificationService.fyi("Update failed", tail, 2);
+                        root.upgradeError(tail);
                     }
                 }
                 root.upgrading = false;
