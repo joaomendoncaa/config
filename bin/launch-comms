@@ -6,5 +6,4 @@ source ~/.config.jmmm.sh/dotfiles/bash/functions
 launch_app "Discord" "https://discord.com/channels/" "discord" "launch-comms"
 launch_app "WhatsApp" "https://web.whatsapp.com/" "whatsapp" "launch-comms"
 launch_app "Telegram" "Telegram" "cmd:org.telegram.desktop" "launch-comms"
-launch_app "Messages" "https://messages.google.com/web/conversations" "messages.google" "launch-comms"
 launch_app "Proton Mail" "https://mail.proton.me/u/0/inbox" "proton" "launch-comms"
