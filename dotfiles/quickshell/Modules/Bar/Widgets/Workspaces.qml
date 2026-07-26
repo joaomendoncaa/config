@@ -10,20 +10,39 @@ RowLayout {
     spacing: Config.gapInner
 
     Repeater {
-        model: Hyprland.workspaces
+        model: {
+            var ids = [];
+            var values = Hyprland.workspaces.values;
+            for (var i = 0; i < values.length; i++) {
+                var id = values[i].id;
+                if (id >= 1 && id <= 10 && ids.indexOf(id) === -1) {
+                    ids.push(id);
+                }
+            }
+            ids.sort(function(a, b) { return a - b; });
+            return ids;
+        }
 
         delegate: Rectangle {
-            required property var modelData
+            required property int modelData
+
+            readonly property var workspace: {
+                var values = Hyprland.workspaces.values;
+                for (var i = 0; i < values.length; i++) {
+                    if (values[i].id === modelData) return values[i];
+                }
+                return null;
+            }
 
             Layout.preferredWidth: Config.buttonSize
             Layout.preferredHeight: Config.buttonSize
             radius: Config.buttonBorderRadius
-            color: modelData.focused ? Config.foreground : mouseArea.containsMouse ? Config.backgroundHovered : Config.background
+            color: (workspace && workspace.focused) ? Config.foreground : mouseArea.containsMouse ? Config.backgroundHovered : Config.background
 
             Text {
                 anchors.centerIn: parent
-                text: modelData.id
-                color: modelData.focused ? Config.foregroundSelected : Config.foreground
+                text: modelData
+                color: (workspace && workspace.focused) ? Config.foregroundSelected : Config.foreground
                 font.pixelSize: Config.fontSize
                 font.family: Config.fontFamily
             }
@@ -33,7 +52,7 @@ RowLayout {
 
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: modelData.activate()
+                onClicked: { if (workspace) workspace.activate(); }
                 hoverEnabled: true
             }
 

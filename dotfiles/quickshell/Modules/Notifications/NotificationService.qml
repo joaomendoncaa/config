@@ -1,8 +1,6 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import qs.Core
 import "NotificationLogic.js" as N
@@ -12,15 +10,18 @@ Item {
 
     readonly property string stateDir: Quickshell.env("HOME") + "/.local/state/quickshell/"
     readonly property string historyPath: stateDir + "notifications.json"
+    readonly property string rulesPath: Quickshell.env("HOME") + "/.config/quickshell/notification-rules.json"
     readonly property string cacheDir: Quickshell.env("HOME") + "/.cache/quickshell/"
     readonly property string imageCacheDir: cacheDir + "notification-images/"
 
     readonly property int cornerRadius: Config.borderRadius
 
+    // Notification rules — loaded from notification-rules.json
+    property var notificationRules: []
+
     signal historyOpenRequested()
 
     property bool popupsBlocked: false
-
     property bool _hydrating: false
 
     PersistentProperties {
@@ -48,13 +49,9 @@ Item {
             var oldId = service._fyiGroups[group]
             if (oldId !== undefined) {
                 service.dismissPendingByOriginalId(oldId)
-                for (var pi = 0; pi < popupModel.count; pi++) {
-                    var pe = popupModel.get(pi)
-                    if (pe && pe.originalId === oldId) {
-                        service.dismissPopup(pi)
-                        break
-                    }
-                }
+                // Also dismiss any popup wrapper for this group
+                var oldWrapper = service._popupRefsByOriginalId[oldId]
+                if (oldWrapper) oldWrapper.popup = false
                 delete service._fyiGroups[group]
             }
         }
@@ -81,11 +78,10 @@ Item {
             snapshot.expireTimeout = service.defaultExpirySeconds(snapshot.urgency)
         setRef(id, null)
         addToPending(snapshot)
-        schedulePendingExpiry(snapshot.contentHash, id, snapshot.expireTimeout)
         if (!service.doNotDisturb) {
             Qt.callLater(function() {
                 if (service.popupsBlocked) return
-                upsertPopup(snapshot)
+                showPopup(snapshot)
             })
         }
         if (group) {
@@ -100,6 +96,12 @@ Item {
     ListModel { id: popupModel }
     ListModel { id: pendingModel }
     ListModel { id: pastModel }
+
+    // visiblePopups — array of NotificationWrapper objects for individual popup windows
+    property var visiblePopups: []
+    property var _popupRefs: ({}) // id -> wrapper
+    property var _popupRefsByOriginalId: ({}) // originalId -> wrapper
+    readonly property int maxVisiblePopups: 4
 
     property var _refs: ({})
 
@@ -153,9 +155,7 @@ Item {
         return N.snapshotOf(notification, Date.now())
     }
 
-    // Merge duplicate notifications by content hash: if a pending card with the
-    // same content already exists, bump its duplicate count and refresh its
-    // id/timestamp/ref in place (position preserved). Otherwise insert at 0.
+    // Merge duplicate notifications by content hash
     function upsertPending(snapshot) {
         var hash = snapshot.contentHash || N.contentHash(snapshot)
         var newRef = getRef(snapshot.id)
@@ -198,37 +198,38 @@ Item {
         pendingModel.insert(0, fresh)
     }
 
-    // Same merge-by-contentHash strategy for floating popup toasts. When a
-    // duplicate arrives, the existing popup is updated in place (count bumped,
-    // ref/timestamp refreshed) and the stale old ref is dismissed so the DBus
-    // server doesn't leak tracked notifications.
-    function upsertPopup(snapshot) {
+    // -----------------------------------------------------------------------
+    // showPopup — creates/updates a popup wrapper and adds to visiblePopups
+    // -----------------------------------------------------------------------
+    Component { id: wrapperComponent; NotificationWrapper {} }
+
+    function showPopup(snapshot) {
         var hash = snapshot.contentHash || N.contentHash(snapshot)
-        var newRef = getRef(snapshot.id)
-        for (var i = 0; i < popupModel.count; i++) {
-            var row = popupModel.get(i)
-            if (row && row.contentHash === hash && row.closing !== true) {
-                var oldRef = getRef(row.id)
-                var merged = service.snapshotFromRow(row)
-                var oldId = merged.id
-                merged.id = snapshot.id
-                merged.originalId = snapshot.originalId
-                merged.timestamp = snapshot.timestamp
-                merged.expireTimeout = snapshot.expireTimeout || 0
-                merged.duplicateCount = (row.duplicateCount || 1) + 1
-                merged._clickCommand = snapshot._clickCommand || row._clickCommand || ""
-                merged._desktopEntry = snapshot._desktopEntry || row._desktopEntry || ""
-                merged.closing = false
-                removeRef(oldId)
-                setRef(merged.id, newRef)
-                popupModel.set(i, merged)
-                if (oldRef && oldRef !== newRef) {
-                    try { if (oldRef.tracked) oldRef.dismiss() } catch (e) {}
-                }
-                return
+        var existing = _popupRefsByOriginalId[snapshot.originalId]
+
+        // Duplicate: update existing popup in place
+        if (existing && !existing.popupClosing) {
+            var oldRef = existing.ref
+            existing.id = snapshot.id
+            existing.originalId = snapshot.originalId
+            existing.timestamp = snapshot.timestamp
+            existing.duplicateCount = (existing.duplicateCount || 1) + 1
+            existing._clickCommand = snapshot._clickCommand || existing._clickCommand || ""
+            existing._desktopEntry = snapshot._desktopEntry || existing._desktopEntry || ""
+            existing.expireTimeout = snapshot.expireTimeout || existing.expireTimeout
+            existing.ref = getRef(snapshot.id)
+            if (oldRef && oldRef !== getRef(snapshot.id)) {
+                try { if (oldRef.tracked) oldRef.dismiss() } catch (e) {}
             }
+            existing.stopPopupTimer()
+            existing.startPopupTimer()
+            // Trigger UI update
+            visiblePopups = visiblePopups.slice()
+            return
         }
-        var fresh = {
+
+        // Create new wrapper
+        var wrapper = wrapperComponent.createObject(service, {
             id: snapshot.id,
             originalId: snapshot.originalId,
             app: snapshot.app,
@@ -242,12 +243,58 @@ Item {
             timestamp: snapshot.timestamp,
             contentHash: hash,
             duplicateCount: snapshot.duplicateCount || 1,
-            closing: false,
+            popup: true,
+            popupClosing: false,
+            popupProgress: 1.0,
+            ref: getRef(snapshot.id),
+            service: service,
             _clickCommand: snapshot._clickCommand || "",
             _desktopEntry: snapshot._desktopEntry || ""
+        })
+        if (!wrapper) return
+
+        _popupRefs[snapshot.id] = wrapper
+        _popupRefsByOriginalId[snapshot.originalId] = wrapper
+
+        // Evict oldest if at max
+        if (visiblePopups.length >= maxVisiblePopups) {
+            var oldest = visiblePopups[visiblePopups.length - 1]
+            if (oldest) oldest.popup = false
         }
-        setRef(fresh.id, newRef)
-        popupModel.insert(0, fresh)
+
+        visiblePopups.unshift(wrapper)
+        wrapper.startPopupTimer()
+        visiblePopups = visiblePopups.slice()
+    }
+
+    function dismissPopupByWrapper(wrapper) {
+        if (!wrapper) return
+        wrapper.stopPopupTimer()
+        wrapper.popup = false
+        wrapper.popupClosing = true
+        // Remove from visiblePopups
+        var idx = visiblePopups.indexOf(wrapper)
+        if (idx !== -1) {
+            visiblePopups.splice(idx, 1)
+            visiblePopups = visiblePopups.slice()
+        }
+        markSeenByOriginalId(wrapper.originalId)
+        // Clean up ref
+        removeRef(wrapper.id)
+        delete _popupRefs[wrapper.id]
+        delete _popupRefsByOriginalId[wrapper.originalId]
+    }
+
+    // Called by the popup manager when a popup window is destroyed
+    function releasePopup(wrapper) {
+        if (!wrapper) return
+        var idx = visiblePopups.indexOf(wrapper)
+        if (idx !== -1) {
+            visiblePopups.splice(idx, 1)
+            visiblePopups = visiblePopups.slice()
+        }
+        delete _popupRefs[wrapper.id]
+        delete _popupRefsByOriginalId[wrapper.originalId]
     }
 
     function handleNotification(notification) {
@@ -255,18 +302,55 @@ Item {
         var snapshot = snapshotOf(notification)
         setRef(snapshot.id, notification)
 
-        var transient = !!notification.transient
         var appName = String(notification.appName || "")
         var ephemeralApp = N.isEphemeralApp(appName)
 
-        if (transient || ephemeralApp) {
+        // Rules engine — evaluate before any processing
+        var rule = N.evaluateRules(service.notificationRules, snapshot)
+        if (rule) {
+            switch (rule.action) {
+            case "ignore":
+                notification.tracked = false
+                return
+            case "mute":
+                // No popup, but keep in center
+                if (rule.urgencyOverride !== undefined) snapshot.urgency = rule.urgencyOverride
+                addToPending(snapshot)
+                maybeCacheImage(snapshot)
+                return
+            case "popup_only":
+                if (rule.urgencyOverride !== undefined) snapshot.urgency = rule.urgencyOverride
+                if (!service.doNotDisturb || shouldBypassDnd(notification)) {
+                    Qt.callLater(function() {
+                        if (service.popupsBlocked) return
+                        showPopup(snapshot)
+                    })
+                }
+                return
+            case "no_history":
+                if (rule.urgencyOverride !== undefined) snapshot.urgency = rule.urgencyOverride
+                snapshot._noHistory = true
+                if (!service.doNotDisturb || shouldBypassDnd(notification)) {
+                    Qt.callLater(function() {
+                        if (service.popupsBlocked) return
+                        showPopup(snapshot)
+                    })
+                }
+                return
+            case "default":
+                if (rule.urgencyOverride !== undefined) snapshot.urgency = rule.urgencyOverride
+                break
+            }
+        }
+
+        if (ephemeralApp) {
             if (service.doNotDisturb && !shouldBypassDnd(notification)) {
                 notification.tracked = false
                 return
             }
             Qt.callLater(function() {
                 if (service.popupsBlocked) return
-                upsertPopup(snapshot)
+                showPopup(snapshot)
             })
             return
         }
@@ -274,7 +358,6 @@ Item {
         if (snapshot.expireTimeout <= 0)
             snapshot.expireTimeout = service.defaultExpirySeconds(snapshot.urgency)
         addToPending(snapshot)
-        schedulePendingExpiry(snapshot.contentHash, snapshot.id, snapshot.expireTimeout)
         maybeCacheImage(snapshot)
 
         if (service.doNotDisturb && !shouldBypassDnd(notification)) {
@@ -284,7 +367,7 @@ Item {
 
         Qt.callLater(function() {
             if (service.popupsBlocked) return
-            upsertPopup(snapshot)
+            showPopup(snapshot)
         })
     }
 
@@ -327,9 +410,10 @@ Item {
                 if (!entry || entry.originalId !== originalId) continue
                 var snapshot = service.snapshotFromRow(entry)
                 pendingModel.remove(i)
-                removeRef(entry.id)
                 pastModel.insert(0, snapshot)
                 while (pastModel.count > service.historyCap) {
+                    var trimmedPast = pastModel.get(pastModel.count - 1)
+                    if (trimmedPast) removeRef(trimmedPast.id)
                     pastModel.remove(pastModel.count - 1)
                 }
                 scheduleHistorySave()
@@ -344,61 +428,27 @@ Item {
                 var entry = pendingModel.get(0)
                 var snapshot = service.snapshotFromRow(entry)
                 pendingModel.remove(0)
-                removeRef(entry.id)
                 pastModel.insert(0, snapshot)
             }
             while (pastModel.count > service.historyCap) {
+                var trimmedPast = pastModel.get(pastModel.count - 1)
+                if (trimmedPast) removeRef(trimmedPast.id)
                 pastModel.remove(pastModel.count - 1)
             }
             scheduleHistorySave()
         })
     }
 
+    // Legacy popup dismiss for backward compat — no longer used but kept for IPC
     function dismissPopup(index) {
-        removePopup(index, "dismiss")
+        // popupModel is no longer used; popups are managed via visiblePopups
+        if (index < 0 || index >= visiblePopups.length) return
+        var wrapper = visiblePopups[index]
+        if (wrapper) wrapper.popup = false
     }
 
     function expirePopup(index) {
-        removePopup(index, "expire")
-    }
-
-    // Marks the popup row as closing; the delegate animates out and calls
-    // finalizePopupClose() to actually remove the row once invisible.
-    function removePopup(index, reason, soft) {
-        if (index < 0 || index >= popupModel.count) return
-        var entry = popupModel.get(index)
-        if (!entry) return
-        if (entry.closing === true) return
-        popupModel.setProperty(index, "closing", true)
-        var ref = getRef(entry.id)
-        var originalId = entry.originalId
-        removeRef(entry.id)
-        if (ref) {
-            try {
-                if (ref.tracked) {
-                    if (reason === "expire" && typeof ref.expire === "function") ref.expire()
-                    else ref.dismiss()
-                }
-            } catch (e) {}
-        }
-        if (!soft) markSeenByOriginalId(originalId)
-    }
-
-    // Called by the delegate when its close animation finishes. The index is
-    // live and always tracks the delegate's row; the closing guard makes sure
-    // we never remove a row that isn't animating out.
-    function finalizePopupClose(index) {
-        if (index < 0 || index >= popupModel.count) return
-        var row = popupModel.get(index)
-        if (row && row.closing === true) popupModel.remove(index)
-    }
-
-    function clearPopups() {
-        for (var i = 0; i < popupModel.count; i++) dismissPopup(i)
-    }
-
-    function clearPopupsSoft() {
-        for (var i = 0; i < popupModel.count; i++) removePopup(i, "dismiss", true)
+        dismissPopup(index)
     }
 
     function dismissPending(index) {
@@ -422,47 +472,13 @@ Item {
         }
     }
 
-    property var _expiryTimers: ({})
-
-    function schedulePendingExpiry(contentHash, originalId, timeoutSeconds) {
-        if (_expiryTimers[contentHash]) {
-            _expiryTimers[contentHash].destroy()
-            delete _expiryTimers[contentHash]
-        }
-        var timer = expiryTimerComponent.createObject(service, {
-            interval: timeoutSeconds * 1000,
-            targetOriginalId: originalId
-        })
-        _expiryTimers[contentHash] = timer
-        timer.running = true
-    }
-
-    function _cleanupExpiryTimer(timer) {
-        for (var key in service._expiryTimers) {
-            if (service._expiryTimers[key] === timer) {
-                delete service._expiryTimers[key]
-                break
-            }
-        }
-    }
-
-    Component {
-        id: expiryTimerComponent
-        Timer {
-            repeat: false
-            property int targetOriginalId: 0
-            onTriggered: {
-                service.dismissPendingByOriginalId(targetOriginalId)
-                service._cleanupExpiryTimer(this)
-                destroy()
-            }
-        }
-    }
-
     function dismissPast(index) {
         if (index < 0 || index >= pastModel.count) return
         var entry = pastModel.get(index)
-        if (entry) maybeDeleteCachedImage(entry.image)
+        if (entry) {
+            maybeDeleteCachedImage(entry.image)
+            removeRef(entry.id)
+        }
         pastModel.remove(index)
         scheduleHistorySave()
     }
@@ -485,7 +501,10 @@ Item {
         Qt.callLater(function() {
             for (var i = 0; i < pastModel.count; i++) {
                 var entry = pastModel.get(i)
-                if (entry) maybeDeleteCachedImage(entry.image)
+                if (entry) {
+                    maybeDeleteCachedImage(entry.image)
+                    removeRef(entry.id)
+                }
             }
             pastModel.clear()
             scheduleHistorySave()
@@ -495,50 +514,75 @@ Item {
     function invokePopupDefault(index) {
         if (index < 0 || index >= popupModel.count) return
         var entry = popupModel.get(index)
-        var ref = entry ? getRef(entry.id) : null
+        if (!entry) return
+        var wrapper = _popupRefsByOriginalId[entry.originalId]
+        if (wrapper) {
+            dismissPopupByWrapper(wrapper)
+            service.invokeDefaultFromWrapper(wrapper)
+            return
+        }
+        // Fallback for old flow
+        var ref = getRef(entry.id)
         var invoked = false
-        var logParts = ["app=" + (entry ? entry.app : "?"), "id=" + (entry ? entry.id : "?")]
-        if (ref) {
-            if (ref.actions) {
-                logParts.push("actions_count=" + ref.actions.length)
-                for (var i = 0; i < ref.actions.length; i++) {
-                    var action = ref.actions[i]
-                    if (action && action.identifier === "default") {
-                        try { action.invoke(); invoked = true } catch (e) { logParts.push("invoke_error=" + e) }
-                        break
-                    }
+        if (ref && ref.actions) {
+            for (var i = 0; i < ref.actions.length; i++) {
+                var action = ref.actions[i]
+                if (action && action.identifier === "default") {
+                    try { action.invoke(); invoked = true } catch (e) {}
+                    break
                 }
-            } else {
-                logParts.push("ref_exists_no_actions")
             }
-        } else {
-            logParts.push("ref_null")
         }
         if (!invoked) {
-            var cmd = entry ? String(entry._clickCommand || "") : ""
+            var cmd = String(entry._clickCommand || "")
             if (cmd) {
-                logParts.push("fyi_cmd=" + cmd)
                 var home = Quickshell.env("HOME")
                 fyiActionProc.command = [
                     "sh", "-c",
                     "PATH=" + home + "/.config.jmmm.sh/bin:/usr/local/bin:/usr/bin:/bin; " + cmd
                 ]
                 fyiActionProc.running = true
-                invoked = true
             } else {
-                logParts.push("launchApp")
                 launchApp(entry)
             }
-        } else {
-            logParts.push("handled_by_action")
         }
-        logParts.push("invoked=" + invoked)
-        var refKeys = Object.keys(_refs)
-        logParts.push("refs_count=" + refKeys.length)
-        logParts.push("ref_keys=[" + refKeys.join(",") + "]")
-        debugProc.command = ["sh", "-c", "echo '" + logParts.join(" | ") + "' >> /tmp/notif-debug.log"]
-        debugProc.running = true
-        dismissPopup(index)
+    }
+
+    function invokeDefaultFromWrapper(wrapper) {
+        if (!wrapper) return
+        var ref = wrapper.ref
+        var invoked = false
+        if (ref && ref.actions && ref.actions.length > 0) {
+            // Try "default" action first
+            for (var i = 0; i < ref.actions.length; i++) {
+                var action = ref.actions[i]
+                if (action && action.identifier === "default") {
+                    try { action.invoke(); invoked = true } catch (e) {}
+                    break
+                }
+            }
+            // Fallback: invoke first action (many apps only have one action)
+            if (!invoked && ref.actions.length > 0) {
+                var first = ref.actions[0]
+                if (first && first.invoke) {
+                    try { first.invoke(); invoked = true } catch (e) {}
+                }
+            }
+        }
+        if (!invoked) {
+            var cmd = String(wrapper._clickCommand || "")
+            if (cmd) {
+                var home = Quickshell.env("HOME")
+                fyiActionProc.command = [
+                    "sh", "-c",
+                    "PATH=" + home + "/.config.jmmm.sh/bin:/usr/local/bin:/usr/bin:/bin; " + cmd
+                ]
+                fyiActionProc.running = true
+            } else {
+                launchApp(wrapper)
+            }
+        }
+        if (invoked) focusAppWorkspace(wrapper.app)
     }
 
     function invokePendingDefault(index) {
@@ -568,7 +612,31 @@ Item {
                 launchApp(entry)
             }
         }
+        if (invoked && entry) focusAppWorkspace(entry.app)
         dismissPending(index)
+    }
+
+    function invokePastDefault(index) {
+        if (index < 0 || index >= pastModel.count) return
+        var entry = pastModel.get(index)
+        if (!entry || !entry.app) return
+        var ref = entry ? getRef(entry.id) : null
+        if (ref && ref.actions && ref.actions.length > 0) {
+            for (var i = 0; i < ref.actions.length; i++) {
+                var action = ref.actions[i]
+                if (action && action.identifier === "default") {
+                    try { action.invoke() } catch (e) {}
+                    break
+                }
+            }
+            if (ref.actions.length > 0 && (!ref.actions[0] || ref.actions[0].identifier !== "default")) {
+                var first = ref.actions[0]
+                if (first && first.invoke) {
+                    try { first.invoke() } catch (e) {}
+                }
+            }
+        }
+        launchApp(entry)
     }
 
     function launchApp(entry) {
@@ -606,15 +674,24 @@ Item {
         addCmd(de)
 
         script += "sleep 1; " + focusApp + " " + safeApp
-        debugProc.command = ["sh", "-c", "echo 'LAUNCH_SCRIPT: " + script.replace(/'/g, "'\\''") + "' >> /tmp/notif-debug.log"]
-        debugProc.running = true
         launchAppProc.command = ["bash", "-l", "-c", script]
         launchAppProc.running = true
     }
 
     Process { id: launchAppProc; running: false }
     Process { id: fyiActionProc; running: false }
-    Process { id: debugProc; running: false }
+    Process {
+        id: focusAppProc
+        running: false
+        onExited: function() { /* best-effort, ignore failures */ }
+    }
+
+    function focusAppWorkspace(appName) {
+        if (!appName) return
+        var home = Quickshell.env("HOME")
+        focusAppProc.command = [home + "/.config.jmmm.sh/bin/hyprland-focus-app", appName]
+        focusAppProc.running = true
+    }
 
     // Image caching
     function imageExtension(srcPath) {
@@ -719,7 +796,7 @@ Item {
         onTriggered: service.flushHistory()
     }
 
-    readonly property int pastTtlMs: 15 * 60 * 1000
+    readonly property int pastTtlMs: 7 * 24 * 60 * 60 * 1000
 
     Timer {
         id: pastPruneTimer
@@ -738,6 +815,7 @@ Item {
             var entry = pastModel.get(i)
             if (entry && entry.timestamp && entry.timestamp < cutoff) {
                 if (entry.image) maybeDeleteCachedImage(entry.image)
+                removeRef(entry.id)
                 pastModel.remove(i)
                 removed = true
             }
@@ -813,9 +891,21 @@ Item {
         historyFile.setText(JSON.stringify(payload, null, 2) + "\n")
     }
 
+    // Rules file
+    FileView {
+        id: rulesFile
+        path: service.rulesPath
+        watchChanges: true
+        printErrors: false
+        onLoaded: service.notificationRules = N.parseRules(text())
+        onLoadFailed: service.notificationRules = []
+        onFileChanged: reload()
+    }
+
     Component.onCompleted: {
         ensureDirsProc.running = true
         Qt.callLater(function() { historyFile.reload() })
+        Qt.callLater(function() { rulesFile.reload() })
     }
 
     // IPC handler
@@ -863,15 +953,17 @@ Item {
         }
 
         function dismissAll(): string {
-            service.clearPopups()
             service.clearPending()
             service.clearPast()
+            for (var i = service.visiblePopups.length - 1; i >= 0; i--) {
+                service.visiblePopups[i].popup = false
+            }
             return "ok"
         }
 
         function dismissOne(): string {
-            if (popupModel.count > 0) {
-                service.dismissPopup(0)
+            if (service.visiblePopups.length > 0) {
+                service.visiblePopups[0].popup = false
                 return "ok"
             }
             if (pendingModel.count > 0) {
@@ -886,8 +978,10 @@ Item {
         }
 
         function invokeLast(): string {
-            if (popupModel.count === 0) return "none"
-            service.invokePopupDefault(0)
+            if (service.visiblePopups.length === 0) return "none"
+            var wrapper = service.visiblePopups[0]
+            service.dismissPopupByWrapper(wrapper)
+            service.invokeDefaultFromWrapper(wrapper)
             return "ok"
         }
 
@@ -906,7 +1000,13 @@ Item {
             }
             sweep(pendingModel, service.dismissPending)
             sweep(pastModel, service.dismissPast)
-            sweep(popupModel, service.dismissPopup)
+            for (var i = service.visiblePopups.length - 1; i >= 0; i--) {
+                var w = service.visiblePopups[i]
+                if (w && String(w.summary || "").indexOf(needle) !== -1) {
+                    w.popup = false
+                    hit = true
+                }
+            }
             return hit ? "ok" : "none"
         }
 
@@ -939,143 +1039,14 @@ Item {
         }
     }
 
-    // Per-screen popup PanelWindows for toast rendering
+    // Per-screen popup managers — individual popup windows
     Variants {
         model: Quickshell.screens
 
-        PanelWindow {
-            id: popupWindow
-            required property var modelData
-            screen: modelData
-            visible: popupModel.count > 0
-
-            WlrLayershell.namespace: "quickshell-notifications"
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-            exclusionMode: ExclusionMode.Ignore
-            color: "transparent"
-
-            anchors.right: true
-            anchors.top: true
-            margins.top: Config.height + Config.shellPadding + Config.gapsOut
-            margins.right: Config.shellPadding
-
-            implicitWidth: popupColumn.implicitWidth
-            implicitHeight: popupColumn.implicitHeight
-
-            ColumnLayout {
-                id: popupColumn
-                anchors.right: parent.right
-                anchors.top: parent.top
-                spacing: 8
-
-                Repeater {
-                    model: popupModel
-
-                    delegate: Item {
-                        id: cardSlot
-                        required property int index
-                        required property string app
-                        required property string appIcon
-                        required property string summary
-                        required property string body
-                        required property string image
-                        required property string glyph
-                        required property int urgency
-                        required property double expireTimeout
-                        required property double timestamp
-                        required property int duplicateCount
-                        required property bool closing
-
-                        Layout.preferredWidth: card.implicitWidth
-                        Layout.alignment: Qt.AlignRight
-                        implicitHeight: card.implicitHeight
-
-                        readonly property real lifetime: cardSlot.expireTimeout > 0
-                            ? Math.round(cardSlot.expireTimeout * 1000)
-                            : service.durationFor(cardSlot.urgency, cardSlot.expireTimeout)
-                        property real remainingLifetime: 1.0
-                        readonly property bool ticking: !cardSlot.closing && cardSlot.lifetime > 0 && !card.hovered
-                        property bool _stopped: false
-
-                        onDuplicateCountChanged: {
-                            if (cardSlot.duplicateCount > 1)
-                                cardSlot.remainingLifetime = 1.0
-                        }
-
-                        // Animate out before the row is removed: destroying the
-                        // delegate mid-frame lets context properties reset in
-                        // undefined order, which shows textless/glitchy frames.
-                        onClosingChanged: {
-                            if (cardSlot.closing) {
-                                card.dismissing = true
-                                closeAnimation.restart()
-                            }
-                        }
-
-                        SequentialAnimation {
-                            id: closeAnimation
-
-                            ParallelAnimation {
-                                NumberAnimation {
-                                    target: card
-                                    property: "height"
-                                    to: 0
-                                    duration: 100
-                                    easing.type: Easing.InOutQuad
-                                }
-                            }
-                            ScriptAction {
-                                script: service.finalizePopupClose(cardSlot.index)
-                            }
-                        }
-
-                        Timer {
-                            interval: 50
-                            repeat: true
-                            running: cardSlot.ticking
-                            onTriggered: {
-                                if (cardSlot._stopped || cardSlot.closing || popupModel.count <= cardSlot.index) return
-                                if (cardSlot.lifetime <= 0) return
-                                cardSlot.remainingLifetime -= 50.0 / cardSlot.lifetime
-                                if (cardSlot.remainingLifetime <= 0) {
-                                    cardSlot.remainingLifetime = 0
-                                    cardSlot._stopped = true
-                                    service.expirePopup(cardSlot.index)
-                                }
-                            }
-                        }
-
-                        NotificationCard {
-                            id: card
-                            anchors.right: parent.right
-                            app: cardSlot.app
-                            appIcon: cardSlot.appIcon
-                            summary: cardSlot.summary
-                            body: cardSlot.body
-                            image: cardSlot.image
-                            urgency: cardSlot.urgency
-                            timestamp: cardSlot.timestamp
-                            expireTimeout: cardSlot.expireTimeout
-                            duplicateCount: cardSlot.duplicateCount
-                            cornerRadius: service.cornerRadius
-                            glyph: cardSlot.glyph
-                            popupProgress: cardSlot.lifetime > 0 ? cardSlot.remainingLifetime : -1
-
-                            onCloseRequested: {
-                                if (cardSlot.closing) return
-                                cardSlot._stopped = true
-                                service.dismissPopup(cardSlot.index)
-                            }
-                            onCardClicked: {
-                                if (cardSlot.closing) return
-                                cardSlot._stopped = true
-                                service.invokePopupDefault(cardSlot.index)
-                            }
-                        }
-                    }
-                }
-            }
+        NotificationPopupManager {
+            modelData: modelData
+            popupService: service
+            topMargin: Config.height + Config.shellPadding + Config.gapsOut
         }
     }
 }

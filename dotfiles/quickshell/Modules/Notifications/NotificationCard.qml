@@ -28,6 +28,8 @@ Rectangle {
     property color cardBackground: Config.backgroundColored
     property color cardBorderColor: Config.accent
     property int cardBorderWidth: Config.borderSize
+    property var notificationActions: []
+    property bool hideActionButtons: false
     readonly property bool hovered: hoverTracker.hovered
     readonly property string smallIconSource: image.length > 0 ? image : iconSource(appIcon)
     readonly property bool hasGlyph: glyph.length > 0
@@ -46,6 +48,7 @@ Rectangle {
 
     signal closeRequested()
     signal cardClicked()
+    signal actionInvoked(var action)
 
     function _recomputeExpiryProgress() {
         if (expireTimeout <= 0)
@@ -130,7 +133,7 @@ Rectangle {
                 Layout.preferredWidth: visible ? root.iconSize : 0
                 Layout.preferredHeight: visible ? root.iconSize : 0
                 Layout.alignment: Qt.AlignVCenter
-                visible: !root.collapseRedundantIcon && !root.compactGlyph && root.hasSmallIcon && (root.hasGlyph || smallIconImage.status !== Image.Error)
+                visible: !root.collapseRedundantIcon && !root.compactGlyph && root.hasSmallIcon && (root.hasGlyph || smallIconImage.status !== Image.Error || appIconFallback.visible)
 
                 Image {
                     id: smallIconImage
@@ -145,9 +148,21 @@ Rectangle {
                     visible: !root.hasGlyph || smallIconImage.status === Image.Ready
                 }
 
+                Image {
+                    id: appIconFallback
+                    anchors.fill: parent
+                    source: root.appIcon.length > 0 ? iconSource(root.appIcon) : ""
+                    sourceSize.width: smallIconSlot.width * Screen.devicePixelRatio
+                    sourceSize.height: smallIconSlot.height * Screen.devicePixelRatio
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    smooth: true
+                    visible: !root.hasGlyph && smallIconImage.status === Image.Error && source.length > 0
+                }
+
                 Text {
                     anchors.centerIn: parent
-                    visible: root.hasGlyph && smallIconImage.status !== Image.Ready
+                    visible: root.hasGlyph && smallIconImage.status !== Image.Ready && !appIconFallback.visible
                     text: root.glyph
                     color: Config.foreground
                     font.family: Config.fontFamily
@@ -209,7 +224,7 @@ Rectangle {
 
                 Text {
                     anchors.centerIn: parent
-                    text: "\u2715"
+                    text: "✕"
                     color: root.dimColor
                     font.family: Config.fontFamily
                     font.pixelSize: root.bodyFontSize
@@ -226,6 +241,57 @@ Rectangle {
 
             }
 
+        }
+
+        // Action buttons — shown when hovered and actions exist
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            Layout.bottomMargin: 8
+            spacing: 6
+            visible: !root.hideActionButtons && root.hovered && root.notificationActions.length > 0
+
+            Repeater {
+                model: root.notificationActions
+
+                Rectangle {
+                    property bool isHovered: false
+
+                    Layout.preferredHeight: 24
+                    Layout.preferredWidth: Math.max(actionText.implicitWidth + 16, 48)
+                    radius: 4
+                    color: isHovered ? Config.backgroundHovered : Config.backgroundColoredSecondary
+                    border.color: Config.foregroundSecondary
+                    border.width: 1
+
+                    Text {
+                        id: actionText
+
+                        anchors.centerIn: parent
+                        text: modelData.text || modelData.identifier || "Open"
+                        color: isHovered ? Config.foreground : root.bodyColor
+                        font.family: Config.fontFamily
+                        font.pixelSize: root.bodyFontSize - 2
+                        elide: Text.ElideRight
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        acceptedButtons: Qt.LeftButton
+                        onEntered: parent.isHovered = true
+                        onExited: parent.isHovered = false
+                        onClicked: {
+                            if (modelData && modelData.invoke)
+                                modelData.invoke()
+                            root.actionInvoked(modelData)
+                            root.closeRequested()
+                        }
+                    }
+                }
+            }
         }
 
     }

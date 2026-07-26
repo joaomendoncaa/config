@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# chatgpt-voice — Open ChatGPT voice mode in an invisible headful browser window.
+# Uses Helium browser + workspace 99 (hidden from bar) + CDP.
+#
+# Requires: helium browser (/opt/helium-browser-bin/helium),
+#           python3 with websockets, hyprctl, jq
+
+HELIUM=/opt/helium-browser-bin/helium
+DEBUG_PORT=9223
+CHATGPT_URL="https://chatgpt.com"
+PROFILE_DIR="$HOME/.local/share/chatgpt-voice"
+
+mkdir -p "$PROFILE_DIR"
+
+# Launch a SEPARATE Helium instance with its own profile (bypasses single-instance lock).
+# Persistent profile so ChatGPT login survives restarts.
+"$HELIUM" \
+    --user-data-dir="$PROFILE_DIR" \
+    --remote-debugging-port=$DEBUG_PORT \
+    --no-first-run \
+    --no-default-browser-check \
+    "$CHATGPT_URL" &
+HELIUM_PID=$!
+
+# Wait for CDP endpoint to come up
+for _ in $(seq 1 20); do
+    if curl -sf "http://localhost:$DEBUG_PORT/json/version" >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.5
+done
+
+# Use CDP to control the browser
+python3 << 'PYEOF'
+import asyncio
+import json
+import urllib.request
+import sys
+import subprocess
+
+try:
+    import websockets
+except ImportError:
+    print("error: need 'websockets' — run: pip install websockets", file=sys.stderr)
+    sys.exit(1)
+
+DEBUG_PORT = 9223
+CHATGPT_URL = "https://chatgpt.com"
+
+async def cdp(ws, method, params=None):
+    msg = {"id": 1, "method": method}
+    if params:
+        msg["params"] = params
+    await ws.send(json.dumps(msg))
+    resp = await ws.recv()
+    return json.loads(resp)
+
+def find_helium():
+    clients = json.loads(subprocess.run(
+        ["hyprctl", "clients", "-j"], capture_output=True, text=True
+    ).stdout)
+    for c in clients:
+        if c.get("class", "").lower() == "helium":
+            return c["address"]
+    return None
+
+def window_move(addr, workspace):
+    subprocess.run(["hyprctl", "eval",
+        f'hl.dispatch(hl.dsp.window.move({{ window = "{addr}", workspace = "{workspace}", follow = false }}))'
+    ])
+
+def get_current_workspace():
+    monitors = json.loads(subprocess.run(
+        ["hyprctl", "monitors", "-j"], capture_output=True, text=True
+    ).stdout)
+    for m in monitors:
+        if m.get("focused"):
+            return str(m["activeWorkspace"]["id"])
+    return "1"
+
+async def main():
+    addr = find_helium()
+    if addr is None:
+        print("error: no Helium window found", file=sys.stderr)
+        sys.exit(1)
+
+    # Hide immediately — no flashing
+    window_move(addr, "99")
+
+    tabs = json.loads(
+        urllib.request.urlopen(f"http://localhost:{DEBUG_PORT}/json").read()
+    )
+    ws_url = tabs[0]["webSocketDebuggerUrl"]
+
+    async with websockets.connect(ws_url) as ws:
+        await cdp(ws, "Page.enable")
+        await cdp(ws, "Runtime.enable")
+
+        await cdp(ws, "Page.navigate", {"url": CHATGPT_URL})
+
+        for _ in range(60):
+            result = await cdp(ws, "Runtime.evaluate", {
+                "expression": "document.readyState",
+                "returnByValue": True,
+            })
+            state = result.get("result", {}).get("result", {}).get("value", "")
+            if state == "complete":
+                break
+            await asyncio.sleep(0.5)
+
+        await asyncio.sleep(3)
+
+        # Try clicking the voice button
+        js = """
+        (() => {
+            const selectors = [
+                '[data-testid="composer-speech-button"]',
+                'button[aria-label*="Voice" i]',
+                'button[aria-label*="voice" i]',
+                '[data-testid="voice-button"]',
+                'button[aria-label="Start voice" i]',
+                'button[data-testid="send-button"] + button',
+            ];
+            for (const sel of selectors) {
+                const el = document.querySelector(sel);
+                if (el) { el.click(); return sel; }
+            }
+            return null;
+        })()
+        """
+        result = await cdp(ws, "Runtime.evaluate", {
+            "expression": js,
+            "returnByValue": True,
+        })
+        val = result.get("result", {}).get("result", {}).get("value", "not-found")
+
+        if val:
+            print(f"voice button clicked: {val}")
+            print("ChatGPT voice mode running invisibly on workspace 99")
+        else:
+            # Not logged in — bring the window back so user can log in
+            current_ws = get_current_workspace()
+            window_move(addr, current_ws)
+            print("=" * 60)
+            print("ChatGPT login required.")
+            print("The window is now visible — log in to ChatGPT, then re-run this script.")
+            print("The session will persist in ~/.local/share/chatgpt-voice/")
+            print("=" * 60)
+
+asyncio.run(main())
+PYEOF
+
+echo "PID: $HELIUM_PID — kill with: kill $HELIUM_PID"
