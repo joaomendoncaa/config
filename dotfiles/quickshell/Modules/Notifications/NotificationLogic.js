@@ -215,3 +215,67 @@ function imageExtension(srcPath) {
     if (ext.length === 0 || ext.length > 5) return "png"
     return ext
 }
+
+// ---------------------------------------------------------------------------
+// Notification Rules Engine
+// Rules are evaluated in order; first match wins.
+// Each rule: { match: {appName?, desktopEntry?, summary?, body?}, matchType: "contains"|"exact"|"regex",
+//              action: "ignore"|"mute"|"popup_only"|"no_history"|"default", urgencyOverride?: int }
+// ---------------------------------------------------------------------------
+
+function evaluateRules(rules, snapshot) {
+    if (!rules || !Array.isArray(rules) || rules.length === 0) return null
+    for (var i = 0; i < rules.length; i++) {
+        var rule = rules[i]
+        if (!rule || !rule.match) continue
+        if (_matchesRule(rule, snapshot)) return rule
+    }
+    return null
+}
+
+function _matchesRule(rule, snapshot) {
+    var match = rule.match
+    var matchType = rule.matchType || "contains"
+
+    if (match.appName !== undefined && match.appName !== null) {
+        if (!_matchField(snapshot.app, match.appName, matchType)) return false
+    }
+    if (match.desktopEntry !== undefined && match.desktopEntry !== null) {
+        if (!_matchField(snapshot._desktopEntry, match.desktopEntry, matchType)) return false
+    }
+    if (match.summary !== undefined && match.summary !== null) {
+        if (!_matchField(snapshot.summary, match.summary, matchType)) return false
+    }
+    if (match.body !== undefined && match.body !== null) {
+        if (!_matchField(snapshot.body, match.body, matchType)) return false
+    }
+    return true
+}
+
+function _matchField(value, pattern, matchType) {
+    var text = String(value || "").toLowerCase()
+    var pat = String(pattern || "").toLowerCase()
+    if (matchType === "exact") return text === pat
+    if (matchType === "regex") {
+        try {
+            var re = new RegExp(pat, "i")
+            return re.test(text)
+        } catch (e) {
+            return false
+        }
+    }
+    // contains (default)
+    return text.indexOf(pat) !== -1
+}
+
+// Default rules loaded from a JSON file
+function parseRules(raw) {
+    var text = String(raw || "").trim()
+    if (!text) return []
+    try {
+        var parsed = JSON.parse(text)
+        return Array.isArray(parsed) ? parsed : []
+    } catch (e) {
+        return []
+    }
+}

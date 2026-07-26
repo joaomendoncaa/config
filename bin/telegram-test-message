@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+echo "hello world"
+
+curl -X POST "https://api.telegram.org/bot8767968342:AAEgNeU_Fep_xLVN4Q2H3n2oiqwUbIy8k2A/sendMessage" \
+	-d chat_id=715251077 \
+	-d text="Hello from curl!"
