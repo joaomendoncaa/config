@@ -33,6 +33,9 @@
             "branch": "master",
             "description": "Use for any question regarding {oil,oil.nvim}"
         },
+        "dms": {
+            "repository": "https://github.com/AvengeMedia/DankMaterialShell"
+        },
         "incorrupt": {
             "repository": "$HOME/lab/gilly"
         }
