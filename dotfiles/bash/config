@@ -57,4 +57,6 @@ add_to_path "/home/joao/.opencode/bin"
 
 add_to_path_rs_builds
 
-if shopt -q login_shell 2>/dev/null; then t; fi
+if command -v tmux &>/dev/null && [ -z "$TMUX" ]; then
+    tmux has-session 2>/dev/null && tmux attach || tmux new-session -s lab -c ~/lab
+fi
