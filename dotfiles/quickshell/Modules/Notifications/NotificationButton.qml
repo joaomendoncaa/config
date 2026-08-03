@@ -96,11 +96,11 @@ Rectangle {
 
     LazyLoader {
         id: popupLoader
-        active: root.popupOpen
+        active: root.popupOpen || item !== null
 
         PopupWindow {
             id: popup
-            visible: true
+            visible: root.popupOpen
             anchor.window: root.barWindow
             color: "transparent"
             implicitWidth: 480
@@ -177,7 +177,7 @@ Rectangle {
     HyprlandFocusGrab {
         id: focusGrab
         active: root.popupOpen && popupLoader.item !== null
-        windows: popupLoader.item ? [popupLoader.item] : []
+        windows: popupLoader.item ? (root.barWindow ? [popupLoader.item, root.barWindow] : [popupLoader.item]) : []
         onCleared: {
             if (root.popupOpen)
                 root.popupOpen = false

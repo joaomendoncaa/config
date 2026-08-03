@@ -22,6 +22,7 @@ PanelWindow {
 
     property alias notificationCenterOpen: notifButton.popupOpen
     property alias solanaPanelOpen: solanaWidget.popupOpen
+    property alias opencodePanelOpen: opencodeWidget.popupVisible
 
     Updates {
         id: barUpdates
@@ -35,6 +36,7 @@ PanelWindow {
     signal zenDismissed()
     signal solanaPanelOpening()
     signal notificationPanelOpening()
+    signal opencodePanelOpening()
 
     required property var priceLabels
     required property var notificationService
@@ -76,7 +78,9 @@ PanelWindow {
             }
 
             Opencode {
+                id: opencodeWidget
                 barWindow: bar
+                onOpening: bar.opencodePanelOpening()
             }
 
         }

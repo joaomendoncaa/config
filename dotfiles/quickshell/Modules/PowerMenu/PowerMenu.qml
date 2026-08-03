@@ -10,14 +10,14 @@ PanelWindow {
 
     property real popupX: 0
     property real popupY: 0
+    property bool initialized: false
 
     signal dismissed()
 
-    visible: true
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "power-menu"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
     exclusionMode: ExclusionMode.Ignore
 
     anchors {
@@ -25,6 +25,17 @@ PanelWindow {
         bottom: true
         left: true
         right: true
+    }
+
+    mask: Region {
+        width: root.width
+        height: root.height
+
+        Region {
+            width: root.width
+            height: Config.shellPadding + Config.height
+            intersection: Intersection.Subtract
+        }
     }
 
     readonly property var powerActions: [
@@ -37,7 +48,7 @@ PanelWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.2)
+        color: "transparent"
 
         MouseArea {
             anchors.fill: parent
@@ -49,8 +60,8 @@ PanelWindow {
     Rectangle {
         id: card
 
-        x: 0
-        y: 0
+        x: root.popupX
+        y: root.popupY
         width: 160
         height: 195
         color: Config.hexWithAlpha(Config.backgroundColored, "CC")
@@ -174,9 +185,15 @@ PanelWindow {
     }
 
     Component.onCompleted: {
-        card.x = root.popupX
-        card.y = root.popupY
         card.forceActiveFocus()
+        initialized = true
+    }
+
+    onVisibleChanged: {
+        if (visible && initialized) {
+            card.selectedIndex = 0
+            Qt.callLater(card.forceActiveFocus)
+        }
     }
 
 }

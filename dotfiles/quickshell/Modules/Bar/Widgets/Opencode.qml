@@ -23,7 +23,13 @@ Rectangle {
     property string balance: ""
     property string sessionState: "working"
     property int spinnerFrame: 0
+    signal opening()
     readonly property var spinnerChars: ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+
+    onPopupVisibleChanged: {
+        if (popupVisible)
+            opening()
+    }
 
     ListModel {
         id: sessionModel
@@ -217,24 +223,18 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            var item = popupLoader.item;
-            if (item && item.visible)
-                item.visible = false;
-            else if (!root.popupVisible)
-                root.popupVisible = true;
-        }
+        onClicked: root.popupVisible = !root.popupVisible
     }
 
     LazyLoader {
         id: popupLoader
 
-        active: root.popupVisible
+        active: root.popupVisible || item !== null
 
         PopupWindow {
             id: popup
 
-            visible: true
+            visible: root.popupVisible
             anchor.window: root.barWindow
             implicitWidth: 340
             implicitHeight: 250
@@ -242,6 +242,11 @@ Rectangle {
             onVisibleChanged: {
                 if (!visible && root.popupVisible)
                     root.popupVisible = false;
+
+                if (visible) {
+                    root.fetchUsage();
+                    Qt.callLater(popupBg.forceActiveFocus);
+                }
 
             }
             Component.onCompleted: {
@@ -489,7 +494,7 @@ Rectangle {
         id: focusGrab
 
         active: root.popupVisible && popupLoader.item !== null
-        windows: popupLoader.item ? [popupLoader.item] : []
+        windows: popupLoader.item ? (root.barWindow ? [popupLoader.item, root.barWindow] : [popupLoader.item]) : []
         onCleared: {
             if (root.popupVisible)
                 root.popupVisible = false;

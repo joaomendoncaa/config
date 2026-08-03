@@ -25,6 +25,7 @@ PanelWindow {
     property string fdQueryMarker: ""
     property string initialMode: "apps"
     property var themeList: []
+    property bool initialized: false
 
     signal dismissed()
 
@@ -314,6 +315,19 @@ PanelWindow {
         Qt.callLater(function() {
             keyCatcher.forceActiveFocus();
         });
+        initialized = true;
+    }
+    onVisibleChanged: {
+        if (!visible || !initialized)
+            return;
+
+        setSearchMode(initialMode);
+        filterText = "";
+        selectedIndex = 0;
+        cursorPosition = 0;
+        clearFileSearch();
+        rebuildDisplay();
+        Qt.callLater(keyCatcher.forceActiveFocus);
     }
     onModeChanged: {
         if (mode === "files" && filterText)
@@ -364,6 +378,17 @@ PanelWindow {
         right: true
         top: true
         bottom: true
+    }
+
+    mask: Region {
+        width: root.width
+        height: root.height
+
+        Region {
+            width: root.width
+            height: Config.shellPadding + Config.height
+            intersection: Intersection.Subtract
+        }
     }
 
     Rectangle {
