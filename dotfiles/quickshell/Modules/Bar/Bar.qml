@@ -21,6 +21,7 @@ PanelWindow {
     property bool isRecording: false
 
     property alias notificationCenterOpen: notifButton.popupOpen
+    property alias solanaPanelOpen: solanaWidget.popupOpen
 
     Updates {
         id: barUpdates
@@ -32,6 +33,8 @@ PanelWindow {
     signal togglePowerMenu()
     signal toggleZen()
     signal zenDismissed()
+    signal solanaPanelOpening()
+    signal notificationPanelOpening()
 
     required property var priceLabels
     required property var notificationService
@@ -95,23 +98,11 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Config.gapInner
 
-            Text {
-                text: "Updating prices..."
-                visible: bar.priceLabels.loading
-                color: Config.foreground
-                font.pixelSize: Config.fontSize - 2
-                font.family: Config.fontFamily
-                Layout.preferredHeight: Config.buttonSize
-                Layout.preferredWidth: implicitWidth + Config.gapInner * 2
-                verticalAlignment: Text.AlignVCenter
-            }
-
-            Repeater {
-                model: bar.priceLabels.loading ? [] : bar.priceLabels.trackedTokens
-                delegate: PriceLabel {
-                    mint: modelData
-                    priceData: bar.priceLabels.tokenData[modelData]
-                }
+            SolanaTokenPinned {
+                id: solanaWidget
+                service: bar.priceLabels
+                barWindow: bar
+                onOpening: bar.solanaPanelOpening()
             }
 
             Monitor {
@@ -125,6 +116,7 @@ PanelWindow {
                 barWindow: bar
                 notificationService: bar.notificationService
                 updatesItem: barUpdates
+                onOpening: bar.notificationPanelOpening()
             }
 
             Power {

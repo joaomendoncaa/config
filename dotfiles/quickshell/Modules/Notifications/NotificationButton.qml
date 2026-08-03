@@ -15,6 +15,7 @@ Rectangle {
     property bool popupOpen: false
 
     signal toggle()
+    signal opening()
 
     Layout.preferredWidth: Config.buttonSize
     Layout.preferredHeight: Config.buttonSize
@@ -62,6 +63,7 @@ Rectangle {
 
     onPopupOpenChanged: {
         if (popupOpen && root.notificationService) {
+            root.opening()
             root.notificationService.popupsBlocked = true
             root.notificationService.clearPopupsSoft()
         } else {
