@@ -31,6 +31,8 @@ PanelWindow {
         { icon: "\uf023", text: "Lock", cmd: "qs-power-lock" },
         { icon: "\uf021", text: "Reboot", cmd: "qs-power-reboot" },
         { icon: "\uf011", text: "Shutdown", cmd: "qs-power-shutdown" },
+        { icon: "\u7530", text: "Windows", cmd: ["sh", "-c", "sudo efibootmgr --bootnext 0000 && sudo systemctl reboot"] },
+        { icon: "\u262d", text: "BIOS", cmd: ["sh", "-c", "sudo systemctl reboot --firmware-setup"] },
     ]
 
     Rectangle {
@@ -50,7 +52,7 @@ PanelWindow {
         x: 0
         y: 0
         width: 160
-        height: 112
+        height: 195
         color: Config.hexWithAlpha(Config.backgroundColored, "CC")
         radius: Config.borderRadius
         focus: true
@@ -59,8 +61,12 @@ PanelWindow {
 
         function activateItem(index) {
             var action = root.powerActions[index]
-            if (action)
-                Quickshell.execDetached([action.cmd])
+            if (action) {
+                if (typeof action.cmd === "string")
+                    Quickshell.execDetached([action.cmd])
+                else
+                    Quickshell.execDetached(action.cmd)
+            }
             root.dismissed()
         }
 
@@ -92,48 +98,71 @@ PanelWindow {
             Repeater {
                 model: root.powerActions
 
-                Rectangle {
+                Column {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 32
-                    radius: 4
-                    color: {
-                        if (index === card.selectedIndex)
-                            return Config.backgroundHovered
-                        return "transparent"
+                    spacing: 0
+
+                    Item {
+                        width: parent.width
+                        height: index === 3 ? 6 : 0
                     }
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: 8
-                        anchors.rightMargin: 8
-                        spacing: 8
-
-                        Text {
-                            text: modelData.icon
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
-                        }
-
-                        Text {
-                            text: modelData.text
-                            color: Config.foreground
-                            font.family: Config.fontFamily
-                            font.pixelSize: Config.fontSize - 2
-                        }
-
-                        Item {
-                            Layout.fillWidth: true
-                        }
-
+                    Rectangle {
+                        width: parent.width
+                        height: 1
+                        color: Config.backgroundColoredTertiary
+                        visible: index === 3
                     }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onEntered: card.selectedIndex = index
-                        onClicked: card.activateItem(index)
+                    Item {
+                        width: parent.width
+                        height: index === 3 ? 8 : 0
+                    }
+
+                    Rectangle {
+                        width: parent.width
+                        height: 32
+                        radius: 4
+                        color: {
+                            if (index === card.selectedIndex)
+                                return Config.backgroundHovered
+                            return "transparent"
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 8
+                            anchors.rightMargin: 8
+                            spacing: 8
+
+                            Text {
+                                text: modelData.icon
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
+
+                            Text {
+                                text: modelData.text
+                                color: Config.foreground
+                                font.family: Config.fontFamily
+                                font.pixelSize: Config.fontSize - 2
+                            }
+
+                            Item {
+                                Layout.fillWidth: true
+                            }
+
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onEntered: card.selectedIndex = index
+                            onClicked: card.activateItem(index)
+                        }
+
                     }
 
                 }
