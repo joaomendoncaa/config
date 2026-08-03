@@ -31,9 +31,13 @@ Item {
     }
 
     function togglePanel() {
-        if (!popupOpen)
-            opening()
-        popupOpen = !popupOpen
+        if (popupOpen) {
+            popupOpen = false
+            return
+        }
+
+        popupOpen = true
+        opening()
     }
 
     Layout.preferredHeight: Config.buttonSize
@@ -167,7 +171,7 @@ Item {
 
     LazyLoader {
         id: popupLoader
-        active: root.popupOpen
+        active: root.popupOpen || item !== null
 
         PopupWindow {
             id: popup
@@ -176,7 +180,7 @@ Item {
                 panel.focusSearch()
             }
 
-            visible: true
+            visible: root.popupOpen
             anchor.window: root.barWindow
             color: 'transparent'
             implicitWidth: panel.panelWidth
@@ -185,6 +189,8 @@ Item {
             onVisibleChanged: {
                 if (!visible && root.popupOpen)
                     root.popupOpen = false
+                if (visible)
+                    Qt.callLater(popup.focusSearch)
             }
 
             Component.onCompleted: {
@@ -210,7 +216,7 @@ Item {
     HyprlandFocusGrab {
         id: focusGrab
         active: root.popupOpen && popupLoader.item !== null
-        windows: popupLoader.item ? [popupLoader.item] : []
+        windows: popupLoader.item ? (root.barWindow ? [popupLoader.item, root.barWindow] : [popupLoader.item]) : []
         onActiveChanged: {
             if (active && popupLoader.item)
                 Qt.callLater(popupLoader.item.focusSearch)

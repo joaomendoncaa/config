@@ -56,6 +56,8 @@ Scope {
             barComponent.notificationCenterOpen = false
         if (panel !== 'solana')
             barComponent.solanaPanelOpen = false
+        if (panel !== 'opencode')
+            barComponent.opencodePanelOpen = false
     }
 
     function toggleLauncher(mode) {
@@ -63,9 +65,9 @@ Scope {
             root.launcherOpen = false
             return
         }
-        root.closePanelsExcept('launcher')
         root.launcherMode = mode
         root.launcherOpen = true
+        root.closePanelsExcept('launcher')
     }
 
     function togglePowerMenu() {
@@ -73,9 +75,9 @@ Scope {
             root.powerMenuOpen = false
             return
         }
-        root.closePanelsExcept('power')
         barComponent.updatePowerMenuPosition()
         root.powerMenuOpen = true
+        root.closePanelsExcept('power')
     }
 
     IpcHandler {
@@ -86,9 +88,9 @@ Scope {
         }
 
         function open() {
-            root.closePanelsExcept('launcher')
             root.launcherMode = 'apps'
             root.launcherOpen = true
+            root.closePanelsExcept('launcher')
         }
 
         function close() {
@@ -124,9 +126,9 @@ Scope {
         }
 
         function open() {
-            root.closePanelsExcept('power')
             barComponent.updatePowerMenuPosition()
             root.powerMenuOpen = true
+            root.closePanelsExcept('power')
         }
 
         function close() {
@@ -142,14 +144,14 @@ Scope {
             if (barComponent.notificationCenterOpen) {
                 barComponent.notificationCenterOpen = false
             } else {
-                root.closePanelsExcept('notifications')
                 barComponent.notificationCenterOpen = true
+                root.closePanelsExcept('notifications')
             }
         }
 
         function open() {
-            root.closePanelsExcept('notifications')
             barComponent.notificationCenterOpen = true
+            root.closePanelsExcept('notifications')
         }
 
         function close() {
@@ -176,18 +178,19 @@ Scope {
     }
 
     BlurMask {
-        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen
+        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.opencodePanelOpen
     }
 
     Bar {
         id: barComponent
         zenActive: root.zenActive
         isRecording: root.isRecording
-        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.opencodePanelOpen
         onToggleLauncher: root.toggleLauncher('apps')
         onTogglePowerMenu: root.togglePowerMenu()
         onSolanaPanelOpening: root.closePanelsExcept('solana')
         onNotificationPanelOpening: root.closePanelsExcept('notifications')
+        onOpencodePanelOpening: root.closePanelsExcept('opencode')
         onToggleZen: root.zenActive = true
         onZenDismissed: root.zenActive = false
         priceLabels: root.priceLabels
@@ -201,9 +204,10 @@ Scope {
     LazyLoader {
         id: launcherLoader
 
-        active: root.launcherOpen
+        active: root.launcherOpen || item !== null
 
         Superbar {
+            visible: root.launcherOpen
             initialMode: root.launcherMode
             onDismissed: root.launcherOpen = false
         }
@@ -213,9 +217,10 @@ Scope {
     LazyLoader {
         id: powerMenuLoader
 
-        active: root.powerMenuOpen
+        active: root.powerMenuOpen || item !== null
 
         PowerMenu {
+            visible: root.powerMenuOpen
             popupX: barComponent.powerMenuX
             popupY: barComponent.powerMenuY
             onDismissed: root.powerMenuOpen = false
