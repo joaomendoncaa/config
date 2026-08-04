@@ -1,63 +1,112 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TTY="${1:-}"
-WINDOW_ID="${2:-}"
-[ -n "$TTY" ] && [ -n "$WINDOW_ID" ] || exit 0
-TTY="${TTY#/dev/}"
+# Name tmux windows after the opencode agent running in their active pane.
+# Status comes from the TUI bridge records under $RUNTIME_DIR (same contract as
+# bin/opencode-agents); no bridge record means the window is left untouched.
 
-PID=$(pgrep -t "$TTY" -x opencode 2>/dev/null | head -1) || exit 0
-[ -n "$PID" ] || exit 0
+RUNTIME_BASE="${XDG_RUNTIME_DIR:-/tmp/opencode-dashboard-$UID}"
+RUNTIME_DIR="$RUNTIME_BASE/opencode-dashboard"
+MARKER_FILE="$RUNTIME_DIR/tmux-named-windows"
+STALE_AFTER_MS=5000
+TITLE_MAX=40
+RUNNING_FRAMES=('⣶' '⣧' '⣏' '⡟' '⠿' '⢻' '⣹' '⣼')
+BLOCKED_FRAMES=('·' '·' '·' '·' '⚠' '·' '·' '⚠' '·')
 
-DB="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db"
-LOG="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/log/opencode.log"
-[ -f "$DB" ] || exit 0
-command -v sqlite3 &>/dev/null || exit 0
+SESSION_ID="${1:-}"
 
-CWD=$(readlink "/proc/$PID/cwd" 2>/dev/null) || exit 0
-[ -n "$CWD" ] || exit 0
+command -v tmux >/dev/null 2>&1 || exit 0
+command -v jq >/dev/null 2>&1 || exit 0
+[[ -d "$RUNTIME_DIR" ]] || exit 0
 
-HZ=$(getconf CLK_TCK 2>/dev/null)
-BOOT=$(awk '/^btime/ {print $2}' /proc/stat 2>/dev/null) || exit 0
-TICKS=$(awk '{print $22}' "/proc/$PID/stat" 2>/dev/null) || exit 0
-START_EPOCH=$(( BOOT + TICKS / HZ ))
+now=$(date +%s%3N)
 
-TITLE=""
+# Collect the freshest live bridge record per tty.
+shopt -s nullglob
+declare -A records=()
+declare -A heartbeats=()
 
-if [ -f "$LOG" ]; then
-    RUN_ID=$(TZ=UTC awk -v dir="$CWD" -v start="$START_EPOCH" '
-        /message="creating instance"/ && $0 ~ "directory=" dir {
-            ts = $0; sub(/^timestamp=/, "", ts); sub(/ .*/, "", ts)
-            gsub(/[-T:]/, " ", ts); gsub(/\..*Z/, "", ts)
-            epoch = mktime(ts)
-            diff = epoch - start; if (diff < 0) diff = -diff
-            if (best == "" || diff < bestdiff) { bestdiff = diff; best = $0 }
-        }
-        END { if (best) { match(best, /run=[a-f0-9]+/); print substr(best, RSTART+4, RLENGTH-4) } }
-    ' "$LOG" 2>/dev/null) || RUN_ID=""
+for file in "$RUNTIME_DIR"/tui-*.json; do
+    record=$(jq -c 'select(.schema == 1 and (.pid | type == "number") and ((.rootSessionID // "") | length > 0))' "$file" 2>/dev/null || true)
+    [[ -n "$record" ]] || continue
 
-    if [ -n "$RUN_ID" ]; then
-        SESSION_ID=$(grep "run=$RUN_ID" "$LOG" 2>/dev/null | grep -oP 'session\.id=\K\S+' | tail -1) || SESSION_ID=""
-        if [ -n "$SESSION_ID" ]; then
-            TITLE=$(sqlite3 -separator ' ' "$DB" "SELECT title FROM session WHERE id = '$SESSION_ID' AND time_archived IS NULL" 2>/dev/null) || TITLE=""
-        fi
+    pid=$(jq -r '.pid' <<<"$record")
+    [[ -d "/proc/$pid" ]] || continue
+
+    process_ticks=$(awk '{print $22}' "/proc/$pid/stat" 2>/dev/null || true)
+    expected_ticks=$(jq -r '.processStartTicks // ""' <<<"$record")
+    [[ -n "$process_ticks" && "$process_ticks" == "$expected_ticks" ]] || continue
+
+    tty=$(jq -r '.tty // ""' <<<"$record")
+    [[ -n "$tty" ]] || continue
+
+    heartbeat=$(jq -r '.heartbeatAt // 0' <<<"$record")
+    if [[ -z ${records[$tty]:-} ]] || ((heartbeat > heartbeats[$tty])); then
+        records[$tty]="$record"
+        heartbeats[$tty]="$heartbeat"
     fi
+done
+
+panes=$(tmux list-panes ${SESSION_ID:+-t "$SESSION_ID"} -F '#{window_id},#{pane_tty},#{pane_active}' 2>/dev/null) || exit 0
+[[ -n "$panes" ]] || exit 0
+
+declare -A seen=()
+declare -A named=()
+
+while IFS=',' read -r window_id tty active; do
+    [[ "$active" == "1" ]] || continue
+    seen[$window_id]=1
+
+    record=${records[$tty]:-}
+    [[ -n "$record" ]] || continue
+
+    state=$(jq -r '.state // "unknown"' <<<"$record")
+    heartbeat=${heartbeats[$tty]:-0}
+    if (( now - heartbeat > STALE_AFTER_MS )); then
+        state='unknown'
+    fi
+
+    case "$state" in
+        running) glyph=${RUNNING_FRAMES[$(( (now / 200) % ${#RUNNING_FRAMES[@]} ))]} ;;
+        blocked) glyph=${BLOCKED_FRAMES[$(( (now / 180) % ${#BLOCKED_FRAMES[@]} ))]} ;;
+        idle) glyph='✓' ;;
+        pending) glyph='!' ;;
+        *) glyph='?' ;;
+    esac
+
+    title=$(jq -r '.title // ""' <<<"$record")
+    case "$title" in
+        "New session"*) title="opencode" ;;
+    esac
+    [[ -n "$title" ]] || title="opencode"
+    title="${title:0:$TITLE_MAX}"
+
+    name="[${glyph}] ${title}"
+    window_name=$(tmux display-message -t "$window_id" -p '#{window_name}' 2>/dev/null) || window_name=''
+    if [[ "$name" != "$window_name" ]]; then
+        tmux rename-window -t "$window_id" "$name" 2>/dev/null || true
+    fi
+    named[$window_id]=1
+done <<<"$panes"
+
+# Revert marked windows whose agent is gone back to automatic naming.
+if [[ -f "$MARKER_FILE" ]]; then
+    while IFS= read -r window_id; do
+        [[ -n "$window_id" ]] || continue
+        [[ -n ${seen[$window_id]:-} ]] || continue
+        [[ -n ${named[$window_id]:-} ]] && continue
+        tmux rename-window -t "$window_id" "" 2>/dev/null || true
+    done < "$MARKER_FILE"
 fi
 
-if [ -z "$TITLE" ]; then
-    TITLE=$(sqlite3 -separator ' ' "$DB" "
-        SELECT s.title FROM session s
-        WHERE s.time_archived IS NULL AND s.parent_id IS NULL AND s.directory = '$CWD'
-        ORDER BY s.time_updated DESC LIMIT 1
-    " 2>/dev/null) || TITLE=""
+# Persist the marker with the windows named this cycle.
+if [[ ${#named[@]} -gt 0 ]]; then
+    mkdir -p -m 700 "$RUNTIME_DIR" 2>/dev/null || true
+    : > "$MARKER_FILE.tmp"
+    for window_id in "${!named[@]}"; do
+        printf '%s\n' "$window_id" >> "$MARKER_FILE.tmp"
+    done
+    mv "$MARKER_FILE.tmp" "$MARKER_FILE" 2>/dev/null || true
+elif [[ -f "$MARKER_FILE" ]]; then
+    rm -f "$MARKER_FILE" 2>/dev/null || true
 fi
-
-[ -n "$TITLE" ] || exit 0
-case "$TITLE" in
-    "New session"*) TITLE="opencode" ;;
-esac
-TITLE="${TITLE:0:100}"
-
-NAME=$(tmux display-message -t "$WINDOW_ID" -p '#{window_name}' 2>/dev/null) || exit 0
-[ "$NAME" != "$TITLE" ] || exit 0
-tmux rename-window -t "$WINDOW_ID" "$TITLE" 2>/dev/null || true

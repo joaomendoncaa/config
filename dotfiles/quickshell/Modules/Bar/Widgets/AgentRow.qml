@@ -13,6 +13,7 @@ Rectangle {
     signal activated()
 
     readonly property bool pinned: root.service.isPinned(root.modelData.id)
+    readonly property bool autoPinned: root.service.isAutoPinned(root.modelData.id)
 
     color: rowMouse.containsMouse || pinMouse.containsMouse ? Config.backgroundHovered : (root.rowIndex % 2 === 0 ? Config.backgroundColoredSecondary : 'transparent')
 
@@ -138,7 +139,7 @@ Rectangle {
                 id: pinMouse
                 anchors.fill: parent
                 hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
+                cursorShape: root.autoPinned ? Qt.ArrowCursor : Qt.PointingHandCursor
                 onClicked: root.service.togglePin(root.modelData.id)
             }
         }

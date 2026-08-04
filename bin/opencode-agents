@@ -98,6 +98,7 @@ fallback_record() {
             root.title AS title,
             root.directory AS directory,
             root.time_updated AS activityAt,
+            root.time_created AS createdAt,
             COALESCE((SELECT SUM(summary_additions) FROM session WHERE id IN (SELECT id FROM family)), 0) AS additions,
             COALESCE((SELECT SUM(summary_deletions) FROM session WHERE id IN (SELECT id FROM family)), 0) AS deletions
         FROM root
@@ -214,6 +215,7 @@ snapshot() {
                 id: $latest.rootSessionID,
                 state: $urgent.state,
                 activityAt: ($group | map(.activityAt // 0) | max),
+                createdAt: ($group | map(.createdAt // 0) | min),
                 additions: ($group | map(.additions // 0) | max),
                 deletions: ($group | map(.deletions // 0) | max),
                 clients: (

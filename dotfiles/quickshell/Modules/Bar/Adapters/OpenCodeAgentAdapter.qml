@@ -120,7 +120,8 @@ Item {
                     state: ['running', 'idle', 'blocked', 'pending', 'unknown'].indexOf(agent.state) === -1 ? 'unknown' : agent.state,
                     additions: Number(agent.additions) || 0,
                     deletions: Number(agent.deletions) || 0,
-                    activityAt: Number(agent.activityAt) || 0
+                    activityAt: Number(agent.activityAt) || 0,
+                    createdAt: Number(agent.createdAt) || 0
                 })
             }
 
