@@ -10,7 +10,7 @@ import qs.Core
 PanelWindow {
     id: root
 
-    property var modes: ["apps", "emojis", "files", "clipboard", "calc", "chart", "theme"]
+    property var modes: ["apps", "emojis", "files", "clipboard", "calc", "theme"]
     property string mode: "apps"
     property string filterText: ""
     property int selectedIndex: 0
@@ -20,8 +20,6 @@ PanelWindow {
     property var fileResults: []
     property string calcResult: ""
     property string calcQueryMarker: ""
-    property bool chartInitialized: false
-    property string chartQueryMarker: ""
     property string fdQueryMarker: ""
     property string initialMode: "apps"
     property var themeList: []
@@ -337,9 +335,6 @@ PanelWindow {
         if (mode === "clipboard")
             rebuildDisplay();
 
-        if (mode === "chart" && !chartInitialized)
-            chartInitialized = true;
-
         if (mode === "theme" && themeList.length === 0)
             themeListProc.running = true;
     }
@@ -351,8 +346,6 @@ PanelWindow {
             root.calcResult = "";
             calcTimer.restart();
         }
-        if (mode === "chart")
-            chartTimer.restart();
 
         if (mode !== "files")
             rebuildDisplay();
@@ -442,7 +435,6 @@ PanelWindow {
                     height: parent.height - searchInput.height - parent.spacing
 
                     Row {
-                        visible: root.mode !== "chart"
                         anchors.fill: parent
                         spacing: 0
 
@@ -492,15 +484,6 @@ PanelWindow {
                             active: root.mode === "clipboard"
                         }
 
-                    }
-
-                    Loader {
-                        id: chartLoader
-
-                        active: root.chartInitialized
-                        visible: root.mode === "chart"
-                        anchors.fill: parent
-                        source: "Widgets/Chart.qml"
                     }
 
                 }
@@ -628,22 +611,6 @@ PanelWindow {
                 if (root.mode === "theme")
                     root.rebuildDisplay();
             }
-        }
-    }
-
-    Timer {
-        id: chartTimer
-
-        interval: 400
-        onTriggered: {
-            if (root.mode !== "chart" || !root.filterText)
-                return ;
-
-            root.chartQueryMarker = root.filterText;
-            var chart = chartLoader.item;
-            if (chart)
-                chart.symbol = root.filterText;
-
         }
     }
 

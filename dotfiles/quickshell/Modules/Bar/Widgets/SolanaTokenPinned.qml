@@ -17,6 +17,8 @@ Item {
     signal opening()
 
     readonly property var visiblePins: {
+        if (root.service.pinsHidden)
+            return []
         var pins = service.pinnedTokens || []
         if (pins.length <= 2)
             return pins
@@ -123,7 +125,7 @@ Item {
         }
 
         CarouselButton {
-            visible: root.service.pinnedTokens.length > 2
+            visible: !root.service.pinsHidden && root.service.pinnedTokens.length > 2
             text: '>'
             onClicked: root.shiftPins(1)
         }

@@ -8,8 +8,11 @@ RowLayout {
     id: root
 
     spacing: Config.gapInner
+    implicitWidth: (workspaceRepeater.count + 1) * Config.buttonSize + workspaceRepeater.count * spacing
+    implicitHeight: Config.buttonSize
 
     Repeater {
+        id: workspaceRepeater
         model: {
             var ids = [];
             var values = Hyprland.workspaces.values;

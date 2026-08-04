@@ -22,7 +22,7 @@ PanelWindow {
 
     property alias notificationCenterOpen: notifButton.popupOpen
     property alias solanaPanelOpen: solanaWidget.popupOpen
-    property alias opencodePanelOpen: opencodeWidget.popupVisible
+    property alias agentPanelOpen: agentWidget.popupVisible
 
     Updates {
         id: barUpdates
@@ -36,9 +36,10 @@ PanelWindow {
     signal zenDismissed()
     signal solanaPanelOpening()
     signal notificationPanelOpening()
-    signal opencodePanelOpening()
+    signal agentPanelOpening()
 
     required property var priceLabels
+    required property var agentService
     required property var notificationService
 
     function updatePowerMenuPosition() {
@@ -75,12 +76,18 @@ PanelWindow {
             spacing: Config.gapInner
 
             Workspaces {
+                Layout.fillWidth: false
+                Layout.minimumWidth: implicitWidth
+                Layout.preferredWidth: implicitWidth
+                Layout.maximumWidth: implicitWidth
+                Layout.preferredHeight: Config.buttonSize
             }
 
-            Opencode {
-                id: opencodeWidget
+            AgentWidget {
+                id: agentWidget
                 barWindow: bar
-                onOpening: bar.opencodePanelOpening()
+                service: bar.agentService
+                onOpening: bar.agentPanelOpening()
             }
 
         }

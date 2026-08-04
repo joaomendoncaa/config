@@ -1,0 +1,325 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RUNTIME_BASE="${XDG_RUNTIME_DIR:-/tmp/opencode-dashboard-$UID}"
+RUNTIME_DIR="$RUNTIME_BASE/opencode-dashboard"
+DB="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db"
+LOG="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/log/opencode.log"
+STALE_AFTER_MS=5000
+
+is_tui_process() {
+    local pid="$1"
+    local tty
+    local -a args=()
+
+    tty=$(readlink "/proc/$pid/fd/0" 2>/dev/null || true)
+    [[ "$tty" == /dev/pts/* || "$tty" == /dev/tty* ]] || return 1
+    mapfile -d '' -t args <"/proc/$pid/cmdline" || return 1
+    [[ ${#args[@]} -gt 0 ]] || return 1
+
+    if [[ ${args[1]:-} == "--version" || ${args[1]:-} == "--help" ]]; then
+        return 1
+    fi
+
+    case "${args[1]:-}" in
+        run|serve|web|acp|auth|models|agent|debug|stats|export|import|upgrade|uninstall|completion|mcp|github|pr|session|plugin)
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+process_start_epoch() {
+    local pid="$1"
+    local hz boot ticks
+
+    hz=$(getconf CLK_TCK 2>/dev/null) || return 1
+    boot=$(awk '/^btime/ {print $2}' /proc/stat 2>/dev/null) || return 1
+    ticks=$(awk '{print $22}' "/proc/$pid/stat" 2>/dev/null) || return 1
+    echo $((boot + ticks / hz))
+}
+
+fallback_record() {
+    local pid="$1"
+    local cwd tty start_epoch run_id session_id row directory repo_root repo branch now
+
+    [[ -f "$DB" && -f "$LOG" ]] || return 1
+    cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null) || return 1
+    tty=$(readlink "/proc/$pid/fd/0" 2>/dev/null) || return 1
+    start_epoch=$(process_start_epoch "$pid") || return 1
+
+    run_id=$(TZ=UTC awk -v dir="$cwd" -v start="$start_epoch" '
+        /message="creating instance"/ && index($0, "directory=" dir) {
+            ts = $0
+            sub(/^timestamp=/, "", ts)
+            sub(/ .*/, "", ts)
+            gsub(/[-T:]/, " ", ts)
+            gsub(/\..*Z/, "", ts)
+            epoch = mktime(ts)
+            diff = epoch - start
+            if (diff < 0) diff = -diff
+            if (best == "" || diff < bestdiff) {
+                bestdiff = diff
+                best = $0
+            }
+        }
+        END {
+            if (best) {
+                match(best, /run=[a-f0-9]+/)
+                print substr(best, RSTART + 4, RLENGTH - 4)
+            }
+        }
+    ' "$LOG" 2>/dev/null) || return 1
+    [[ -n "$run_id" ]] || return 1
+
+    session_id=$(awk -v run="run=$run_id" '
+        index($0, run) && match($0, /session\.id=ses_[[:alnum:]]+/) {
+            value = substr($0, RSTART + 11, RLENGTH - 11)
+        }
+        END { print value }
+    ' "$LOG" 2>/dev/null) || return 1
+    [[ -n "$session_id" ]] || return 1
+
+    row=$(sqlite3 -json "$DB" "
+        WITH RECURSIVE ancestry(id, parent_id) AS (
+            SELECT id, parent_id FROM session WHERE id = '$session_id'
+            UNION ALL
+            SELECT s.id, s.parent_id FROM session s JOIN ancestry a ON s.id = a.parent_id
+        ), root AS (
+            SELECT s.* FROM session s
+            WHERE s.id = (SELECT id FROM ancestry WHERE parent_id IS NULL LIMIT 1)
+        ), family(id) AS (
+            SELECT id FROM root
+            UNION ALL
+            SELECT s.id FROM session s JOIN family f ON s.parent_id = f.id
+        )
+        SELECT
+            root.id AS rootSessionID,
+            root.title AS title,
+            root.directory AS directory,
+            root.time_updated AS activityAt,
+            COALESCE((SELECT SUM(summary_additions) FROM session WHERE id IN (SELECT id FROM family)), 0) AS additions,
+            COALESCE((SELECT SUM(summary_deletions) FROM session WHERE id IN (SELECT id FROM family)), 0) AS deletions
+        FROM root
+        LIMIT 1;
+    " 2>/dev/null) || return 1
+    [[ $(jq 'length' <<<"$row") -gt 0 ]] || return 1
+
+    directory=$(jq -r '.[0].directory // ""' <<<"$row")
+    repo_root=$(git -C "$directory" rev-parse --show-toplevel 2>/dev/null || true)
+    if [[ -n "$repo_root" ]]; then
+        repo=$(basename "$repo_root")
+        branch=$(git -C "$directory" branch --show-current 2>/dev/null || true)
+    else
+        repo=$(basename "$directory")
+        branch=""
+    fi
+    now=$(date +%s%3N)
+
+    jq -cn \
+        --argjson session "$(jq '.[0]' <<<"$row")" \
+        --argjson pid "$pid" \
+        --arg tty "$tty" \
+        --arg repo "$repo" \
+        --arg branch "$branch" \
+        --argjson heartbeatAt "$now" \
+        '$session + {
+            pid: $pid,
+            tty: $tty,
+            repo: $repo,
+            branch: $branch,
+            state: "unknown",
+            heartbeatAt: $heartbeatAt,
+            source: "fallback"
+        }'
+}
+
+snapshot() {
+    local now file record pid root_id heartbeat process_ticks expected_ticks
+    local -a records=()
+    local -a pids=()
+    declare -A bridged_pids=()
+    declare -A bridge_records=()
+    declare -A bridge_heartbeats=()
+
+    command -v jq >/dev/null 2>&1 || {
+        printf '{"ok":false,"error":"jq is required"}\n'
+        return 1
+    }
+
+    mkdir -p -m 700 "$RUNTIME_DIR"
+    now=$(date +%s%3N)
+    shopt -s nullglob
+    for file in "$RUNTIME_DIR"/tui-*.json; do
+        record=$(jq -c 'select(.schema == 1 and (.pid | type == "number"))' "$file" 2>/dev/null || true)
+        [[ -n "$record" ]] || continue
+        pid=$(jq -r '.pid' <<<"$record")
+        [[ -d "/proc/$pid" ]] || continue
+        is_tui_process "$pid" || continue
+        process_ticks=$(awk '{print $22}' "/proc/$pid/stat" 2>/dev/null || true)
+        expected_ticks=$(jq -r '.processStartTicks // ""' <<<"$record")
+        [[ -n "$process_ticks" && "$process_ticks" == "$expected_ticks" ]] || continue
+
+        heartbeat=$(jq -r '.heartbeatAt // 0' <<<"$record")
+        if [[ -z ${bridge_records[$pid]:-} ]] || ((heartbeat > bridge_heartbeats[$pid])); then
+            bridge_records[$pid]="$record"
+            bridge_heartbeats[$pid]="$heartbeat"
+        fi
+    done
+
+    for pid in "${!bridge_records[@]}"; do
+        record="${bridge_records[$pid]}"
+        heartbeat="${bridge_heartbeats[$pid]}"
+        bridged_pids[$pid]=1
+
+        root_id=$(jq -r '.rootSessionID // ""' <<<"$record")
+        [[ -n "$root_id" ]] || continue
+        if ((now - heartbeat > STALE_AFTER_MS)); then
+            record=$(jq -c '.state = "unknown" | .source = "stale-bridge"' <<<"$record")
+        else
+            record=$(jq -c '.source = "bridge"' <<<"$record")
+        fi
+        records+=("$record")
+    done
+
+    mapfile -t pids < <(pgrep -x opencode 2>/dev/null || true)
+    for pid in "${pids[@]}"; do
+        [[ -z ${bridged_pids[$pid]:-} ]] || continue
+        is_tui_process "$pid" || continue
+        record=$(fallback_record "$pid" || true)
+        [[ -n "$record" ]] && records+=("$record")
+    done
+
+    if [[ ${#records[@]} -eq 0 ]]; then
+        jq -cn --argjson generatedAt "$now" '{ok: true, generatedAt: $generatedAt, agents: []}'
+        return
+    fi
+
+    printf '%s\n' "${records[@]}" | jq -cs --argjson generatedAt "$now" '
+        def rank:
+            if . == "blocked" then 0
+            elif . == "running" then 1
+            elif . == "pending" then 2
+            elif . == "idle" then 3
+            else 4
+            end;
+
+        sort_by(.rootSessionID)
+        | group_by(.rootSessionID)
+        | map(
+            . as $group
+            | ($group | sort_by(.heartbeatAt // 0) | last) as $latest
+            | ($group | sort_by(.state | rank) | first) as $urgent
+            | $latest + {
+                id: $latest.rootSessionID,
+                state: $urgent.state,
+                activityAt: ($group | map(.activityAt // 0) | max),
+                additions: ($group | map(.additions // 0) | max),
+                deletions: ($group | map(.deletions // 0) | max),
+                clients: (
+                    $group
+                    | sort_by(.pid)
+                    | group_by(.pid)
+                    | map(sort_by(.heartbeatAt // 0) | last)
+                    | sort_by(.heartbeatAt // 0)
+                    | reverse
+                    | map({pid, tty, heartbeatAt, source})
+                )
+            }
+            | del(.rootSessionID, .pid, .tty, .heartbeatAt, .nonce, .selectedSessionID, .route, .schema)
+        )
+        | {ok: true, generatedAt: $generatedAt, agents: .}
+    '
+}
+
+hypr_ancestor_address() {
+    local current="$1"
+    local clients address parent
+
+    command -v hyprctl >/dev/null 2>&1 || return 1
+    clients=$(hyprctl clients -j 2>/dev/null) || return 1
+    while [[ "$current" =~ ^[0-9]+$ ]] && ((current > 1)); do
+        address=$(jq -r --argjson pid "$current" 'first(.[] | select(.pid == $pid) | .address) // empty' <<<"$clients")
+        if [[ -n "$address" ]]; then
+            printf '%s\n' "$address"
+            return 0
+        fi
+        parent=$(ps -o ppid= -p "$current" 2>/dev/null | tr -d ' ')
+        [[ -n "$parent" && "$parent" != "$current" ]] || break
+        current="$parent"
+    done
+    return 1
+}
+
+focus_hypr_address() {
+    local address="$1"
+
+    hyprctl dispatch "hl.dsp.focus({ window = 'address:$address' })" >/dev/null
+}
+
+focus_hypr_ancestor() {
+    local address
+
+    address=$(hypr_ancestor_address "$1") || return 1
+    focus_hypr_address "$address"
+}
+
+focus_agent() {
+    local session_id="$1"
+    local data agent pid tty pane_line pane_tty tmux_session window_id pane_id
+    local client_line="" client_session client_tty client_pid client_activity client_address best_address="" best_activity=-1
+
+    data=$(snapshot)
+    agent=$(jq -c --arg id "$session_id" '.agents[] | select(.id == $id)' <<<"$data")
+    [[ -n "$agent" ]] || return 1
+    pid=$(jq -r '.clients[0].pid // empty' <<<"$agent")
+    tty=$(jq -r '.clients[0].tty // empty' <<<"$agent")
+    [[ -n "$pid" ]] || return 1
+
+    if command -v tmux >/dev/null 2>&1 && [[ -n "$tty" ]]; then
+        pane_line=$(tmux list-panes -a -F '#{pane_tty}	#{session_name}	#{window_id}	#{pane_id}' 2>/dev/null | awk -F '\t' -v tty="$tty" '$1 == tty {print; exit}')
+        if [[ -n "$pane_line" ]]; then
+            IFS=$'\t' read -r pane_tty tmux_session window_id pane_id <<<"$pane_line"
+
+            while IFS=$'\t' read -r client_session client_tty client_pid client_activity; do
+                client_address=$(hypr_ancestor_address "$client_pid" || true)
+                [[ -n "$client_address" ]] || continue
+                if ((client_activity > best_activity)); then
+                    best_activity=$client_activity
+                    client_line="$client_session"$'\t'"$client_tty"$'\t'"$client_pid"
+                    best_address="$client_address"
+                fi
+            done < <(tmux list-clients -F '#{client_session}	#{client_tty}	#{client_pid}	#{client_activity}' 2>/dev/null || true)
+
+            if [[ -n "$client_line" ]]; then
+                IFS=$'\t' read -r client_session client_tty client_pid <<<"$client_line"
+                tmux switch-client -c "$client_tty" -t "$tmux_session" >/dev/null 2>&1 || return 1
+                tmux select-window -t "$window_id" >/dev/null 2>&1 || return 1
+                tmux select-pane -t "$pane_id" >/dev/null 2>&1 || return 1
+                focus_hypr_address "$best_address"
+                return 0
+            fi
+
+            tmux select-window -t "$window_id" >/dev/null 2>&1 || return 1
+            tmux select-pane -t "$pane_id" >/dev/null 2>&1 || return 1
+            uwsm app -- xdg-terminal-exec tmux attach-session -t "$tmux_session" >/dev/null 2>&1 &
+            return 0
+        fi
+    fi
+
+    focus_hypr_ancestor "$pid"
+}
+
+case "${1:-snapshot}" in
+    snapshot)
+        snapshot
+        ;;
+    focus)
+        [[ -n ${2:-} ]] || exit 1
+        focus_agent "$2"
+        ;;
+    *)
+        printf 'usage: opencode-agents [snapshot|focus SESSION_ID]\n' >&2
+        exit 1
+        ;;
+esac

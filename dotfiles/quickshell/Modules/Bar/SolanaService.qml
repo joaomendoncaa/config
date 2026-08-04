@@ -8,6 +8,7 @@ Item {
     property var watchlist: []
     property var pinnedTokens: []
     property var marketCapDisplayTokens: []
+    property bool pinsHidden: false
     property var tokenData: ({})
     property var searchResults: []
     property string searchQuery: ""
@@ -145,6 +146,11 @@ Item {
         var data = root.clone(root.tokenData)
         delete data[mint]
         root.tokenData = data
+        root.persist()
+    }
+
+    function togglePinsHidden() {
+        root.pinsHidden = !root.pinsHidden
         root.persist()
     }
 
@@ -330,6 +336,7 @@ Item {
         stored.tokens = root.watchlist
         stored.watchlist = root.watchlist
         stored.pinnedTokens = root.pinnedTokens
+        stored.pinsHidden = root.pinsHidden
         stored.marketCapDisplayTokens = root.marketCapDisplayTokens
         var symbols = {}
         var metadata = {}
@@ -373,6 +380,7 @@ Item {
             var oldTokens = Array.isArray(root._storage.tokens) ? root._storage.tokens : []
             root.watchlist = Array.isArray(root._storage.watchlist) ? root._storage.watchlist : oldTokens
             root.pinnedTokens = Array.isArray(root._storage.pinnedTokens) ? root._storage.pinnedTokens : oldTokens.slice()
+            root.pinsHidden = root._storage.pinsHidden === true
             root.marketCapDisplayTokens = Array.isArray(root._storage.marketCapDisplayTokens) ? root._storage.marketCapDisplayTokens.filter(function(mint) {
                 return root.watchlist.indexOf(mint) !== -1
             }) : []

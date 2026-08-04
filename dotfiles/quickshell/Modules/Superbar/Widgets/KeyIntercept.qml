@@ -82,9 +82,6 @@ Item {
         case '=':
             root.setSearchMode("calc");
             return true;
-        case '#':
-            root.setSearchMode("chart");
-            return true;
         case ';':
             root.setSearchMode("theme");
             return true;

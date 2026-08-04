@@ -91,8 +91,8 @@ Rectangle {
 
         Rectangle {
             id: searchButton
-            anchors.right: parent.right
-            anchors.rightMargin: Config.shellPadding
+            anchors.right: hidePinsButton.left
+            anchors.rightMargin: Config.gapInner
             anchors.top: parent.top
             anchors.topMargin: Config.shellPadding
             width: Config.buttonSize
@@ -131,6 +131,50 @@ Rectangle {
                     searchDebounce.stop()
                     root.service.search(searchInput.text)
                 }
+            }
+        }
+
+        Rectangle {
+            id: hidePinsButton
+            anchors.right: parent.right
+            anchors.rightMargin: Config.shellPadding
+            anchors.top: parent.top
+            anchors.topMargin: Config.shellPadding
+            width: Config.buttonSize
+            height: Config.buttonSize
+            radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
+            color: root.service.pinsHidden ? Config.foreground : (hidePinsMouse.containsMouse ? Config.backgroundHovered : 'transparent')
+
+            Image {
+                id: hidePinsMask
+                anchors.centerIn: parent
+                width: Config.buttonSize * 0.7
+                height: width
+                source: '../../../Assets/solana-pin-hidden.svg'
+                sourceSize.width: width
+                sourceSize.height: height
+                visible: false
+            }
+
+            Rectangle {
+                id: hidePinsColor
+                anchors.fill: hidePinsMask
+                color: root.service.pinsHidden ? Config.backgroundColored : Config.foreground
+                visible: false
+            }
+
+            OpacityMask {
+                anchors.fill: hidePinsMask
+                source: hidePinsColor
+                maskSource: hidePinsMask
+            }
+
+            MouseArea {
+                id: hidePinsMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.service.togglePinsHidden()
             }
         }
     }
