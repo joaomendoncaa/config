@@ -289,7 +289,8 @@ export default {
                     state: runtime.state,
                     additions: diff.additions,
                     deletions: diff.deletions,
-                    activityAt: runtime.activityAt
+                    activityAt: runtime.activityAt,
+                    createdAt: resolvedRoot.time?.created || 0
                 })
             } catch {
                 if (currentRootID) {

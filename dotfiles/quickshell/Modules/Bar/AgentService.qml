@@ -9,12 +9,15 @@ Item {
     property var adapter: openCodeAdapter
     property var agents: []
     property var pinnedAgentIds: []
+    property var autoPinnedAgentIds: []
     property bool pinsHidden: false
     property bool panelOpen: false
     property real nowMs: Date.now()
     property int runningFrame: 0
     property int blockedFrame: 0
     property int hatchPhase: 0
+
+    readonly property int autoPinLimit: 3
 
     readonly property var runningFrames: ['⣶', '⣧', '⣏', '⡟', '⠿', '⢻', '⣹', '⣼']
     readonly property var blockedFrames: ['·', '·', '·', '·', '⚠', '·', '·', '⚠', '·']
@@ -69,6 +72,45 @@ Item {
         return root.pinnedAgentIds.indexOf(agentId) !== -1
     }
 
+    function isAutoPinned(agentId) {
+        return root.autoPinnedAgentIds.indexOf(agentId) !== -1
+    }
+
+    function agentCreatedAt(agent) {
+        return Number(agent.createdAt) || Number(agent.activityAt) || 0
+    }
+
+    function ensureFirstPins() {
+        var agents = root.adapter && Array.isArray(root.adapter.agents) ? root.adapter.agents : []
+        if (agents.length === 0)
+            return
+
+        var candidates = agents.slice().sort(function(left, right) {
+            return root.agentCreatedAt(left) - root.agentCreatedAt(right)
+        })
+
+        var autoPins = root.autoPinnedAgentIds.slice()
+        for (var i = 0; i < candidates.length && autoPins.length < root.autoPinLimit; i++) {
+            var id = candidates[i].id
+            if (autoPins.indexOf(id) === -1)
+                autoPins.push(id)
+        }
+
+        var pins = autoPins.slice()
+        for (var j = 0; j < root.pinnedAgentIds.length; j++) {
+            var existing = root.pinnedAgentIds[j]
+            if (pins.indexOf(existing) === -1)
+                pins.push(existing)
+        }
+
+        if (JSON.stringify(autoPins) !== JSON.stringify(root.autoPinnedAgentIds)) {
+            root.autoPinnedAgentIds = autoPins
+            persistTimer.restart()
+        }
+        if (JSON.stringify(pins) !== JSON.stringify(root.pinnedAgentIds))
+            root.pinnedAgentIds = pins
+    }
+
     function sortAgents(items) {
         var sorted = items.slice()
         sorted.sort(function(left, right) {
@@ -85,6 +127,7 @@ Item {
     }
 
     function syncAgents() {
+        root.ensureFirstPins()
         var source = root.adapter && Array.isArray(root.adapter.agents) ? root.adapter.agents : []
         var sorted = root.sortAgents(source)
         if (JSON.stringify(sorted) !== JSON.stringify(root.agents))
@@ -103,7 +146,7 @@ Item {
     }
 
     function togglePin(agentId) {
-        if (!agentId)
+        if (!agentId || root.isAutoPinned(agentId))
             return
         var pins = root.pinnedAgentIds.slice()
         var index = pins.indexOf(agentId)
@@ -167,9 +210,11 @@ Item {
         try {
             var data = JSON.parse(String(raw || '{}'))
             root.pinnedAgentIds = Array.isArray(data.pinnedAgentIds) ? data.pinnedAgentIds : []
+            root.autoPinnedAgentIds = Array.isArray(data.autoPinnedAgentIds) ? data.autoPinnedAgentIds : []
             root.pinsHidden = data.pinsHidden === true
         } catch (error) {
             root.pinnedAgentIds = []
+            root.autoPinnedAgentIds = []
             root.pinsHidden = false
         }
         root.syncAgents()
@@ -195,7 +240,7 @@ Item {
     Timer {
         id: persistTimer
         interval: 250
-        onTriggered: storageFile.setText(JSON.stringify({ pinnedAgentIds: root.pinnedAgentIds, pinsHidden: root.pinsHidden }, null, 2) + '\n')
+        onTriggered: storageFile.setText(JSON.stringify({ pinnedAgentIds: root.pinnedAgentIds, autoPinnedAgentIds: root.autoPinnedAgentIds, pinsHidden: root.pinsHidden }, null, 2) + '\n')
     }
 
     Timer {
@@ -238,6 +283,7 @@ Item {
     }
 
     onPinnedAgentIdsChanged: root.syncAgents()
+    onAutoPinnedAgentIdsChanged: root.syncAgents()
 
     Component.onCompleted: {
         root.adapter.panelOpen = root.panelOpen
