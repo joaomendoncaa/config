@@ -10,7 +10,8 @@ Rectangle {
 
     property real volumeRatio: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio.volume : 0
     property bool isHeadphones: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.name === Config.sinkHeadphones : false
-    property bool isMuted: Pipewire.defaultAudioSink ? Pipewire.defaultAudioSink.audio.muted : false
+    property bool isMuted: Pipewire.defaultAudioSink && Pipewire.defaultAudioSink.audio ? Pipewire.defaultAudioSink.audio.muted : false
+    readonly property bool sinkReady: Pipewire.defaultAudioSink !== null && Pipewire.defaultAudioSink.audio !== null
     readonly property string iconSource: {
         if (root.isHeadphones)
             return root.isMuted ? "../../../Assets/sink-headphones-muted.svg" : "../../../Assets/sink-headphones.svg";
@@ -50,7 +51,94 @@ Rectangle {
         anchors.centerIn: parent
         width: Config.buttonSize * 0.7
         height: Config.buttonSize * 0.7
-        visible: Pipewire.defaultAudioSink !== null
+
+        // Skeleton loading background, shown until the sink is resolved
+        Item {
+            id: skeleton
+
+            anchors.fill: parent
+            clip: true
+            visible: opacity > 0
+            opacity: root.sinkReady ? 0 : 1
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 200
+                }
+            }
+
+            Item {
+                id: shimmerSource
+
+                anchors.fill: parent
+                clip: true
+                visible: false
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Config.hexWithAlpha(Config.foreground, "66")
+                }
+
+                Item {
+                    id: shimmerBand
+
+                    width: shimmerSource.width * 1.8
+                    height: shimmerSource.height * 1.8
+
+                    LinearGradient {
+                        anchors.fill: parent
+                        start: Qt.point(0, 0)
+                        end: Qt.point(parent.width, parent.height)
+                        gradient: Gradient {
+                            GradientStop {
+                                position: 0
+                                color: "transparent"
+                            }
+                            GradientStop {
+                                position: 0.5
+                                color: Config.foreground
+                            }
+                            GradientStop {
+                                position: 1
+                                color: "transparent"
+                            }
+                        }
+                    }
+
+                    ParallelAnimation {
+                        running: !root.sinkReady
+                        loops: Animation.Infinite
+
+                        NumberAnimation {
+                            target: shimmerBand
+                            property: "x"
+                            from: -shimmerBand.width
+                            to: shimmerSource.width
+                            duration: 1170
+                            easing.type: Easing.Linear
+                        }
+
+                        NumberAnimation {
+                            target: shimmerBand
+                            property: "y"
+                            from: -shimmerBand.height
+                            to: shimmerSource.height
+                            duration: 1170
+                            easing.type: Easing.Linear
+                        }
+                    }
+
+                }
+
+            }
+
+            OpacityMask {
+                anchors.fill: parent
+                source: shimmerSource
+                maskSource: maskImage
+            }
+
+        }
 
         // Shared mask image (alpha only)
         Image {
@@ -77,6 +165,7 @@ Rectangle {
             anchors.fill: parent
             source: bgColor
             maskSource: maskImage
+            visible: root.sinkReady
         }
 
         // Foreground layer: same icon in primary color, clipped to volume height
@@ -86,6 +175,7 @@ Rectangle {
             height: parent.height * scaleForBar(Math.max(0, Math.min(1, root.volumeRatio)))
             clip: true
             color: "transparent"
+            visible: root.sinkReady
 
             Item {
                 anchors.bottom: parent.bottom
@@ -123,6 +213,9 @@ Rectangle {
             if (mouse.button === Qt.MiddleButton)
                 Quickshell.execDetached(["omarchy-launch-audio"]);
             else if (mouse.button === Qt.RightButton) {
+                if (!Pipewire.defaultAudioSink || !Pipewire.defaultAudioSink.audio)
+                    return ;
+
                 Pipewire.defaultAudioSink.audio.muted = !Pipewire.defaultAudioSink.audio.muted;
                 root.writeVolumeState();
             } else

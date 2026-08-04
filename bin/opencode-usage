@@ -1,81 +1,137 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WORKSPACE_ID="${QUICKSHELL_OPENCODE_WORKSPACE_ID:-wrk_01KEYSE6SWHFGJ2DB8C2690QJ2}"
-BILLING_URL="https://opencode.ai/workspace/${WORKSPACE_ID}/billing"
-GO_URL="https://opencode.ai/workspace/${WORKSPACE_ID}/go"
+ENV_FILE="${OPENCODE_USAGE_ENV_FILE:-$HOME/.config.jmmm.sh/dotfiles/bash/.env}"
+if [[ -f "$ENV_FILE" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "$ENV_FILE"
+    set +a
+fi
 
+WORKSPACE_ID="${QUICKSHELL_OPENCODE_WORKSPACE_ID:-wrk_01KEYSE6SWHFGJ2DB8C2690QJ2}"
+BILLING_URL="https://opencode.ai/workspace/$WORKSPACE_ID/billing"
+GO_URL="https://opencode.ai/workspace/$WORKSPACE_ID/go"
 HTML_BILLING=$(mktemp)
 HTML_GO=$(mktemp)
+COOKIE_FILE=$(mktemp)
 
 cleanup() {
-	rm -f "$HTML_BILLING" "$HTML_GO"
+    rm -f "$HTML_BILLING" "$HTML_GO" "$COOKIE_FILE"
 }
+
+fail() {
+    jq -cn --arg error "$1" '{ok: false, error: $error}'
+    exit 1
+}
+
+duration_seconds() {
+    local text="${1,,}"
+    local days=0 hours=0 minutes=0 seconds=0 matched=0
+
+    if [[ $text =~ ([0-9]+)[[:space:]]*(dias?|days?|d)([^[:alpha:]]|$) ]]; then
+        days="${BASH_REMATCH[1]}"
+        matched=1
+    fi
+    if [[ $text =~ ([0-9]+)[[:space:]]*(horas?|hours?|hrs?|h)([^[:alpha:]]|$) ]]; then
+        hours="${BASH_REMATCH[1]}"
+        matched=1
+    fi
+    if [[ $text =~ ([0-9]+)[[:space:]]*(minutos?|minutes?|mins?|m)([^[:alpha:]]|$) ]]; then
+        minutes="${BASH_REMATCH[1]}"
+        matched=1
+    fi
+    if [[ $text =~ ([0-9]+)[[:space:]]*(segundos?|seconds?|secs?|s)([^[:alpha:]]|$) ]]; then
+        seconds="${BASH_REMATCH[1]}"
+        matched=1
+    fi
+    if ((matched == 0)) && [[ $text == *"less than a minute"* || $text == *"menos de um minuto"* ]]; then
+        echo 60
+        return
+    fi
+    ((matched == 1)) || return 1
+    echo $((days * 86400 + hours * 3600 + minutes * 60 + seconds))
+}
+
 trap cleanup EXIT
+if ! command -v jq >/dev/null 2>&1; then
+    printf '{"ok":false,"error":"jq is required"}\n'
+    exit 1
+fi
+[[ -n ${QUICKSHELL_OPENCODE_COOKIE:-} ]] || fail 'OpenCode authentication is not configured'
+cookie="$QUICKSHELL_OPENCODE_COOKIE"
+unset QUICKSHELL_OPENCODE_COOKIE
+chmod 600 "$COOKIE_FILE"
+printf '# Netscape HTTP Cookie File\n.opencode.ai\tTRUE\t/\tTRUE\t0\tauth\t%s\n' "$cookie" >"$COOKIE_FILE"
+unset cookie
 
-# Fetch both pages in parallel
-# NOTE $QUICKSHELL_OPENCODE_COOKIE is expected on env
-curl -s -L \
-	--compressed \
-	-H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0" \
-	-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
-	-H "Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7" \
-	-b "auth=${QUICKSHELL_OPENCODE_COOKIE}" \
-	"$BILLING_URL" >"$HTML_BILLING" 2>/dev/null &
-PID1=$!
+curl -fLsS \
+    --max-time 20 \
+    --compressed \
+    -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0' \
+    -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+    -H 'Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7' \
+    -b "$COOKIE_FILE" \
+    "$BILLING_URL" >"$HTML_BILLING" 2>/dev/null &
+billing_pid=$!
 
-curl -s -L \
-	--compressed \
-	-H "User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0" \
-	-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" \
-	-H "Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7" \
-	-b "auth=${QUICKSHELL_OPENCODE_COOKIE}" \
-	"$GO_URL" >"$HTML_GO" 2>/dev/null &
-PID2=$!
+curl -fLsS \
+    --max-time 20 \
+    --compressed \
+    -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0' \
+    -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
+    -H 'Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7' \
+    -b "$COOKIE_FILE" \
+    "$GO_URL" >"$HTML_GO" 2>/dev/null &
+go_pid=$!
 
-wait $PID1 && BILLING_OK=0 || BILLING_OK=1
-wait $PID2 && GO_OK=0 || GO_OK=1
-
-if [[ $BILLING_OK -ne 0 || $GO_OK -ne 0 ]]; then
-	echo '{"error": "failed to get usage"}'
-	exit 1
+billing_ok=0
+go_ok=0
+wait "$billing_pid" || billing_ok=$?
+wait "$go_pid" || go_ok=$?
+if ((billing_ok != 0 || go_ok != 0)); then
+    fail 'Failed to fetch OpenCode usage'
 fi
 
-BILLING_HTML=$(<"$HTML_BILLING")
-GO_HTML=$(<"$HTML_GO")
+billing_html=$(<"$HTML_BILLING")
+go_html=$(<"$HTML_GO")
+clean_billing=$(sed 's/<!--[^>]*-->//g' <<<"$billing_html")
+clean_go=$(sed 's/<!--[^>]*-->//g' <<<"$go_html")
 
-# Strip HTML comments (SolidJS hydration markers like <!--$--> confuse grep)
-CLEAN_BILLING=$(echo "$BILLING_HTML" | sed 's/<!--[^>]*-->//g')
-CLEAN_GO=$(echo "$GO_HTML" | sed 's/<!--[^>]*-->//g')
-
-# Extract balance from the billing page
-BALANCE=$(echo "$CLEAN_BILLING" | grep -oP 'data-slot="balance-value">\$\K[0-9.]+' | head -n1 || true)
-
-if [[ -z "$BALANCE" ]]; then
-	BALANCE=$(echo "$CLEAN_BILLING" | grep -oiP 'data-slot="balance-[^"]*">\$\K[0-9.]+' | head -n1 || true)
+balance=$(grep -oP 'data-slot="balance-value">\$\K[0-9.]+' <<<"$clean_billing" | head -n 1 || true)
+if [[ -z $balance ]]; then
+    balance=$(grep -oiP 'data-slot="balance-[^"]*">\$\K[0-9.]+' <<<"$clean_billing" | head -n 1 || true)
 fi
 
-# Extract usage percentages from /go page (ordered: 5h, weekly, monthly)
-USAGE_VALS=($(echo "$CLEAN_GO" | grep -oP 'data-slot="usage-value">\K[0-9]+' | head -n3 || printf '0 0 0'))
+mapfile -t usage_values < <(grep -oP 'data-slot="usage-value">\K[0-9]+' <<<"$clean_go" | head -n 3 || true)
+mapfile -t reset_values < <(grep -oP 'data-slot="reset-time">\K[^<]+' <<<"$clean_go" | head -n 3 || true)
 
-# Extract reset-time text from /go page (ordered: continuous, weekly, monthly)
-mapfile -t RESET_TIMES_RAW < <(echo "$CLEAN_GO" | grep -oP 'data-slot="reset-time">\K[^<]+' | head -n3 || true)
-RESET_TIMES=()
-for val in "${RESET_TIMES_RAW[@]}"; do
-	translated="${val#Reinicia em }"
-	translated="${translated//dias/days}"
-	translated="${translated//minutos/minutes}"
-	translated="${translated//horas/hours}"
-	RESET_TIMES+=("$translated")
-done
+[[ -n $balance ]] || fail 'OpenCode balance was not found'
+[[ ${#usage_values[@]} -eq 3 ]] || fail 'OpenCode usage values were not found'
+[[ ${#reset_values[@]} -eq 3 ]] || fail 'OpenCode reset times were not found'
 
-if [[ -z "$BALANCE" ]]; then
-	echo '{"error": "balance not found"}'
-	exit 0
-fi
+reset_5h=$(duration_seconds "${reset_values[0]}") || fail 'OpenCode 5-hour reset time could not be parsed'
+reset_weekly=$(duration_seconds "${reset_values[1]}") || fail 'OpenCode weekly reset time could not be parsed'
+reset_monthly=$(duration_seconds "${reset_values[2]}") || fail 'OpenCode monthly reset time could not be parsed'
 
-printf '{"billing":{"balance":"$%s"},"usage":{"5h":{"current":%s,"reset":"%s"},"weekly":{"current":%s,"reset":"%s"},"monthly":{"current":%s,"reset":"%s"}}}\n' \
-	"$BALANCE" \
-	"${USAGE_VALS[0]:-0}" "${RESET_TIMES[0]:-}" \
-	"${USAGE_VALS[1]:-0}" "${RESET_TIMES[1]:-}" \
-	"${USAGE_VALS[2]:-0}" "${RESET_TIMES[2]:-}"
+jq -cn \
+    --arg balance "\$$balance" \
+    --arg dashboardUrl "$GO_URL" \
+    --argjson fetchedAt "$(date +%s%3N)" \
+    --argjson used5h "${usage_values[0]}" \
+    --argjson usedWeekly "${usage_values[1]}" \
+    --argjson usedMonthly "${usage_values[2]}" \
+    --argjson reset5h "$reset_5h" \
+    --argjson resetWeekly "$reset_weekly" \
+    --argjson resetMonthly "$reset_monthly" \
+    '{
+        ok: true,
+        fetchedAt: $fetchedAt,
+        dashboardUrl: $dashboardUrl,
+        billing: {balance: $balance},
+        usage: {
+            "5h": {used: $used5h, resetSeconds: $reset5h},
+            weekly: {used: $usedWeekly, resetSeconds: $resetWeekly},
+            monthly: {used: $usedMonthly, resetSeconds: $resetMonthly}
+        }
+    }'

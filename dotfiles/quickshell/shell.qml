@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Services.Pipewire
 import qs.Core
 import "Modules/BlurMask"
 import "Modules/Bar"
@@ -24,10 +25,18 @@ Scope {
     property bool zenActive: false
     property bool isRecording: false
 
+    // Prewarm the pipewire service so the connection and registry
+    // enumeration start before the bar renders, not when the Sink widget instantiates
+    readonly property bool pipewirePrewarm: Pipewire.ready
+
     property var priceLabels: solanaService
 
     SolanaService {
         id: solanaService
+    }
+
+    AgentService {
+        id: agentService
     }
 
     Timer {
@@ -56,8 +65,8 @@ Scope {
             barComponent.notificationCenterOpen = false
         if (panel !== 'solana')
             barComponent.solanaPanelOpen = false
-        if (panel !== 'opencode')
-            barComponent.opencodePanelOpen = false
+        if (panel !== 'agents')
+            barComponent.agentPanelOpen = false
     }
 
     function toggleLauncher(mode) {
@@ -178,22 +187,23 @@ Scope {
     }
 
     BlurMask {
-        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.opencodePanelOpen
+        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen
     }
 
     Bar {
         id: barComponent
         zenActive: root.zenActive
         isRecording: root.isRecording
-        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.opencodePanelOpen
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen
         onToggleLauncher: root.toggleLauncher('apps')
         onTogglePowerMenu: root.togglePowerMenu()
         onSolanaPanelOpening: root.closePanelsExcept('solana')
         onNotificationPanelOpening: root.closePanelsExcept('notifications')
-        onOpencodePanelOpening: root.closePanelsExcept('opencode')
+        onAgentPanelOpening: root.closePanelsExcept('agents')
         onToggleZen: root.zenActive = true
         onZenDismissed: root.zenActive = false
         priceLabels: root.priceLabels
+        agentService: agentService
         notificationService: notificationService
     }
 
