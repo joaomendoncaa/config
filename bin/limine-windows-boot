@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+sed -i 's/^default_entry: .*/default_entry: 1/' /boot/limine.conf
+sed -i 's/^timeout: .*/timeout: 1/' /boot/limine.conf
+sync -f /boot/limine.conf
+systemctl reboot --no-wall

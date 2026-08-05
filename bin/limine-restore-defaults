@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+sed -i 's/^default_entry: .*/default_entry: 3/' /boot/limine.conf
+sed -i 's/^timeout: .*/timeout: 15/' /boot/limine.conf
+sync -f /boot/limine.conf
