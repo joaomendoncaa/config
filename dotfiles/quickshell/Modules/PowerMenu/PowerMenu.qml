@@ -42,7 +42,7 @@ PanelWindow {
         { icon: "\uf023", text: "Lock", cmd: "qs-power-lock" },
         { icon: "\uf021", text: "Reboot", cmd: "qs-power-reboot" },
         { icon: "\uf011", text: "Shutdown", cmd: "qs-power-shutdown" },
-        { icon: "\u7530", text: "Windows", cmd: ["sh", "-c", "sudo efibootmgr --bootnext 0000 && sudo systemctl reboot"] },
+        { icon: "\u7530", text: "Windows", cmd: ["sh", "-c", "sudo /usr/local/bin/limine-windows-boot"] },
         { icon: "\u262d", text: "BIOS", cmd: ["sh", "-c", "sudo systemctl reboot --firmware-setup"] },
     ]
 
