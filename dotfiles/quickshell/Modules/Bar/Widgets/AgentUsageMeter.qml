@@ -30,7 +30,7 @@ ColumnLayout {
         }
 
         Text {
-            text: `⚡ ${root.resetText}`
+            text: `🗲 ${root.resetText}`
             color: Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize - 2
