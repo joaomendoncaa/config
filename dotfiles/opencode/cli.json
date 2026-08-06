@@ -1,0 +1,24 @@
+{
+  "theme": {
+    "name": "system"
+  },
+  "keybinds": {
+    "model_cycle_recent": "none",
+    "model_cycle_favorite": "f2",
+    "model_cycle_favorite_reverse": "f1",
+    "messages_line_up": "ctrl+alt+p",
+    "messages_line_down": "ctrl+alt+n"
+  },
+  "plugins": [
+    "file:///home/joao/.config/opencode/plugins/opencode-dashboard.tui.tsx"
+  ],
+  "diffs": {
+    "wrap": "word"
+  },
+  "session": {
+    "sidebar": "hide",
+    "scrollbar": false,
+    "thinking": "show"
+  },
+  "animations": true
+}
