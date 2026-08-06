@@ -166,7 +166,13 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.togglePanel()
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton)
+                        root.service.togglePinsHidden()
+                    else
+                        root.togglePanel()
+                }
             }
         }
     }

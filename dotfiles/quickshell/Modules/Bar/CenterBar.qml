@@ -10,7 +10,6 @@ Item {
 
     property bool isRecording: false
     property bool showAux: true
-    property alias zenmodeItem: zenmode
 
     implicitWidth: row.implicitWidth
     implicitHeight: Config.buttonSize
@@ -29,13 +28,6 @@ Item {
 
         Clock {
             notificationService: root.notificationService
-        }
-
-        Zen {
-            id: zenmode
-
-            opacity: root.showAux ? 1 : 0
-            enabled: root.showAux
         }
 
     }

@@ -7,7 +7,6 @@ import Quickshell.Services.Pipewire
 import Quickshell.Wayland
 import qs.Core
 import "Widgets"
-import "../ZenBar"
 import "../Notifications"
 
 PanelWindow {
@@ -17,7 +16,6 @@ PanelWindow {
     property real powerMenuX: 0
     property real powerMenuY: 0
     property bool contentVisible: true
-    property bool zenActive: false
     property bool isRecording: false
 
     property alias notificationCenterOpen: notifButton.popupOpen
@@ -32,8 +30,6 @@ PanelWindow {
 
     signal toggleLauncher()
     signal togglePowerMenu()
-    signal toggleZen()
-    signal zenDismissed()
     signal solanaPanelOpening()
     signal notificationPanelOpening()
     signal agentPanelOpening()
@@ -59,8 +55,8 @@ PanelWindow {
 
     Item {
         anchors.fill: parent
-        opacity: !zenActive && contentVisible ? 1 : 0
-        enabled: !zenActive && contentVisible
+        opacity: contentVisible ? 1 : 0
+        enabled: contentVisible
 
         Rectangle {
             anchors.fill: parent
@@ -100,7 +96,6 @@ PanelWindow {
 
             anchors.centerIn: parent
             anchors.verticalCenter: parent.verticalCenter
-            zenmodeItem.onActivated: bar.toggleZen()
         }
 
         RowLayout {
@@ -140,19 +135,6 @@ PanelWindow {
                 }
             }
 
-        }
-
-    }
-
-    Item {
-        anchors.fill: parent
-        opacity: zenActive ? 1 : 0
-        enabled: zenActive
-
-        ZenBarContent {
-            anchors.fill: parent
-            active: zenActive
-            onDismissed: bar.zenDismissed()
         }
 
     }
