@@ -126,20 +126,34 @@ Rectangle {
                 }
 
                 Rectangle {
-                    Layout.preferredWidth: dashboardLabel.implicitWidth + Config.shellPadding * 2
+                    Layout.preferredWidth: Config.buttonSize
                     Layout.preferredHeight: Config.buttonSize
                     visible: root.service.dashboardAvailable
                     radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
-                    color: dashboardMouse.containsMouse ? Config.foreground : 'transparent'
+                    color: dashboardMouse.containsMouse ? Config.backgroundHovered : 'transparent'
 
-                    Text {
-                        id: dashboardLabel
+                    Image {
+                        id: dashboardMask
                         anchors.centerIn: parent
-                        text: root.service.dashboardLabel
-                        color: dashboardMouse.containsMouse ? Config.backgroundColored : Config.foreground
-                        font.family: Config.fontFamily
-                        font.pixelSize: Config.fontSize - 2
-                        font.weight: Font.Medium
+                        width: Config.buttonSize * 0.7
+                        height: width
+                        source: '../../../Assets/agent-dashboard-open.svg'
+                        sourceSize.width: width
+                        sourceSize.height: height
+                        visible: false
+                    }
+
+                    Rectangle {
+                        id: dashboardColor
+                        anchors.fill: dashboardMask
+                        color: Config.foreground
+                        visible: false
+                    }
+
+                    OpacityMask {
+                        anchors.fill: dashboardMask
+                        source: dashboardColor
+                        maskSource: dashboardMask
                     }
 
                     MouseArea {

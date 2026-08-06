@@ -42,6 +42,7 @@ Item {
     readonly property var pinnedAgents: root.collectPinnedAgents()
     readonly property real primaryUsageRemaining: root.usageAvailable && root.usageWindows.length > 0 ? Number(root.usageWindows[0].actual) || 0 : 0
     readonly property bool usageWarning: root.hasUsageWarning()
+    readonly property bool blockedWarningFrame: root.blockedCount > 0 && root.blockedFrames[root.blockedFrame % root.blockedFrames.length] === '⚠'
 
     OpenCodeAgentAdapter {
         id: openCodeAdapter
