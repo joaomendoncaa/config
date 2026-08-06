@@ -82,23 +82,37 @@ Item {
 
     function ensureFirstPins() {
         var agents = root.adapter && Array.isArray(root.adapter.agents) ? root.adapter.agents : []
-        if (agents.length === 0)
-            return
 
-        var candidates = agents.slice().sort(function(left, right) {
+        var liveIds = {}
+        var candidates = []
+        for (var k = 0; k < agents.length; k++) {
+            var agent = agents[k]
+            if (!agent || !agent.id)
+                continue
+            liveIds[agent.id] = true
+            candidates.push(agent)
+        }
+
+        candidates.sort(function(left, right) {
             return root.agentCreatedAt(left) - root.agentCreatedAt(right)
         })
 
-        var autoPins = root.autoPinnedAgentIds.slice()
-        for (var i = 0; i < candidates.length && autoPins.length < root.autoPinLimit; i++) {
-            var id = candidates[i].id
+        var autoPins = []
+        for (var i = 0; i < root.autoPinnedAgentIds.length; i++) {
+            var persisted = root.autoPinnedAgentIds[i]
+            if (liveIds[persisted] && autoPins.indexOf(persisted) === -1)
+                autoPins.push(persisted)
+        }
+
+        for (var j = 0; j < candidates.length && autoPins.length < root.autoPinLimit; j++) {
+            var id = candidates[j].id
             if (autoPins.indexOf(id) === -1)
                 autoPins.push(id)
         }
 
         var pins = autoPins.slice()
-        for (var j = 0; j < root.pinnedAgentIds.length; j++) {
-            var existing = root.pinnedAgentIds[j]
+        for (var m = 0; m < root.pinnedAgentIds.length; m++) {
+            var existing = root.pinnedAgentIds[m]
             if (pins.indexOf(existing) === -1)
                 pins.push(existing)
         }
