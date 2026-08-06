@@ -47,11 +47,13 @@ Rectangle {
         }
 
         RowLayout {
+            Layout.fillWidth: false
             Layout.preferredWidth: Config.buttonSize * 8.5
             Layout.minimumWidth: Config.buttonSize * 6
             spacing: Config.gapInner
 
             Text {
+                Layout.preferredWidth: Config.buttonSize * 4
                 Layout.maximumWidth: Config.buttonSize * 4
                 elide: Text.ElideRight
                 text: root.modelData.repo
@@ -63,7 +65,7 @@ Rectangle {
             }
 
             Text {
-                visible: root.modelData.branch.length > 0
+                opacity: root.modelData.branch.length > 0 ? 1 : 0
                 text: '↳'
                 color: root.warningFlash ? Config.backgroundColored : Config.foregroundSecondary
                 font.family: Config.fontFamily
@@ -71,7 +73,7 @@ Rectangle {
             }
 
             Text {
-                visible: root.modelData.branch.length > 0
+                opacity: root.modelData.branch.length > 0 ? 1 : 0
                 Layout.fillWidth: true
                 Layout.minimumWidth: 0
                 elide: Text.ElideRight
