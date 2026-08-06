@@ -68,6 +68,16 @@ Item {
         }
     }
 
+    MouseArea {
+        id: wheelScroller
+        anchors.fill: parent
+        acceptedButtons: Qt.NoButton
+        onWheel: wheel => {
+            if (root.service.pinnedAgents.length > 3)
+                root.shiftPins(wheel.angleDelta.y > 0 ? -1 : 1)
+        }
+    }
+
     Row {
         id: content
         anchors.fill: parent
