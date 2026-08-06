@@ -22,7 +22,6 @@ Scope {
     property bool powerMenuOpen: false
     property string launcherMode: "apps"
 
-    property bool zenActive: false
     property bool isRecording: false
 
     // Prewarm the pipewire service so the connection and registry
@@ -192,7 +191,6 @@ Scope {
 
     Bar {
         id: barComponent
-        zenActive: root.zenActive
         isRecording: root.isRecording
         contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen
         onToggleLauncher: root.toggleLauncher('apps')
@@ -200,8 +198,6 @@ Scope {
         onSolanaPanelOpening: root.closePanelsExcept('solana')
         onNotificationPanelOpening: root.closePanelsExcept('notifications')
         onAgentPanelOpening: root.closePanelsExcept('agents')
-        onToggleZen: root.zenActive = true
-        onZenDismissed: root.zenActive = false
         priceLabels: root.priceLabels
         agentService: agentService
         notificationService: notificationService

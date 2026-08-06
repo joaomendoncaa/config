@@ -39,33 +39,6 @@ Rectangle {
                 anchors.rightMargin: Config.shellPadding
                 spacing: Config.gapInner * 2
 
-                Item {
-                    Layout.preferredWidth: Config.buttonSize
-                    Layout.preferredHeight: Config.buttonSize
-
-                    Image {
-                        id: logoMask
-                        anchors.fill: parent
-                        source: root.service.iconSource
-                        sourceSize.width: width
-                        sourceSize.height: height
-                        visible: false
-                    }
-
-                    Rectangle {
-                        id: logoColor
-                        anchors.fill: parent
-                        color: Config.foreground
-                        visible: false
-                    }
-
-                    OpacityMask {
-                        anchors.fill: parent
-                        source: logoColor
-                        maskSource: logoMask
-                    }
-                }
-
                 Text {
                     text: `${root.service.blockedCount} blocked`
                     color: Config.foreground
