@@ -14,8 +14,9 @@ Rectangle {
 
     readonly property bool pinned: root.service.isPinned(root.modelData.id)
     readonly property bool autoPinned: root.service.isAutoPinned(root.modelData.id)
+    readonly property bool warningFlash: root.modelData.state === 'blocked' && root.service.blockedWarningFrame
 
-    color: rowMouse.containsMouse || pinMouse.containsMouse ? Config.backgroundHovered : (root.rowIndex % 2 === 0 ? Config.backgroundColoredSecondary : 'transparent')
+    color: root.warningFlash ? Config.foreground : (rowMouse.containsMouse || pinMouse.containsMouse ? Config.backgroundHovered : (root.rowIndex % 2 === 0 ? Config.backgroundColoredSecondary : 'transparent'))
 
     MouseArea {
         id: rowMouse
@@ -38,7 +39,7 @@ Rectangle {
             Layout.preferredWidth: Config.buttonSize * 0.7
             Layout.preferredHeight: Config.buttonSize
             state: root.modelData.state
-            fillColor: Config.foreground
+            fillColor: root.warningFlash ? Config.backgroundColored : Config.foreground
             fontFamily: Config.fontFamily
             fontSize: Config.fontSize
             runningFrame: root.service.runningFrame
@@ -55,7 +56,7 @@ Rectangle {
                 elide: Text.ElideRight
                 text: root.modelData.repo
                 textFormat: Text.PlainText
-                color: Config.foreground
+                color: root.warningFlash ? Config.backgroundColored : Config.foreground
                 font.family: Config.fontFamily
                 font.pixelSize: Config.fontSize
                 font.weight: Font.Bold
@@ -64,7 +65,7 @@ Rectangle {
             Text {
                 visible: root.modelData.branch.length > 0
                 text: '↳'
-                color: Config.foregroundSecondary
+                color: root.warningFlash ? Config.backgroundColored : Config.foregroundSecondary
                 font.family: Config.fontFamily
                 font.pixelSize: Config.fontSize
             }
@@ -76,7 +77,7 @@ Rectangle {
                 elide: Text.ElideRight
                 text: root.modelData.branch
                 textFormat: Text.PlainText
-                color: Config.foreground
+                color: root.warningFlash ? Config.backgroundColored : Config.foreground
                 font.family: Config.fontFamily
                 font.pixelSize: Config.fontSize
                 font.weight: Font.Bold
@@ -89,7 +90,7 @@ Rectangle {
             elide: Text.ElideRight
             text: root.modelData.title
             textFormat: Text.PlainText
-            color: Config.foreground
+            color: root.warningFlash ? Config.backgroundColored : Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize
         }
@@ -98,7 +99,7 @@ Rectangle {
             Layout.preferredWidth: Config.buttonSize * 5
             horizontalAlignment: Text.AlignRight
             text: root.modelData.additions > 0 || root.modelData.deletions > 0 ? `+${root.modelData.additions} -${root.modelData.deletions}` : ''
-            color: Config.foreground
+            color: root.warningFlash ? Config.backgroundColored : Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize
         }
@@ -108,7 +109,7 @@ Rectangle {
             Layout.preferredWidth: Config.buttonSize
             Layout.preferredHeight: Config.buttonSize
             radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
-            color: root.pinned ? Config.foreground : (pinMouse.containsMouse ? Config.backgroundHovered : 'transparent')
+            color: root.warningFlash ? Config.backgroundColored : (root.pinned ? Config.foreground : (pinMouse.containsMouse ? Config.backgroundHovered : 'transparent'))
 
             Image {
                 id: pinMask
@@ -124,7 +125,7 @@ Rectangle {
             Rectangle {
                 id: pinColor
                 anchors.fill: pinMask
-                color: root.pinned ? Config.backgroundColored : Config.foreground
+                color: root.warningFlash ? Config.foreground : (root.pinned ? Config.backgroundColored : Config.foreground)
                 visible: false
             }
 

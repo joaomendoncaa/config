@@ -81,7 +81,7 @@ while IFS=',' read -r window_id tty active; do
     [[ -n "$title" ]] || title="opencode"
     title="${title:0:$TITLE_MAX}"
 
-    name="[${glyph}] ${title}"
+    name="${glyph} ${title}"
     window_name=$(tmux display-message -t "$window_id" -p '#{window_name}' 2>/dev/null) || window_name=''
     if [[ "$name" != "$window_name" ]]; then
         tmux rename-window -t "$window_id" "$name" 2>/dev/null || true
