@@ -8,7 +8,7 @@ find_sink_id() {
 }
 
 current_id=$(find_sink_id $current_sink_name)
-headphones_id=$(find_sink_id "razer")
+headphones_id=$(find_sink_id "pci-0000_30_00.6")
 speakers_id=$(find_sink_id "logi")
 
 if [ $current_id == $headphones_id ]; then
