@@ -43,20 +43,17 @@ Item {
     property int _fyiSeq: 0
     property var _fyiGroups: ({})
 
-    function fyi(summary, body, urgency, expireTimeout, command, group, desktopEntry) {
+    function fyi(summary, body, urgency, expireTimeout, command, group, desktopEntry, busy) {
         group = String(group || "")
-        if (group) {
-            var oldId = service._fyiGroups[group]
-            if (oldId !== undefined) {
-                service.dismissPendingByOriginalId(oldId)
-                // Also dismiss any popup wrapper for this group
-                var oldWrapper = service._popupRefsByOriginalId[oldId]
-                if (oldWrapper) oldWrapper.popup = false
-                delete service._fyiGroups[group]
-            }
+        busy = !!busy
+
+        // Reuse the group's existing id so we update the same card in place
+        var id = group ? service._fyiGroups[group] : undefined
+        if (id === undefined || !service.hasPendingByOriginalId(id)) {
+            id = --service._fyiSeq
+            if (group) service._fyiGroups[group] = id
         }
 
-        var id = --service._fyiSeq
         var snapshot = {
             id: id,
             originalId: id,
@@ -70,22 +67,50 @@ Item {
             expireTimeout: typeof expireTimeout === "number" ? expireTimeout : 0,
             timestamp: Date.now(),
             _clickCommand: String(command || ""),
-            _desktopEntry: String(desktopEntry || "")
+            _desktopEntry: String(desktopEntry || ""),
+            _busy: busy
         }
         snapshot.contentHash = N.contentHash(snapshot)
         snapshot.duplicateCount = 1
         if (snapshot.expireTimeout <= 0)
             snapshot.expireTimeout = service.defaultExpirySeconds(snapshot.urgency)
         setRef(id, null)
-        addToPending(snapshot)
-        if (!service.doNotDisturb) {
+
+        // Update an existing pending row in place, otherwise add a fresh one
+        var updated = false
+        for (var i = 0; i < pendingModel.count; i++) {
+            var row = pendingModel.get(i)
+            if (row && row.originalId === id) {
+                pendingModel.set(i, snapshot)
+                updated = true
+                break
+            }
+        }
+        if (!updated) addToPending(snapshot)
+
+        // Update an existing popup wrapper in place
+        var wrapper = service._popupRefsByOriginalId[id]
+        if (wrapper && wrapper.popup && !wrapper.popupClosing) {
+            wrapper.id = snapshot.id
+            wrapper.originalId = snapshot.originalId
+            wrapper.summary = snapshot.summary
+            wrapper.body = snapshot.body
+            wrapper.image = snapshot.image
+            wrapper.glyph = snapshot.glyph || ""
+            wrapper.urgency = snapshot.urgency
+            wrapper.timestamp = snapshot.timestamp
+            wrapper.expireTimeout = snapshot.expireTimeout
+            wrapper.busy = snapshot._busy
+            wrapper._clickCommand = snapshot._clickCommand
+            wrapper._desktopEntry = snapshot._desktopEntry
+            wrapper.stopPopupTimer()
+            if (!wrapper.busy) wrapper.startPopupTimer()
+            visiblePopups = visiblePopups.slice()
+        } else if (!service.doNotDisturb) {
             Qt.callLater(function() {
                 if (service.popupsBlocked) return
                 showPopup(snapshot)
             })
-        }
-        if (group) {
-            service._fyiGroups[group] = id
         }
     }
 
@@ -192,7 +217,8 @@ Item {
             contentHash: hash,
             duplicateCount: snapshot.duplicateCount || 1,
             _clickCommand: snapshot._clickCommand || "",
-            _desktopEntry: snapshot._desktopEntry || ""
+            _desktopEntry: snapshot._desktopEntry || "",
+            _busy: !!snapshot._busy
         }
         setRef(fresh.id, newRef)
         pendingModel.insert(0, fresh)
@@ -208,7 +234,7 @@ Item {
         var existing = _popupRefsByOriginalId[snapshot.originalId]
 
         // Duplicate: update existing popup in place
-        if (existing && !existing.popupClosing) {
+        if (existing && existing.popup && !existing.popupClosing) {
             var oldRef = existing.ref
             existing.id = snapshot.id
             existing.originalId = snapshot.originalId
@@ -217,15 +243,30 @@ Item {
             existing._clickCommand = snapshot._clickCommand || existing._clickCommand || ""
             existing._desktopEntry = snapshot._desktopEntry || existing._desktopEntry || ""
             existing.expireTimeout = snapshot.expireTimeout || existing.expireTimeout
+            existing.busy = !!snapshot._busy
             existing.ref = getRef(snapshot.id)
             if (oldRef && oldRef !== getRef(snapshot.id)) {
                 try { if (oldRef.tracked) oldRef.dismiss() } catch (e) {}
             }
             existing.stopPopupTimer()
-            existing.startPopupTimer()
+            if (!existing.busy) existing.startPopupTimer()
             // Trigger UI update
             visiblePopups = visiblePopups.slice()
             return
+        }
+
+        // Popup was dismissed while an update arrived — replace refs and show fresh
+        if (existing) {
+            if (!existing.popupClosing) {
+                existing.popup = false
+                existing.popupClosing = true
+            }
+            var deadIdx = visiblePopups.indexOf(existing)
+            if (deadIdx !== -1) {
+                visiblePopups.splice(deadIdx, 1)
+            }
+            delete _popupRefs[existing.id]
+            delete _popupRefsByOriginalId[existing.originalId]
         }
 
         // Create new wrapper
@@ -243,6 +284,7 @@ Item {
             timestamp: snapshot.timestamp,
             contentHash: hash,
             duplicateCount: snapshot.duplicateCount || 1,
+            busy: !!snapshot._busy,
             popup: true,
             popupClosing: false,
             popupProgress: 1.0,
@@ -263,7 +305,7 @@ Item {
         }
 
         visiblePopups.unshift(wrapper)
-        wrapper.startPopupTimer()
+        if (!wrapper.busy) wrapper.startPopupTimer()
         visiblePopups = visiblePopups.slice()
     }
 
@@ -281,8 +323,8 @@ Item {
         markSeenByOriginalId(wrapper.originalId)
         // Clean up ref
         removeRef(wrapper.id)
-        delete _popupRefs[wrapper.id]
-        delete _popupRefsByOriginalId[wrapper.originalId]
+        if (_popupRefs[wrapper.id] === wrapper) delete _popupRefs[wrapper.id]
+        if (_popupRefsByOriginalId[wrapper.originalId] === wrapper) delete _popupRefsByOriginalId[wrapper.originalId]
     }
 
     // Called by the popup manager when a popup window is destroyed
@@ -293,8 +335,8 @@ Item {
             visiblePopups.splice(idx, 1)
             visiblePopups = visiblePopups.slice()
         }
-        delete _popupRefs[wrapper.id]
-        delete _popupRefsByOriginalId[wrapper.originalId]
+        if (_popupRefs[wrapper.id] === wrapper) delete _popupRefs[wrapper.id]
+        if (_popupRefsByOriginalId[wrapper.originalId] === wrapper) delete _popupRefsByOriginalId[wrapper.originalId]
     }
 
     function handleNotification(notification) {
@@ -399,7 +441,8 @@ Item {
             contentHash: row.contentHash || N.contentHash(row),
             duplicateCount: row.duplicateCount || 1,
             _clickCommand: row._clickCommand || "",
-            _desktopEntry: row._desktopEntry || ""
+            _desktopEntry: row._desktopEntry || "",
+            _busy: !!row._busy
         }
     }
 
@@ -409,6 +452,7 @@ Item {
                 var entry = pendingModel.get(i)
                 if (!entry || entry.originalId !== originalId) continue
                 var snapshot = service.snapshotFromRow(entry)
+                snapshot._busy = false
                 pendingModel.remove(i)
                 pastModel.insert(0, snapshot)
                 while (pastModel.count > service.historyCap) {
@@ -427,6 +471,7 @@ Item {
             while (pendingModel.count > 0) {
                 var entry = pendingModel.get(0)
                 var snapshot = service.snapshotFromRow(entry)
+                snapshot._busy = false
                 pendingModel.remove(0)
                 pastModel.insert(0, snapshot)
             }
@@ -470,6 +515,14 @@ Item {
                 return
             }
         }
+    }
+
+    function hasPendingByOriginalId(originalId) {
+        for (var i = 0; i < pendingModel.count; i++) {
+            var entry = pendingModel.get(i)
+            if (entry && entry.originalId === originalId) return true
+        }
+        return false
     }
 
     function dismissPast(index) {
@@ -877,7 +930,8 @@ Item {
                     expireTimeout: r.expireTimeout || 0,
                     timestamp: r.timestamp,
                     contentHash: r.contentHash || "",
-                    duplicateCount: r.duplicateCount || 1
+                    duplicateCount: r.duplicateCount || 1,
+                    _busy: !!r._busy
                 })
             }
             return out
@@ -1010,14 +1064,15 @@ Item {
             return hit ? "ok" : "none"
         }
 
-        function fyi(summary: string, body: string, urgency: string, expiry: string, command: string, group: string, desktopEntry: string): string {
+        function fyi(summary: string, body: string, urgency: string, expiry: string, command: string, group: string, desktopEntry: string, busy: string): string {
             var u = NotificationUrgency.Normal
             var urg = String(urgency || "").toLowerCase()
             if (urg === "low" || urg === "0") u = NotificationUrgency.Low
             else if (urg === "critical" || urg === "2") u = NotificationUrgency.Critical
             var e = Number(expiry || 0)
             if (!isFinite(e) || e < 0) e = 0
-            service.fyi(summary, body, u, e, command, group, desktopEntry)
+            var b = String(busy || "").toLowerCase() === "1" || String(busy || "").toLowerCase() === "true"
+            service.fyi(summary, body, u, e, command, group, desktopEntry, b)
             return "ok"
         }
 

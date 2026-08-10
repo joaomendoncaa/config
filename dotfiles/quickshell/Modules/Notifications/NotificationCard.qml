@@ -18,6 +18,7 @@ Rectangle {
     property double expireTimeout: 0
     property int cornerRadius: 5
     property int duplicateCount: 1
+    property bool busy: false
     property bool showCloseButton: false
     property bool dismissing: false
     property real popupProgress: -1
@@ -185,17 +186,56 @@ Rectangle {
                 Layout.alignment: Qt.AlignVCenter
                 spacing: 2
 
-                Text {
+                RowLayout {
                     Layout.fillWidth: true
+                    spacing: 8
                     visible: root.summary.length > 0
-                    text: root.displaySummary
-                    color: Config.foreground
-                    font.family: Config.fontFamily
-                    font.pixelSize: root.titleFontSize
-                    font.bold: true
-                    wrapMode: Text.WordWrap
-                    elide: Text.ElideRight
-                    maximumLineCount: 2
+
+                    Text {
+                        Layout.fillWidth: true
+                        Layout.alignment: Qt.AlignVCenter
+                        text: root.displaySummary
+                        color: Config.foreground
+                        font.family: Config.fontFamily
+                        font.pixelSize: root.titleFontSize
+                        font.bold: true
+                        wrapMode: Text.WordWrap
+                        elide: Text.ElideRight
+                        maximumLineCount: 2
+                    }
+
+                    Canvas {
+                        id: busySpinner
+
+                        Layout.preferredWidth: 14
+                        Layout.preferredHeight: 14
+                        Layout.alignment: Qt.AlignVCenter
+                        antialiasing: true
+                        visible: root.busy
+
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.reset()
+                            ctx.lineWidth = 2
+                            ctx.strokeStyle = root.accentColor
+                            ctx.lineCap = "round"
+                            ctx.beginPath()
+                            ctx.arc(width / 2, height / 2, width / 2 - 3, -Math.PI / 2, Math.PI * 0.8)
+                            ctx.stroke()
+                        }
+
+                        onVisibleChanged: {
+                            if (visible) requestPaint()
+                        }
+
+                        RotationAnimation on rotation {
+                            from: 0
+                            to: 360
+                            duration: 700
+                            loops: Animation.Infinite
+                            running: root.busy
+                        }
+                    }
                 }
 
                 Text {
@@ -300,7 +340,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
         height: 3
-        visible: !root.dismissing && (root.popupProgress >= 0 || root.expireTimeout > 0)
+        visible: !root.dismissing && !root.busy && (root.popupProgress >= 0 || root.expireTimeout > 0)
         z: 1
         color: Config.foreground
         width: root.width * (root.popupProgress >= 0 ? root.popupProgress : root._expiryProgress)

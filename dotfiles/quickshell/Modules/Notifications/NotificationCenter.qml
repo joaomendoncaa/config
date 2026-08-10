@@ -332,6 +332,7 @@ Rectangle {
                         timestamp: modelData.entry.timestamp
                         expireTimeout: modelData.entry.expireTimeout
                         duplicateCount: modelData.entry.duplicateCount
+                        busy: !!modelData.entry._busy
                         cornerRadius: Config.borderRadius
                         showCloseButton: true
                         iconSize: 32

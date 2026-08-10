@@ -125,6 +125,7 @@ PanelWindow {
             timestamp: win.wrapper ? win.wrapper.timestamp : 0
             expireTimeout: win.wrapper ? win.wrapper.expireTimeout : 0
             duplicateCount: win.wrapper ? win.wrapper.duplicateCount : 1
+            busy: win.wrapper ? win.wrapper.busy : false
             cornerRadius: Config.borderRadius
             popupProgress: -1
             notificationActions: win.wrapper ? win.wrapper.actions : []
