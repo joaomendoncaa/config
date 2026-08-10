@@ -17,6 +17,7 @@ QtObject {
     property double timestamp: 0
     property string contentHash: ""
     property int duplicateCount: 1
+    property bool busy: false
     property bool popup: false
     property bool popupClosing: false
     property real popupProgress: 1.0
@@ -36,7 +37,7 @@ QtObject {
     }
 
     function startPopupTimer() {
-        if (!popupTimer) return
+        if (!popupTimer || wrapper.busy) return
         var duration = service ? service.durationFor(wrapper.urgency, wrapper.expireTimeout) : 8000
         if (duration <= 0) return
         popupTimer.interval = duration

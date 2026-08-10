@@ -122,6 +122,7 @@ function historyEntry(value, normalUrgency) {
     }
     entry.contentHash = e.contentHash || contentHash(entry)
     entry.duplicateCount = typeof e.duplicateCount === "number" ? e.duplicateCount : 1
+    entry._busy = !!e._busy
     return entry
 }
 
