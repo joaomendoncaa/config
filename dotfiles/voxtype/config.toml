@@ -20,7 +20,7 @@ state_file = "auto"
 # Optional modifier keys that must also be held
 # Example: modifiers = ["LEFTCTRL", "LEFTALT"]
 mode = "toggle"
-enabled = false
+enabled = true
 key = "HOME"
 
 # Activation mode: "push_to_talk" or "toggle"
@@ -47,7 +47,8 @@ device = "default"
 sample_rate = 16000
 
 # Maximum recording duration in seconds (safety limit)
-max_duration_secs = 60
+# 0 = unlimited (no timeout)
+max_duration_secs = 0
 
 # Pause MPRIS media players (Spotify, Firefox, etc.) when recording starts,
 # resume them when recording stops. Requires playerctl.
@@ -89,11 +90,12 @@ language = "en"
 
 # Translate non-English speech to English
 translate = false
+context_window_optimization = true
 mode = "local"
 flash_attention = true
 on_demand_loading = false
 gpu_isolation = false
-eager_processing = false
+eager_processing = true
 
 # Number of CPU threads for inference (omit for auto-detection)
 # threads = 4
@@ -160,10 +162,11 @@ eager_processing = false
 # remote_timeout_secs = 30
 
 [output]
-# Primary output mode: "type" or "clipboard"
+# Primary output mode: "type", "clipboard" or "paste"
 # - type: Simulates keyboard input at cursor position (requires ydotool)
 # - clipboard: Copies text to clipboard (requires wl-copy)
-mode = "type"
+# - paste: Copies text to clipboard, then simulates Ctrl+V (instant paste)
+mode = "paste"
 
 # Fall back to clipboard if typing fails
 fallback_to_clipboard = true
@@ -272,13 +275,14 @@ spoken_punctuation = true
 filter_filler_words = true
 filler_words = ["uh", "um", "er", "ah", "eh", "hmm", "hm", "mm", "mhm"]
 
-# [vad]
+[vad]
 # Voice Activity Detection - filters silence-only recordings
 # Prevents Whisper hallucinations on silent audio
 #
-# enabled = false      # Enable VAD (off by default)
-# threshold = 0.5      # 0.0 = sensitive, 1.0 = aggressive
-# min_speech_duration_ms = 100  # Minimum speech required
+enabled = true
+backend = "whisper"
+threshold = 0.5      # 0.0 = sensitive, 1.0 = aggressive
+min_speech_duration_ms = 100  # Minimum speech required
 
 # [status]
 # Status display icons for Waybar/tray integrations
@@ -326,17 +330,17 @@ streaming_right_context_secs = 0.32 # lookahead per chunk
 
 
 [meeting]
-enabled = false
+enabled = true
 
 [meeting.diarization]
-enabled = false
+enabled = true
 
 [meeting.audio]
 source = "mic"
 
 [osd]
 # Disabled — omarchy's Quickshell OSD handles dictation state display
-enabled = false
+enabled = true
 
 [status]
 icon_theme = "emoji"

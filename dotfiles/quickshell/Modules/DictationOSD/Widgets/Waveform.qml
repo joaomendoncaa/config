@@ -7,6 +7,13 @@ Item {
     property real peak: 0
     readonly property color waveformColor: Config.foreground
     readonly property int bufferSize: 90
+    // Some mics briefly saturate (peak >= 0.99) when the recording wakes
+    // them. Blank the waveform only while the signal is actually
+    // saturated, and only during the wake window, so the wave appears the
+    // instant the mic is producing real audio — the user can speak from
+    // t=0 and see feedback immediately.
+    readonly property int settleMs: 2500
+    property double settleUntil: 0
     property var ring: (function() {
         var a = [];
         for (var i = 0; i < 90; i++) a.push(0)
@@ -17,6 +24,7 @@ Item {
         var a = [];
         for (var i = 0; i < root.bufferSize; i++) a.push(0)
         ring = a;
+        root.settleUntil = Date.now() + root.settleMs;
     }
 
     Timer {
@@ -24,8 +32,14 @@ Item {
         running: true
         repeat: true
         onTriggered: {
+            var p = root.peak;
+            if (Date.now() < root.settleUntil && p >= 0.99)
+                p = 0;
+            if (p > 1.0)
+                p = 1.0;
+
             var r = root.ring;
-            r.push(root.peak);
+            r.push(p);
             if (r.length > root.bufferSize)
                 r.shift();
 
