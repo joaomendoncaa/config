@@ -195,6 +195,7 @@ Scope {
         contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen
         onToggleLauncher: root.toggleLauncher('apps')
         onTogglePowerMenu: root.togglePowerMenu()
+        onDismissPanels: root.closePanelsExcept('')
         onSolanaPanelOpening: root.closePanelsExcept('solana')
         onNotificationPanelOpening: root.closePanelsExcept('notifications')
         onAgentPanelOpening: root.closePanelsExcept('agents')
