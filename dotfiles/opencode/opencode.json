@@ -20,8 +20,8 @@
         },
         "omarchy-4": {
             "repository": "github.com/basecamp/omarchy",
-            "branch": "omarchy-shell",
-            "description": "Use for omarchy's migration to quickshell and lua-based hyprland"
+            "branch": "quattro",
+            "description": "Use for any question/implementation regarding Omarchy: Quattro (the 4th major release of Omarchy)"
         },
         "herdr": {
             "repository": "https://github.com/ogulcancelik/herdr",

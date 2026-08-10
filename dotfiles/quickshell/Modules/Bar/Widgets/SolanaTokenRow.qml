@@ -246,8 +246,8 @@ Rectangle {
     }
 
     function openExternal() {
-        if (root.details.dexUrl) {
-            Quickshell.execDetached(['xdg-open', root.details.dexUrl])
+        if (root.mint) {
+            Quickshell.execDetached(['xdg-open', 'https://app.jtx.com/?mint=' + root.mint])
             root.dismissRequested()
         }
     }

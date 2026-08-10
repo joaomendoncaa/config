@@ -175,13 +175,14 @@ Item {
             delegate: Rectangle {
                 id: pinChip
                 required property var modelData
+                readonly property bool pendingStyle: pinChip.modelData.state === 'pending'
                 readonly property bool warningFlash: pinChip.modelData.state === 'blocked' && root.service.blockedWarningFrame
                 readonly property real desiredWidth: Config.gapInner * 4 + Config.buttonSize * 0.7 + Math.min(repoText.implicitWidth, Config.buttonSize * 3.5) + Math.min(titleText.implicitWidth, Config.buttonSize * 5)
 
                 width: Math.max(Config.buttonSize * 4, Math.min(Config.buttonSize * 9, desiredWidth))
                 height: Config.buttonSize
                 radius: Config.buttonBorderRadius
-                color: pinChip.warningFlash ? Config.foreground : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent')
+                color: pinChip.warningFlash || pinChip.pendingStyle ? Config.foreground : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent')
 
                 RowLayout {
                     anchors.fill: parent
@@ -193,7 +194,7 @@ Item {
                         Layout.preferredWidth: Config.buttonSize * 0.7
                         Layout.preferredHeight: Config.buttonSize
                         state: pinChip.modelData.state
-                        fillColor: pinChip.warningFlash ? Config.backgroundColored : Config.foreground
+                        fillColor: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
                         fontFamily: Config.fontFamily
                         fontSize: Config.fontSize - 2
                         runningFrame: root.service.runningFrame
@@ -206,7 +207,7 @@ Item {
                         elide: Text.ElideRight
                         text: pinChip.modelData.repo
                         textFormat: Text.PlainText
-                        color: pinChip.warningFlash ? Config.backgroundColored : Config.foreground
+                        color: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
                         font.family: Config.fontFamily
                         font.pixelSize: Config.fontSize - 2
                         font.weight: Font.Bold
@@ -219,7 +220,7 @@ Item {
                         elide: Text.ElideRight
                         text: pinChip.modelData.title
                         textFormat: Text.PlainText
-                        color: pinChip.warningFlash ? Config.backgroundColored : Config.foreground
+                        color: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
                         font.family: Config.fontFamily
                         font.pixelSize: Config.fontSize - 2
                     }

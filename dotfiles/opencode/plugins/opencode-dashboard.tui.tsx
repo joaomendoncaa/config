@@ -265,8 +265,9 @@ export default {
                 const family = await refreshFamily(resolvedRoot)
                 const runtime = deriveState(resolvedRoot, family)
                 const diff = aggregateDiff(family)
-                const worktree = api.state.path.worktree || resolvedRoot.directory || ''
-                const rawRepo = basename(worktree || resolvedRoot.directory || '')
+                const worktree = api.state.path.worktree
+                const directory = api.state.path.directory || resolvedRoot.directory || ''
+                const rawRepo = basename(worktree && worktree !== '/' ? worktree : directory)
                 const repo = rawRepo.replace(/@[^@]+$/, '')
 
                 queueWrite({

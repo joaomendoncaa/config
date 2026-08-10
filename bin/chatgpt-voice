@@ -1,31 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# chatgpt-voice — Open ChatGPT voice mode in an invisible headful browser window.
-# Uses Helium browser + workspace 99 (hidden from bar) + CDP.
+# chatgpt-voice — Open ChatGPT voice mode in a new window of the regular
+# Helium browser (default profile, so you stay logged in) and control it via CDP.
 #
 # Requires: helium browser (/opt/helium-browser-bin/helium),
-#           python3 with websockets, hyprctl, jq
+#           python3 with websockets
 
 HELIUM=/opt/helium-browser-bin/helium
 DEBUG_PORT=9223
 CHATGPT_URL="https://chatgpt.com"
-PROFILE_DIR="$HOME/.local/share/chatgpt-voice"
 
-mkdir -p "$PROFILE_DIR"
+# CDP needs the debug port at browser startup, and Chromium (Helium) only
+# allows one instance per profile. So stop any running Helium, then relaunch
+# it with the port on the default profile (same login), restoring the session.
+if pgrep -x helium >/dev/null 2>&1; then
+    echo "Helium is running — restarting it with the debug port (session will be restored)"
+    pkill -x helium
+    for _ in $(seq 1 20); do
+        pgrep -x helium >/dev/null 2>&1 || break
+        sleep 0.5
+    done
+fi
 
-# Launch a SEPARATE Helium instance with its own profile (bypasses single-instance lock).
-# Persistent profile so ChatGPT login survives restarts.
 "$HELIUM" \
-    --user-data-dir="$PROFILE_DIR" \
     --remote-debugging-port=$DEBUG_PORT \
+    --restore-last-session \
     --no-first-run \
     --no-default-browser-check \
+    --new-window \
     "$CHATGPT_URL" &
 HELIUM_PID=$!
 
 # Wait for CDP endpoint to come up
-for _ in $(seq 1 20); do
+for _ in $(seq 1 40); do
     if curl -sf "http://localhost:$DEBUG_PORT/json/version" >/dev/null 2>&1; then
         break
     fi
@@ -38,7 +46,6 @@ import asyncio
 import json
 import urllib.request
 import sys
-import subprocess
 
 try:
     import websockets
@@ -57,42 +64,25 @@ async def cdp(ws, method, params=None):
     resp = await ws.recv()
     return json.loads(resp)
 
-def find_helium():
-    clients = json.loads(subprocess.run(
-        ["hyprctl", "clients", "-j"], capture_output=True, text=True
-    ).stdout)
-    for c in clients:
-        if c.get("class", "").lower() == "helium":
-            return c["address"]
-    return None
-
-def window_move(addr, workspace):
-    subprocess.run(["hyprctl", "eval",
-        f'hl.dispatch(hl.dsp.window.move({{ window = "{addr}", workspace = "{workspace}", follow = false }}))'
-    ])
-
-def get_current_workspace():
-    monitors = json.loads(subprocess.run(
-        ["hyprctl", "monitors", "-j"], capture_output=True, text=True
-    ).stdout)
-    for m in monitors:
-        if m.get("focused"):
-            return str(m["activeWorkspace"]["id"])
-    return "1"
-
 async def main():
-    addr = find_helium()
-    if addr is None:
-        print("error: no Helium window found", file=sys.stderr)
-        sys.exit(1)
+    # Find the tab pointing at ChatGPT (waits for it to appear)
+    target = None
+    for _ in range(20):
+        tabs = json.loads(
+            urllib.request.urlopen(f"http://localhost:{DEBUG_PORT}/json").read()
+        )
+        target = next(
+            (t for t in tabs if t.get("type") == "page" and "chatgpt.com" in t.get("url", "")),
+            None,
+        )
+        if target:
+            break
+        await asyncio.sleep(0.5)
 
-    # Hide immediately — no flashing
-    window_move(addr, "99")
-
-    tabs = json.loads(
-        urllib.request.urlopen(f"http://localhost:{DEBUG_PORT}/json").read()
-    )
-    ws_url = tabs[0]["webSocketDebuggerUrl"]
+    if target is None:
+        pages = [t for t in tabs if t.get("type") == "page"]
+        target = pages[0] if pages else tabs[0]
+    ws_url = target["webSocketDebuggerUrl"]
 
     async with websockets.connect(ws_url) as ws:
         await cdp(ws, "Page.enable")
@@ -138,15 +128,12 @@ async def main():
 
         if val:
             print(f"voice button clicked: {val}")
-            print("ChatGPT voice mode running invisibly on workspace 99")
+            print("ChatGPT voice mode running")
         else:
-            # Not logged in — bring the window back so user can log in
-            current_ws = get_current_workspace()
-            window_move(addr, current_ws)
+            # Voice button not found — probably not logged in
             print("=" * 60)
-            print("ChatGPT login required.")
-            print("The window is now visible — log in to ChatGPT, then re-run this script.")
-            print("The session will persist in ~/.local/share/chatgpt-voice/")
+            print("Voice button not found — log in to ChatGPT in the window,")
+            print("then re-run this script.")
             print("=" * 60)
 
 asyncio.run(main())
