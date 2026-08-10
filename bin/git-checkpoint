@@ -3,6 +3,7 @@ set -euo pipefail
 
 LOCKFILE="/tmp/git-checkpoint.lock"
 MODEL="opencode-go/deepseek-v4-flash"
+GROUP="tmux-commit"
 
 if [[ -f "$LOCKFILE" ]] && kill -0 "$(cat "$LOCKFILE")" 2>/dev/null; then
 	fyi "already running" "" low
@@ -11,7 +12,13 @@ fi
 echo "$$" >"$LOCKFILE"
 trap 'rm -f "$LOCKFILE"' EXIT
 
-notif() { fyi "$1" "" low 2>/dev/null || true; }
+# notif <summary> [busy] [expiry] — updates the same group card on every call
+notif() {
+	local summary="$1"
+	local busy="${2:-0}"
+	local expiry="${3:-0}"
+	fyi "$summary" "" low "$expiry" "" "$GROUP" "" "$busy" 2>/dev/null || true
+}
 
 ERRFILE=$(mktemp)
 trap 'rm -f "$LOCKFILE" "$ERRFILE"' EXIT
@@ -22,6 +29,8 @@ undo_stage() {
 		xargs -r git rm --cached --quiet 2>/dev/null || true
 }
 
+notif "Commit started" 1
+
 for i in 1 2 3 4 5; do
 	if git add -A 2>"$ERRFILE"; then
 		STAGED=true
@@ -29,15 +38,17 @@ for i in 1 2 3 4 5; do
 	fi
 	ERR=$(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)
 	if [[ "$ERR" != *"index.lock"* ]]; then
-		notif "failed to stage: $ERR"
+		notif "Failed to stage: $ERR" 0 8
 		exit 0
 	fi
 	sleep 0.1
 done
 if [[ -z "${STAGED:-}" ]]; then
-	notif "failed to stage (lock contention): $ERR"
+	notif "Failed to stage (lock contention): $ERR" 0 8
 	exit 0
 fi
+
+notif "Files staged" 1
 
 DIFF_FILE=$(mktemp)
 trap 'rm -f "$LOCKFILE" "$DIFF_FILE" "$ERRFILE"' EXIT
@@ -45,13 +56,15 @@ trap 'rm -f "$LOCKFILE" "$DIFF_FILE" "$ERRFILE"' EXIT
 git diff --cached >"$DIFF_FILE" 2>/dev/null
 if [[ ! -s "$DIFF_FILE" ]]; then
 	undo_stage
-	notif "nothing to commit"
+	notif "Nothing to commit" 0 5
 	exit 0
 fi
 
 LOG_FILE=$(mktemp)
 trap 'rm -f "$LOCKFILE" "$DIFF_FILE" "$ERRFILE" "$LOG_FILE"' EXIT
 git log --oneline -20 >"$LOG_FILE" 2>/dev/null
+
+notif "Sending LLM request for commit message" 1
 
 RAW=$(timeout 30 \
 	opencode run \
@@ -93,7 +106,7 @@ print(body)
 " 2>/dev/null) || {
 	undo_stage
 	ERR=$(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)
-	notif "failed to generate commit message${ERR:+: $ERR}"
+	notif "Failed to generate commit message${ERR:+: $ERR}" 0 8
 	exit 0
 }
 
@@ -102,34 +115,36 @@ DESC=$(echo "$RAW" | sed -n '2p')
 
 if [[ -z "$TITLE" ]]; then
 	undo_stage
-	notif "failed to generate commit message"
+	notif "Failed to generate commit message" 0 8
 	exit 0
 fi
 
 # Validate conventional commit format
 if ! echo "$TITLE" | grep -qiE '^(feat|fix|chore|docs|style|refactor|perf|test|build|ci|revert)(\([^)]*\))?!?: '; then
 	undo_stage
-	notif "bad commit format: $TITLE"
+	notif "Bad commit format: $TITLE" 0 8
 	exit 0
 fi
+
+notif "Got commit message" 1
 
 if [[ -n "$DESC" ]]; then
 	if ! git commit -m "$TITLE" -m "$DESC" >/dev/null 2>"$ERRFILE"; then
 		undo_stage
-		notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
+		notif "Commit failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)" 0 8
 		exit 0
 	fi
 else
 	if ! git commit -m "$TITLE" >/dev/null 2>"$ERRFILE"; then
 		undo_stage
-		notif "commit failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
+		notif "Commit failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)" 0 8
 		exit 0
 	fi
 fi
 
 if ! git push >/dev/null 2>"$ERRFILE"; then
-	notif "push failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)"
+	notif "Push failed: $(head -1 "$ERRFILE" | tr -d '\n' | head -c 80)" 0 8
 	exit 0
 fi
 
-notif "Pushed | $TITLE"
+notif "Pushed | $TITLE" 0 3

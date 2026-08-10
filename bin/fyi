@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # fyi — send a notification via quickshell's native notification service
-# Usage: fyi <summary> [body] [urgency] [expiry] [command] [group] [desktop-entry]
+# Usage: fyi <summary> [body] [urgency] [expiry] [command] [group] [desktop-entry] [busy]
 #   urgency: low, normal (default), critical
 #   expiry:  seconds until auto-dismiss from pending backlog (0 = never, default)
 #   command: shell command to run when the notification is clicked
-#   group:   group key; replaces any existing notification with the same group
+#   group:   group key; updates any existing notification with the same group
 #   desktop-entry: .desktop file name for gtk-launch (e.g. telegramdesktop)
+#   busy:    1 to show a spinner on the card; the popup will not auto-dismiss while busy
 
 set -euo pipefail
 
@@ -17,10 +18,11 @@ EXPIRY="${4:-0}"
 COMMAND="${5:-}"
 GROUP="${6:-}"
 DESKTOP_ENTRY="${7:-}"
+BUSY="${8:-0}"
 
 if [[ -z "$SUMMARY" ]]; then
-    echo "Usage: fyi <summary> [body] [urgency] [expiry] [command] [group] [desktop-entry]" >&2
+    echo "Usage: fyi <summary> [body] [urgency] [expiry] [command] [group] [desktop-entry] [busy]" >&2
     exit 1
 fi
 
-exec quickshell ipc -p "$QS_CONFIG" call notifications fyi "$SUMMARY" "$BODY" "$URGENCY" "$EXPIRY" "$COMMAND" "$GROUP" "$DESKTOP_ENTRY"
+exec quickshell ipc -p "$QS_CONFIG" call notifications fyi "$SUMMARY" "$BODY" "$URGENCY" "$EXPIRY" "$COMMAND" "$GROUP" "$DESKTOP_ENTRY" "$BUSY"
