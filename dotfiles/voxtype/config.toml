@@ -8,7 +8,7 @@
 # a custom path, or "disabled" to turn off. The daemon writes state
 # ("idle", "recording", "transcribing") to this file whenever it changes.
 # Required for `voxtype record toggle` and `voxtype status` commands.
-engine = "parakeet"
+engine = "whisper"
 
 state_file = "auto"
 
@@ -74,7 +74,8 @@ max_duration_secs = 60
 # .en models are English-only but faster and more accurate for English
 # large-v3-turbo is faster than large-v3 with minimal accuracy loss (recommended for GPU)
 # Or provide absolute path to a custom .bin model file
-model = "base.en"
+model = "large-v3-turbo"
+gpu_device = 0
 
 # Language for transcription
 # Options:
@@ -89,7 +90,7 @@ language = "en"
 # Translate non-English speech to English
 translate = false
 mode = "local"
-flash_attention = false
+flash_attention = true
 on_demand_loading = false
 gpu_isolation = false
 eager_processing = false
