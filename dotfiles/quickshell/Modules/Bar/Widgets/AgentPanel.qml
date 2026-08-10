@@ -223,13 +223,6 @@ Rectangle {
             visible: root.service.usageSupported
             color: Config.backgroundColored
 
-            Rectangle {
-                anchors.top: parent.top
-                width: parent.width
-                height: 1
-                color: Config.foregroundSecondary
-            }
-
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: Config.shellPadding

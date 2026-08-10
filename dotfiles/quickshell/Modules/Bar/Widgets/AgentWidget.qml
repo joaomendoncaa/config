@@ -196,7 +196,7 @@ Item {
                         state: pinChip.modelData.state
                         fillColor: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
                         fontFamily: Config.fontFamily
-                        fontSize: Config.fontSize - 2
+                        fontSize: Config.fontSize
                         runningFrame: root.service.runningFrame
                         blockedFrame: root.service.blockedFrame
                     }
@@ -209,7 +209,7 @@ Item {
                         textFormat: Text.PlainText
                         color: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
                         font.family: Config.fontFamily
-                        font.pixelSize: Config.fontSize - 2
+                        font.pixelSize: Config.fontSize
                         font.weight: Font.Bold
                     }
 
@@ -222,7 +222,7 @@ Item {
                         textFormat: Text.PlainText
                         color: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
                         font.family: Config.fontFamily
-                        font.pixelSize: Config.fontSize - 2
+                        font.pixelSize: Config.fontSize
                     }
                 }
 

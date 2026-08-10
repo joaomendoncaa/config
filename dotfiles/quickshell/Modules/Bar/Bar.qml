@@ -33,6 +33,7 @@ PanelWindow {
     signal solanaPanelOpening()
     signal notificationPanelOpening()
     signal agentPanelOpening()
+    signal dismissPanels()
 
     required property var priceLabels
     required property var agentService
@@ -57,6 +58,9 @@ PanelWindow {
         anchors.fill: parent
         opacity: contentVisible ? 1 : 0
         enabled: contentVisible
+        focus: true
+
+        Keys.onEscapePressed: bar.dismissPanels()
 
         Rectangle {
             anchors.fill: parent
