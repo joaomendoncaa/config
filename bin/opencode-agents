@@ -135,8 +135,71 @@ fallback_record() {
         }'
 }
 
+pid_is_descendant() {
+    local descendant="$1"
+    local ancestor="$2"
+    local current="$descendant"
+    local parent
+    local depth=0
+
+    [[ -n "$ancestor" ]] || return 1
+    while [[ -n "$current" && "$current" != "$ancestor" ]] && ((depth < 32)); do
+        parent=$(ps -o ppid= -p "$current" 2>/dev/null | tr -d ' ')
+        [[ -n "$parent" && "$parent" != "$current" ]] || return 1
+        current="$parent"
+        depth=$((depth + 1))
+    done
+    [[ "$current" == "$ancestor" ]]
+}
+
+matching_client() {
+    local win_pid="$1"
+    shift
+    local client_pid
+
+    for client_pid in "$@"; do
+        if pid_is_descendant "$client_pid" "$win_pid"; then
+            printf '%s\n' "$client_pid"
+            return 0
+        fi
+    done
+    return 1
+}
+
+active_pane_tty() {
+    local win_pid client_pid client_session session pane_tty
+    local -a client_pids=()
+    declare -A client_sessions=()
+
+    command -v hyprctl >/dev/null 2>&1 || return 1
+    command -v tmux >/dev/null 2>&1 || return 1
+
+    while IFS=',' read -r client_pid client_session; do
+        [[ "$client_pid" =~ ^[0-9]+$ ]] || continue
+        client_pids+=("$client_pid")
+        client_sessions[$client_pid]="$client_session"
+    done < <(tmux list-clients -F '#{client_pid},#{client_session}' 2>/dev/null || true)
+
+    ((${#client_pids[@]} > 0)) || return 1
+
+    win_pid=$(hyprctl activewindow -j 2>/dev/null | jq -r '.pid // 0' 2>/dev/null || true)
+    client_pid=$(matching_client "$win_pid" "${client_pids[@]}" || true)
+    if [[ -z "$client_pid" ]]; then
+        win_pid=$(hyprctl clients -j 2>/dev/null | jq -r '[.[] | select(.focusHistoryID == 1)] | .[0].pid // 0' 2>/dev/null || true)
+        client_pid=$(matching_client "$win_pid" "${client_pids[@]}" || true)
+    fi
+    [[ -n "$client_pid" ]] || return 1
+
+    session="${client_sessions[$client_pid]}"
+    [[ -n "$session" ]] || return 1
+
+    pane_tty=$(tmux list-panes -t "$session" -F '#{pane_tty},#{pane_active}' 2>/dev/null | awk -F ',' '$2 == "1" {print $1; exit}')
+    [[ -n "$pane_tty" ]] || return 1
+    printf '%s\n' "$pane_tty"
+}
+
 snapshot() {
-    local now file record pid root_id heartbeat process_ticks expected_ticks
+    local now file record pid root_id heartbeat process_ticks expected_ticks active_tty
     local -a records=()
     local -a pids=()
     declare -A bridged_pids=()
@@ -192,11 +255,12 @@ snapshot() {
     done
 
     if [[ ${#records[@]} -eq 0 ]]; then
-        jq -cn --argjson generatedAt "$now" '{ok: true, generatedAt: $generatedAt, agents: []}'
+        jq -cn --argjson generatedAt "$now" '{ok: true, generatedAt: $generatedAt, agents: [], activeAgentId: null}'
         return
     fi
 
-    printf '%s\n' "${records[@]}" | jq -cs --argjson generatedAt "$now" '
+    active_tty=$(active_pane_tty || true)
+    printf '%s\n' "${records[@]}" | jq -cs --argjson generatedAt "$now" --arg activeTty "$active_tty" '
         def rank:
             if . == "blocked" then 0
             elif . == "running" then 1
@@ -230,7 +294,11 @@ snapshot() {
             }
             | del(.rootSessionID, .pid, .tty, .heartbeatAt, .nonce, .selectedSessionID, .route, .schema)
         )
-        | {ok: true, generatedAt: $generatedAt, agents: .}
+        | {ok: true, generatedAt: $generatedAt, agents: ., activeAgentId: (
+            if $activeTty == "" then null
+            else ([.[] | select(any(.clients[]?; .tty == $activeTty)) | .id] | .[0])
+            end
+        )}
     '
 }
 
@@ -279,11 +347,11 @@ focus_agent() {
     [[ -n "$pid" ]] || return 1
 
     if command -v tmux >/dev/null 2>&1 && [[ -n "$tty" ]]; then
-        pane_line=$(tmux list-panes -a -F '#{pane_tty}	#{session_name}	#{window_id}	#{pane_id}' 2>/dev/null | awk -F '\t' -v tty="$tty" '$1 == tty {print; exit}')
+        pane_line=$(tmux list-panes -a -F '#{pane_tty},#{session_name},#{window_id},#{pane_id}' 2>/dev/null | awk -F ',' -v tty="$tty" '$1 == tty {print; exit}')
         if [[ -n "$pane_line" ]]; then
-            IFS=$'\t' read -r pane_tty tmux_session window_id pane_id <<<"$pane_line"
+            IFS=',' read -r pane_tty tmux_session window_id pane_id <<<"$pane_line"
 
-            while IFS=$'\t' read -r client_session client_tty client_pid client_activity; do
+            while IFS=',' read -r client_session client_tty client_pid client_activity; do
                 client_address=$(hypr_ancestor_address "$client_pid" || true)
                 [[ -n "$client_address" ]] || continue
                 if ((client_activity > best_activity)); then
@@ -291,7 +359,7 @@ focus_agent() {
                     client_line="$client_session"$'\t'"$client_tty"$'\t'"$client_pid"
                     best_address="$client_address"
                 fi
-            done < <(tmux list-clients -F '#{client_session}	#{client_tty}	#{client_pid}	#{client_activity}' 2>/dev/null || true)
+            done < <(tmux list-clients -F '#{client_session},#{client_tty},#{client_pid},#{client_activity}' 2>/dev/null || true)
 
             if [[ -n "$client_line" ]]; then
                 IFS=$'\t' read -r client_session client_tty client_pid <<<"$client_line"
@@ -318,7 +386,11 @@ case "${1:-snapshot}" in
         ;;
     focus)
         [[ -n ${2:-} ]] || exit 1
-        focus_agent "$2"
+        if focus_agent "$2"; then
+            jq -cn --arg id "$2" '{activeAgentId: $id}'
+        else
+            exit 1
+        fi
         ;;
     *)
         printf 'usage: opencode-agents [snapshot|focus SESSION_ID]\n' >&2

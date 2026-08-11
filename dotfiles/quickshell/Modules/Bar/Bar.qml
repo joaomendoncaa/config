@@ -45,7 +45,8 @@ PanelWindow {
         powerMenuY = Config.shellPadding + Config.height + Config.gapsOut;
     }
 
-    implicitHeight: Config.height
+    implicitHeight: Config.height + Config.shellPadding
+    exclusiveZone: Config.height
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "shell-bar"
@@ -55,7 +56,10 @@ PanelWindow {
     margins.top: Config.shellPadding
 
     Item {
-        anchors.fill: parent
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        height: Config.height
         opacity: contentVisible ? 1 : 0
         enabled: contentVisible
         focus: true
