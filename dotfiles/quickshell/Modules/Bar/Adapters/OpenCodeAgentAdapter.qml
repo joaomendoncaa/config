@@ -11,6 +11,7 @@ Item {
     property bool agentAvailable: false
     property bool agentRequestPending: false
     property string agentError: ''
+    property string activeAgentId: ''
     property bool usageLoading: true
     property bool usageAvailable: false
     property bool usageRequestPending: false
@@ -131,6 +132,7 @@ Item {
             root.agentLoading = false
             root.agentRequestPending = false
             root.agentError = ''
+            root.activeAgentId = String(data.activeAgentId || '')
             agentWatchdog.stop()
         } catch (error) {
             root.agents = []
@@ -138,6 +140,7 @@ Item {
             root.agentLoading = false
             root.agentRequestPending = false
             root.agentError = String(error)
+            root.activeAgentId = ''
             agentWatchdog.stop()
         }
     }
@@ -213,12 +216,26 @@ Item {
                 root.agentAvailable = false
                 root.agentLoading = false
                 root.agentError = 'collector exited with status ' + exitCode
+                root.activeAgentId = ''
             }
         }
     }
 
     Process {
         id: focusProc
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                var data = {}
+                try {
+                    data = JSON.parse(String(text || '{}'))
+                } catch (error) {
+                    data = {}
+                }
+                if (data.activeAgentId)
+                    root.activeAgentId = String(data.activeAgentId)
+            }
+        }
 
         stderr: StdioCollector {
             onStreamFinished: {

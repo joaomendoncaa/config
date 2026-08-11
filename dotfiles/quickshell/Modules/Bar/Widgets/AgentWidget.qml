@@ -177,6 +177,7 @@ Item {
                 required property var modelData
                 readonly property bool pendingStyle: pinChip.modelData.state === 'pending'
                 readonly property bool warningFlash: pinChip.modelData.state === 'blocked' && root.service.blockedWarningFrame
+                readonly property bool active: root.service.activeAgentId === pinChip.modelData.id
                 readonly property real desiredWidth: Config.gapInner * 4 + Config.buttonSize * 0.7 + Math.min(repoText.implicitWidth, Config.buttonSize * 3.5) + Math.min(titleText.implicitWidth, Config.buttonSize * 5)
 
                 width: Math.max(Config.buttonSize * 4, Math.min(Config.buttonSize * 9, desiredWidth))
@@ -235,6 +236,17 @@ Item {
                         root.popupVisible = false
                         root.service.focusAgent(pinChip.modelData.id)
                     }
+                }
+
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.bottom
+                    anchors.topMargin: 3
+                    width: 4
+                    height: 4
+                    radius: 2
+                    visible: pinChip.active
+                    color: Config.foreground
                 }
             }
         }

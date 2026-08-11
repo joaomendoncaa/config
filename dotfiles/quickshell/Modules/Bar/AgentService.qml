@@ -24,6 +24,7 @@ Item {
     readonly property bool agentLoading: root.adapter ? root.adapter.agentLoading : false
     readonly property bool agentAvailable: root.adapter ? root.adapter.agentAvailable : false
     readonly property string agentError: root.adapter ? root.adapter.agentError : 'agent adapter unavailable'
+    readonly property string activeAgentId: root.adapter && root.adapter.activeAgentId ? root.adapter.activeAgentId : ''
     readonly property bool usageLoading: root.adapter ? root.adapter.usageLoading : false
     readonly property bool usageAvailable: root.adapter ? root.adapter.usageAvailable : false
     readonly property string usageError: root.adapter ? root.adapter.usageError : 'usage adapter unavailable'

@@ -14,6 +14,7 @@ Rectangle {
 
     readonly property bool pinned: root.service.isPinned(root.modelData.id)
     readonly property bool autoPinned: root.service.isAutoPinned(root.modelData.id)
+    readonly property bool active: root.service.activeAgentId === root.modelData.id
     readonly property bool pendingStyle: root.modelData.state === 'pending'
     readonly property bool warningFlash: root.modelData.state === 'blocked' && root.service.blockedWarningFrame
 
