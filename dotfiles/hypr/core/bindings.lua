@@ -22,7 +22,51 @@ bind("SUPER + CTRL + ALT + Z", "Reset zoom", function()
 	hl.config({ cursor = { zoom_factor = 1 } })
 end)
 
-hl.bind("SUPER + D", hl.dsp.exec_cmd("/home/joao/.local/bin/voxtype record toggle"), { description = "Voxtype toggle" })
+-- SUPER+D: tap toggles voxtype, hold (>=400ms) push-to-talk
+-- (start on hold, transcribe+paste+submit on release)
+local SUPER_D_KEYCODE = 40 -- xkb keycode for D (kernel 32 + 8)
+local PTT_THRESHOLD_MS = 400
+
+local ptt_state = "idle" -- idle | pending | hold
+local ptt_timer = nil
+
+local function voxtype_record(action)
+	hl.exec_cmd("/home/joao/.local/bin/voxtype record " .. action)
+end
+
+hl.bind(
+	"SUPER + D",
+	function()
+		if ptt_state ~= "idle" then
+			return
+		end
+		ptt_state = "pending"
+		ptt_timer = hl.timer(function()
+			if ptt_state ~= "pending" then
+				return
+			end
+			ptt_state = "hold"
+			voxtype_record("start --auto-submit")
+		end, { timeout = PTT_THRESHOLD_MS, type = "oneshot" })
+	end,
+	{ description = "Dictate (tap: toggle, hold: push-to-talk)" }
+)
+
+hl.on("input.keyboard.key", function(keycode, _, state)
+	if keycode ~= SUPER_D_KEYCODE or state ~= 0 then
+		return
+	end
+	if ptt_state == "pending" then
+		ptt_state = "idle"
+		if ptt_timer then
+			ptt_timer:set_enabled(false)
+		end
+		voxtype_record("toggle")
+	elseif ptt_state == "hold" then
+		ptt_state = "idle"
+		voxtype_record("stop")
+	end
+end)
 bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
 hl.bind("SUPER + SHIFT + V", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle Float" })
 bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
