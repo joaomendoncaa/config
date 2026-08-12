@@ -1,137 +1,41 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ENV_FILE="${OPENCODE_USAGE_ENV_FILE:-$HOME/.config.jmmm.sh/dotfiles/bash/.env}"
-if [[ -f "$ENV_FILE" ]]; then
-    set -a
-    # shellcheck disable=SC1090
-    source "$ENV_FILE"
-    set +a
-fi
-
-WORKSPACE_ID="${QUICKSHELL_OPENCODE_WORKSPACE_ID:-wrk_01KEYSE6SWHFGJ2DB8C2690QJ2}"
-BILLING_URL="https://opencode.ai/workspace/$WORKSPACE_ID/billing"
-GO_URL="https://opencode.ai/workspace/$WORKSPACE_ID/go"
-HTML_BILLING=$(mktemp)
-HTML_GO=$(mktemp)
-COOKIE_FILE=$(mktemp)
-
-cleanup() {
-    rm -f "$HTML_BILLING" "$HTML_GO" "$COOKIE_FILE"
-}
+USAGE_URL='https://opencode.ai/zen/go/v1/usage'
+ACCOUNT_FILE="$HOME/.local/share/opencode/account.json"
 
 fail() {
     jq -cn --arg error "$1" '{ok: false, error: $error}'
     exit 1
 }
 
-duration_seconds() {
-    local text="${1,,}"
-    local days=0 hours=0 minutes=0 seconds=0 matched=0
+command -v jq >/dev/null 2>&1 || { printf '{"ok":false,"error":"jq is required"}\n'; exit 1; }
 
-    if [[ $text =~ ([0-9]+)[[:space:]]*(dias?|days?|d)([^[:alpha:]]|$) ]]; then
-        days="${BASH_REMATCH[1]}"
-        matched=1
-    fi
-    if [[ $text =~ ([0-9]+)[[:space:]]*(horas?|hours?|hrs?|h)([^[:alpha:]]|$) ]]; then
-        hours="${BASH_REMATCH[1]}"
-        matched=1
-    fi
-    if [[ $text =~ ([0-9]+)[[:space:]]*(minutos?|minutes?|mins?|m)([^[:alpha:]]|$) ]]; then
-        minutes="${BASH_REMATCH[1]}"
-        matched=1
-    fi
-    if [[ $text =~ ([0-9]+)[[:space:]]*(segundos?|seconds?|secs?|s)([^[:alpha:]]|$) ]]; then
-        seconds="${BASH_REMATCH[1]}"
-        matched=1
-    fi
-    if ((matched == 0)) && [[ $text == *"less than a minute"* || $text == *"menos de um minuto"* ]]; then
-        echo 60
-        return
-    fi
-    ((matched == 1)) || return 1
-    echo $((days * 86400 + hours * 3600 + minutes * 60 + seconds))
-}
+api_key=$(jq -r '[.accounts[] | select(.serviceID == "opencode-go" or .serviceID == "opencode") | .credential.key] | first // empty' "$ACCOUNT_FILE") || fail 'OpenCode account is not configured'
+[[ -n $api_key ]] || fail 'OpenCode API key not found in ~/.local/share/opencode/account.json'
 
-trap cleanup EXIT
-if ! command -v jq >/dev/null 2>&1; then
-    printf '{"ok":false,"error":"jq is required"}\n'
-    exit 1
-fi
-[[ -n ${QUICKSHELL_OPENCODE_COOKIE:-} ]] || fail 'OpenCode authentication is not configured'
-cookie="$QUICKSHELL_OPENCODE_COOKIE"
-unset QUICKSHELL_OPENCODE_COOKIE
-chmod 600 "$COOKIE_FILE"
-printf '# Netscape HTTP Cookie File\n.opencode.ai\tTRUE\t/\tTRUE\t0\tauth\t%s\n' "$cookie" >"$COOKIE_FILE"
-unset cookie
+output=$(
+    curl -fsS --max-time 20 --compressed -H "Authorization: Bearer $api_key" "$USAGE_URL" |
+        jq -c --argjson now "$(date +%s%3N)" '
+            def norm:
+                . as $w
+                | ($w.resetsAt | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) as $reset
+                | {
+                    used: ($w.percent // 0),
+                    percent: ($w.percent // 0),
+                    status: ($w.status // "ok"),
+                    resetSeconds: (((($reset * 1000) - $now) / 1000) | floor)
+                };
+            .usage
+            | {
+                ok: true,
+                fetchedAt: $now,
+                usage: {
+                    "5h": (.rolling | norm),
+                    weekly: (.weekly | norm),
+                    monthly: (.monthly | norm)
+                }
+            }'
+) || fail 'Failed to fetch OpenCode usage'
 
-curl -fLsS \
-    --max-time 20 \
-    --compressed \
-    -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0' \
-    -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
-    -H 'Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7' \
-    -b "$COOKIE_FILE" \
-    "$BILLING_URL" >"$HTML_BILLING" 2>/dev/null &
-billing_pid=$!
-
-curl -fLsS \
-    --max-time 20 \
-    --compressed \
-    -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:149.0) Gecko/20100101 Firefox/149.0' \
-    -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' \
-    -H 'Accept-Language: pt,pt-BR;q=0.9,en-US;q=0.8,en;q=0.7' \
-    -b "$COOKIE_FILE" \
-    "$GO_URL" >"$HTML_GO" 2>/dev/null &
-go_pid=$!
-
-billing_ok=0
-go_ok=0
-wait "$billing_pid" || billing_ok=$?
-wait "$go_pid" || go_ok=$?
-if ((billing_ok != 0 || go_ok != 0)); then
-    fail 'Failed to fetch OpenCode usage'
-fi
-
-billing_html=$(<"$HTML_BILLING")
-go_html=$(<"$HTML_GO")
-clean_billing=$(sed 's/<!--[^>]*-->//g' <<<"$billing_html")
-clean_go=$(sed 's/<!--[^>]*-->//g' <<<"$go_html")
-
-balance=$(grep -oP 'data-slot="balance-value">\$\K[0-9.]+' <<<"$clean_billing" | head -n 1 || true)
-if [[ -z $balance ]]; then
-    balance=$(grep -oiP 'data-slot="balance-[^"]*">\$\K[0-9.]+' <<<"$clean_billing" | head -n 1 || true)
-fi
-
-mapfile -t usage_values < <(grep -oP 'data-slot="usage-value">\K[0-9]+' <<<"$clean_go" | head -n 3 || true)
-mapfile -t reset_values < <(grep -oP 'data-slot="reset-time">\K[^<]+' <<<"$clean_go" | head -n 3 || true)
-
-[[ -n $balance ]] || fail 'OpenCode balance was not found'
-[[ ${#usage_values[@]} -eq 3 ]] || fail 'OpenCode usage values were not found'
-[[ ${#reset_values[@]} -eq 3 ]] || fail 'OpenCode reset times were not found'
-
-reset_5h=$(duration_seconds "${reset_values[0]}") || fail 'OpenCode 5-hour reset time could not be parsed'
-reset_weekly=$(duration_seconds "${reset_values[1]}") || fail 'OpenCode weekly reset time could not be parsed'
-reset_monthly=$(duration_seconds "${reset_values[2]}") || fail 'OpenCode monthly reset time could not be parsed'
-
-jq -cn \
-    --arg balance "\$$balance" \
-    --arg dashboardUrl "$GO_URL" \
-    --argjson fetchedAt "$(date +%s%3N)" \
-    --argjson used5h "${usage_values[0]}" \
-    --argjson usedWeekly "${usage_values[1]}" \
-    --argjson usedMonthly "${usage_values[2]}" \
-    --argjson reset5h "$reset_5h" \
-    --argjson resetWeekly "$reset_weekly" \
-    --argjson resetMonthly "$reset_monthly" \
-    '{
-        ok: true,
-        fetchedAt: $fetchedAt,
-        dashboardUrl: $dashboardUrl,
-        billing: {balance: $balance},
-        usage: {
-            "5h": {used: $used5h, resetSeconds: $reset5h},
-            weekly: {used: $usedWeekly, resetSeconds: $resetWeekly},
-            monthly: {used: $usedMonthly, resetSeconds: $resetMonthly}
-        }
-    }'
+printf '%s\n' "$output"

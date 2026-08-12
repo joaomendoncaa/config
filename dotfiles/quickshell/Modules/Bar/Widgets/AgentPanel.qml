@@ -140,24 +140,6 @@ Rectangle {
                         }
                     }
                 }
-
-                Rectangle {
-                    Layout.preferredWidth: balanceLabel.implicitWidth + Config.shellPadding * 2
-                    Layout.preferredHeight: Config.buttonSize
-                    visible: root.service.balanceLabel.length > 0
-                    radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
-                    color: Config.foreground
-
-                    Text {
-                        id: balanceLabel
-                        anchors.centerIn: parent
-                        text: `${root.service.balanceLabel} ${root.service.usageAvailable && root.service.balance ? root.service.balance : '?'}`
-                        color: Config.backgroundColored
-                        font.family: Config.fontFamily
-                        font.pixelSize: Config.fontSize - 2
-                        font.weight: Font.Medium
-                    }
-                }
             }
         }
 
