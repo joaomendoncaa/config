@@ -23,7 +23,11 @@ quota details. `AgentService.qml` is the shell-facing facade; bar modules only
 depend on its generic agent and optional usage interfaces.
 
 The cloud usage helper is separate. Local OpenCode v2 session APIs do not replace
-the authenticated billing and quota source used by `bin/opencode-usage`.
+the authenticated quota source used by `bin/opencode-usage`, which queries
+`https://opencode.ai/zen/go/v1/usage` with the API key from
+`~/.local/share/opencode/account.json`. The response exposes rolling, weekly, and
+monthly usage percentages and reset timestamps only; the API has no account
+balance, so the bar does not display one.
 
 ## Expected v2 Replacements
 

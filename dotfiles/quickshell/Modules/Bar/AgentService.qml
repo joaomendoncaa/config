@@ -33,8 +33,6 @@ Item {
     readonly property url iconSource: root.adapter && root.adapter.iconSource ? root.adapter.iconSource : ''
     readonly property bool usageSupported: root.adapter ? Boolean(root.adapter.usageSupported) : false
     readonly property string dashboardLabel: root.adapter && root.adapter.dashboardLabel ? root.adapter.dashboardLabel : ''
-    readonly property string balanceLabel: root.adapter && root.adapter.balanceLabel ? root.adapter.balanceLabel : ''
-    readonly property string balance: root.adapter && root.adapter.balance ? root.adapter.balance : ''
     readonly property bool dashboardAvailable: root.adapter && root.dashboardLabel.length > 0
     readonly property int agentCount: root.agentAvailable ? root.agents.length : 0
     readonly property int runningCount: root.countState('running')

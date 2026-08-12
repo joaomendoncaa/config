@@ -17,8 +17,6 @@ Item {
     property bool usageRequestPending: false
     property string usageError: ''
     property bool panelOpen: false
-    property string balance: ''
-    property string dashboardUrl: ''
     property var usageWindows: []
     property real used5h: 0
     property real usedWeekly: 0
@@ -32,10 +30,9 @@ Item {
     readonly property url iconSource: Qt.resolvedUrl('../../../Assets/opencode-logo.svg')
     readonly property bool usageSupported: true
     readonly property string dashboardLabel: 'OPEN DASHBOARD ↗'
-    readonly property string balanceLabel: 'BALANCE'
     readonly property string settingsPath: `${Quickshell.env('HOME')}/.config/quickshell/opencode.json`
     readonly property string workspaceId: Config.env.QUICKSHELL_OPENCODE_WORKSPACE_ID || 'wrk_01KEYSE6SWHFGJ2DB8C2690QJ2'
-    readonly property string dashboardTarget: root.dashboardUrl || `https://opencode.ai/workspace/${root.workspaceId}/go`
+    readonly property string dashboardTarget: `https://opencode.ai/workspace/${root.workspaceId}/go`
     readonly property string agentsCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-agents`
     readonly property string usageCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-usage`
 
@@ -170,8 +167,6 @@ Item {
             root.reset5hAt = fetchedAt + (Number(shortWindow.resetSeconds) || 0) * 1000
             root.resetWeeklyAt = fetchedAt + (Number(weeklyWindow.resetSeconds) || 0) * 1000
             root.resetMonthlyAt = fetchedAt + (Number(monthlyWindow.resetSeconds) || 0) * 1000
-            root.balance = data.billing && data.billing.balance ? data.billing.balance : ''
-            root.dashboardUrl = data.dashboardUrl || ''
             root.nowMs = Date.now()
             root.usageAvailable = true
             root.usageLoading = false
