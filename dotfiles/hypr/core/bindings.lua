@@ -23,15 +23,67 @@ bind("SUPER + CTRL + ALT + Z", "Reset zoom", function()
 end)
 
 -- SUPER+D: tap toggles voxtype, hold (>=400ms) push-to-talk
--- (start on hold, transcribe+paste+submit on release)
+-- (start on hold, transcribe+paste+submit on release).
+-- ESC while the gesture is active cancels: discards the recording and
+-- kills the OSD ("voxtype record cancel" resets the state file to idle).
+-- SUPER+ESCAPE is hijacked from the power menu for the duration of the
+-- gesture, since SUPER is necessarily held while dictating.
 local SUPER_D_KEYCODE = 40 -- xkb keycode for D (kernel 32 + 8)
 local PTT_THRESHOLD_MS = 400
 
 local ptt_state = "idle" -- idle | pending | hold
 local ptt_timer = nil
+local esc_bound = false
 
 local function voxtype_record(action)
 	hl.exec_cmd("/home/joao/.local/bin/voxtype record " .. action)
+end
+
+-- Bind/unbind is deferred via hl.timer so it never mutates the keybind
+-- list while Hyprland is walking it (same trick as the CTRL+N/P block).
+local function unbind_escape()
+	if not esc_bound then
+		return
+	end
+	esc_bound = false
+	hl.timer(function()
+		hl.unbind("SUPER + ESCAPE")
+		hl.unbind("ESCAPE")
+		bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
+	end, { timeout = 1, type = "oneshot" })
+end
+
+local function ptt_end()
+	ptt_state = "idle"
+	if ptt_timer then
+		ptt_timer:set_enabled(false)
+	end
+	unbind_escape()
+end
+
+local function ptt_cancel()
+	if ptt_state == "idle" then
+		return
+	end
+	ptt_end()
+	voxtype_record("cancel")
+end
+
+local function bind_escape()
+	if esc_bound then
+		return
+	end
+	esc_bound = true
+	hl.timer(function()
+		hl.unbind("SUPER + ESCAPE")
+		hl.unbind("ESCAPE")
+		hl.bind("SUPER + ESCAPE", function()
+			ptt_cancel()
+		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
+		hl.bind("ESCAPE", function()
+			ptt_cancel()
+		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
+	end, { timeout = 1, type = "oneshot" })
 end
 
 hl.bind(
@@ -41,6 +93,7 @@ hl.bind(
 			return
 		end
 		ptt_state = "pending"
+		bind_escape()
 		ptt_timer = hl.timer(function()
 			if ptt_state ~= "pending" then
 				return
@@ -57,13 +110,10 @@ hl.on("input.keyboard.key", function(keycode, _, state)
 		return
 	end
 	if ptt_state == "pending" then
-		ptt_state = "idle"
-		if ptt_timer then
-			ptt_timer:set_enabled(false)
-		end
+		ptt_end()
 		voxtype_record("toggle")
 	elseif ptt_state == "hold" then
-		ptt_state = "idle"
+		ptt_end()
 		voxtype_record("stop")
 	end
 end)
