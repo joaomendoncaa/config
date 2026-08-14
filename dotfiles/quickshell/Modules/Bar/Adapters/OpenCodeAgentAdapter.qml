@@ -12,6 +12,7 @@ Item {
     property bool agentRequestPending: false
     property string agentError: ''
     property string activeAgentId: ''
+    property bool agentRefreshQueued: false
     property bool usageLoading: true
     property bool usageAvailable: false
     property bool usageRequestPending: false
@@ -99,6 +100,24 @@ Item {
         agentProc.running = true
     }
 
+    function onHyprEvent(line) {
+        var separator = line.indexOf('>>')
+        var eventName = separator > 0 ? line.substring(0, separator) : String(line)
+        if (['activewindow', 'activewindowv2', 'workspace', 'workspacev2'].indexOf(eventName) === -1)
+            return
+        if (agentProc.running || root.agentRequestPending)
+            root.agentRefreshQueued = true
+        else
+            root.refreshAgents()
+    }
+
+    function drainAgentQueue() {
+        if (!root.agentRefreshQueued)
+            return
+        root.agentRefreshQueued = false
+        root.refreshAgents()
+    }
+
     function parseAgents(output) {
         try {
             var data = JSON.parse(String(output || '{}'))
@@ -131,6 +150,7 @@ Item {
             root.agentError = ''
             root.activeAgentId = String(data.activeAgentId || '')
             agentWatchdog.stop()
+            Qt.callLater(root.drainAgentQueue)
         } catch (error) {
             root.agents = []
             root.agentAvailable = false
@@ -139,6 +159,7 @@ Item {
             root.agentError = String(error)
             root.activeAgentId = ''
             agentWatchdog.stop()
+            Qt.callLater(root.drainAgentQueue)
         }
     }
 
@@ -213,6 +234,7 @@ Item {
                 root.agentError = 'collector exited with status ' + exitCode
                 root.activeAgentId = ''
             }
+            Qt.callLater(root.drainAgentQueue)
         }
     }
 
@@ -325,5 +347,16 @@ Item {
     Component.onCompleted: {
         root.refreshAgents()
         root.refreshUsage()
+    }
+
+    readonly property string hyprSignature: Quickshell.env('HYPRLAND_INSTANCE_SIGNATURE')
+
+    Socket {
+        id: hyprSocket
+        path: root.hyprSignature ? `${Quickshell.env('XDG_RUNTIME_DIR')}/hypr/${root.hyprSignature}/.socket2.sock` : ''
+        connected: root.hyprSignature.length > 0
+        parser: SplitParser {
+            onRead: msg => root.onHyprEvent(String(msg))
+        }
     }
 }

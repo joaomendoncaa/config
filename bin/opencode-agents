@@ -142,7 +142,7 @@ pid_is_descendant() {
     local parent
     local depth=0
 
-    [[ -n "$ancestor" ]] || return 1
+    [[ "$ancestor" =~ ^[1-9][0-9]*$ ]] || return 1
     while [[ -n "$current" && "$current" != "$ancestor" ]] && ((depth < 32)); do
         parent=$(ps -o ppid= -p "$current" 2>/dev/null | tr -d ' ')
         [[ -n "$parent" && "$parent" != "$current" ]] || return 1
@@ -185,7 +185,10 @@ active_pane_tty() {
     win_pid=$(hyprctl activewindow -j 2>/dev/null | jq -r '.pid // 0' 2>/dev/null || true)
     client_pid=$(matching_client "$win_pid" "${client_pids[@]}" || true)
     if [[ -z "$client_pid" ]]; then
-        win_pid=$(hyprctl clients -j 2>/dev/null | jq -r '[.[] | select(.focusHistoryID == 1)] | .[0].pid // 0' 2>/dev/null || true)
+        active_ws=$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.id // 0' 2>/dev/null || true)
+        [[ "$active_ws" =~ ^-?[0-9]+$ ]] || return 1
+        win_pid=$(hyprctl clients -j 2>/dev/null | jq -r --argjson ws "$active_ws" \
+            '[.[] | select(.focusHistoryID == 1 and .workspace.id == $ws)] | .[0].pid // 0' 2>/dev/null || true)
         client_pid=$(matching_client "$win_pid" "${client_pids[@]}" || true)
     fi
     [[ -n "$client_pid" ]] || return 1
