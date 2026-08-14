@@ -39,6 +39,29 @@ local function voxtype_record(action)
 	hl.exec_cmd("/home/joao/.local/bin/voxtype record " .. action)
 end
 
+-- While dictating on the speakers, drop the sink volume to near-silence so it
+-- does not bleed into the microphone. The pre-dictation volume is saved in
+-- $XDG_RUNTIME_DIR/voxtype/ducked-vol and restored when dictation ends.
+local SPEAKERS_SINK = "alsa_output.usb-Logitech_Logi_Z407_00000000-01.analog-stereo"
+local DUCK_VOLUME = "20%"
+local DUCKED_VOL_FILE = "$XDG_RUNTIME_DIR/voxtype/ducked-vol"
+
+local DUCK_CMD = 'sink="$(pactl get-default-sink)"; f="' .. DUCKED_VOL_FILE
+	.. '"; if [ "$sink" = "' .. SPEAKERS_SINK .. '" ] && [ ! -f "$f" ]; then pactl get-sink-volume "$sink" | grep -o "[0-9]*%" | head -n1 > "$f"; pactl set-sink-volume "$sink" '
+	.. DUCK_VOLUME .. '; fi'
+local RESTORE_CMD = 'f="' .. DUCKED_VOL_FILE .. '"; if [ -f "$f" ]; then pactl set-sink-volume "' .. SPEAKERS_SINK
+	.. '" "$(cat "$f")"; rm -f "$f"; fi'
+local TOGGLE_CMD = 'state="$(cat "$XDG_RUNTIME_DIR/voxtype/state" 2>/dev/null || printf idle)"; if [ "$state" = "idle" ] || [ "$state" = "stopped" ]; then '
+	.. DUCK_CMD .. '; else ' .. RESTORE_CMD .. '; fi'
+
+local function run_sync(sh)
+	local p = io.popen("bash -c '" .. sh .. "' 2>/dev/null")
+	if p then
+		p:read("*a")
+		p:close()
+	end
+end
+
 -- Bind/unbind is deferred via hl.timer so it never mutates the keybind
 -- list while Hyprland is walking it (same trick as the CTRL+N/P block).
 local function unbind_escape()
@@ -67,6 +90,7 @@ local function ptt_cancel()
 	end
 	ptt_end()
 	voxtype_record("cancel")
+	run_sync(RESTORE_CMD)
 end
 
 local function bind_escape()
@@ -98,8 +122,9 @@ hl.bind(
 			if ptt_state ~= "pending" then
 				return
 			end
-			ptt_state = "hold"
-			voxtype_record("start --auto-submit")
+		ptt_state = "hold"
+		run_sync(DUCK_CMD)
+		voxtype_record("start --auto-submit")
 		end, { timeout = PTT_THRESHOLD_MS, type = "oneshot" })
 	end,
 	{ description = "Dictate (tap: toggle, hold: push-to-talk)" }
@@ -111,10 +136,12 @@ hl.on("input.keyboard.key", function(keycode, _, state)
 	end
 	if ptt_state == "pending" then
 		ptt_end()
+		run_sync(TOGGLE_CMD)
 		voxtype_record("toggle")
 	elseif ptt_state == "hold" then
 		ptt_end()
 		voxtype_record("stop")
+		run_sync(RESTORE_CMD)
 	end
 end)
 bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
