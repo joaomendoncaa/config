@@ -1,139 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Snapshot of opencode2 agents for the quickshell bar, sourced from TUI bridge
+# records written by the V2 TUI plugin (~/.config/opencode/plugins/tui).
+# Same normalized contract as before; V1 fallback (SQLite/log scraping) removed.
+
 RUNTIME_BASE="${XDG_RUNTIME_DIR:-/tmp/opencode-dashboard-$UID}"
 RUNTIME_DIR="$RUNTIME_BASE/opencode-dashboard"
-DB="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db"
-LOG="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/log/opencode.log"
 STALE_AFTER_MS=5000
-
-is_tui_process() {
-    local pid="$1"
-    local tty
-    local -a args=()
-
-    tty=$(readlink "/proc/$pid/fd/0" 2>/dev/null || true)
-    [[ "$tty" == /dev/pts/* || "$tty" == /dev/tty* ]] || return 1
-    mapfile -d '' -t args <"/proc/$pid/cmdline" || return 1
-    [[ ${#args[@]} -gt 0 ]] || return 1
-
-    if [[ ${args[1]:-} == "--version" || ${args[1]:-} == "--help" ]]; then
-        return 1
-    fi
-
-    case "${args[1]:-}" in
-        run|serve|web|acp|auth|models|agent|debug|stats|export|import|upgrade|uninstall|completion|mcp|github|pr|session|plugin)
-            return 1
-            ;;
-    esac
-    return 0
-}
-
-process_start_epoch() {
-    local pid="$1"
-    local hz boot ticks
-
-    hz=$(getconf CLK_TCK 2>/dev/null) || return 1
-    boot=$(awk '/^btime/ {print $2}' /proc/stat 2>/dev/null) || return 1
-    ticks=$(awk '{print $22}' "/proc/$pid/stat" 2>/dev/null) || return 1
-    echo $((boot + ticks / hz))
-}
-
-fallback_record() {
-    local pid="$1"
-    local cwd tty start_epoch run_id session_id row directory repo_root repo branch now
-
-    [[ -f "$DB" && -f "$LOG" ]] || return 1
-    cwd=$(readlink "/proc/$pid/cwd" 2>/dev/null) || return 1
-    tty=$(readlink "/proc/$pid/fd/0" 2>/dev/null) || return 1
-    start_epoch=$(process_start_epoch "$pid") || return 1
-
-    run_id=$(TZ=UTC awk -v dir="$cwd" -v start="$start_epoch" '
-        /message="creating instance"/ && index($0, "directory=" dir) {
-            ts = $0
-            sub(/^timestamp=/, "", ts)
-            sub(/ .*/, "", ts)
-            gsub(/[-T:]/, " ", ts)
-            gsub(/\..*Z/, "", ts)
-            epoch = mktime(ts)
-            diff = epoch - start
-            if (diff < 0) diff = -diff
-            if (best == "" || diff < bestdiff) {
-                bestdiff = diff
-                best = $0
-            }
-        }
-        END {
-            if (best) {
-                match(best, /run=[a-f0-9]+/)
-                print substr(best, RSTART + 4, RLENGTH - 4)
-            }
-        }
-    ' "$LOG" 2>/dev/null) || return 1
-    [[ -n "$run_id" ]] || return 1
-
-    session_id=$(awk -v run="run=$run_id" '
-        index($0, run) && match($0, /session\.id=ses_[[:alnum:]]+/) {
-            value = substr($0, RSTART + 11, RLENGTH - 11)
-        }
-        END { print value }
-    ' "$LOG" 2>/dev/null) || return 1
-    [[ -n "$session_id" ]] || return 1
-
-    row=$(sqlite3 -json "$DB" "
-        WITH RECURSIVE ancestry(id, parent_id) AS (
-            SELECT id, parent_id FROM session WHERE id = '$session_id'
-            UNION ALL
-            SELECT s.id, s.parent_id FROM session s JOIN ancestry a ON s.id = a.parent_id
-        ), root AS (
-            SELECT s.* FROM session s
-            WHERE s.id = (SELECT id FROM ancestry WHERE parent_id IS NULL LIMIT 1)
-        ), family(id) AS (
-            SELECT id FROM root
-            UNION ALL
-            SELECT s.id FROM session s JOIN family f ON s.parent_id = f.id
-        )
-        SELECT
-            root.id AS rootSessionID,
-            root.title AS title,
-            root.directory AS directory,
-            root.time_updated AS activityAt,
-            root.time_created AS createdAt,
-            COALESCE((SELECT SUM(summary_additions) FROM session WHERE id IN (SELECT id FROM family)), 0) AS additions,
-            COALESCE((SELECT SUM(summary_deletions) FROM session WHERE id IN (SELECT id FROM family)), 0) AS deletions
-        FROM root
-        LIMIT 1;
-    " 2>/dev/null) || return 1
-    [[ $(jq 'length' <<<"$row") -gt 0 ]] || return 1
-
-    directory=$(jq -r '.[0].directory // ""' <<<"$row")
-    repo_root=$(git -C "$directory" rev-parse --show-toplevel 2>/dev/null || true)
-    if [[ -n "$repo_root" ]]; then
-        repo=$(basename "$repo_root")
-        branch=$(git -C "$directory" branch --show-current 2>/dev/null || true)
-    else
-        repo=$(basename "$directory")
-        branch=""
-    fi
-    now=$(date +%s%3N)
-
-    jq -cn \
-        --argjson session "$(jq '.[0]' <<<"$row")" \
-        --argjson pid "$pid" \
-        --arg tty "$tty" \
-        --arg repo "$repo" \
-        --arg branch "$branch" \
-        --argjson heartbeatAt "$now" \
-        '$session + {
-            pid: $pid,
-            tty: $tty,
-            repo: $repo,
-            branch: $branch,
-            state: "unknown",
-            heartbeatAt: $heartbeatAt,
-            source: "fallback"
-        }'
-}
 
 pid_is_descendant() {
     local descendant="$1"
@@ -167,7 +41,7 @@ matching_client() {
 }
 
 active_pane_tty() {
-    local win_pid client_pid client_session session pane_tty
+    local win_pid client_pid client_session session pane_tty active_ws
     local -a client_pids=()
     declare -A client_sessions=()
 
@@ -204,8 +78,6 @@ active_pane_tty() {
 snapshot() {
     local now file record pid root_id heartbeat process_ticks expected_ticks active_tty
     local -a records=()
-    local -a pids=()
-    declare -A bridged_pids=()
     declare -A bridge_records=()
     declare -A bridge_heartbeats=()
 
@@ -222,7 +94,6 @@ snapshot() {
         [[ -n "$record" ]] || continue
         pid=$(jq -r '.pid' <<<"$record")
         [[ -d "/proc/$pid" ]] || continue
-        is_tui_process "$pid" || continue
         process_ticks=$(awk '{print $22}' "/proc/$pid/stat" 2>/dev/null || true)
         expected_ticks=$(jq -r '.processStartTicks // ""' <<<"$record")
         [[ -n "$process_ticks" && "$process_ticks" == "$expected_ticks" ]] || continue
@@ -237,7 +108,6 @@ snapshot() {
     for pid in "${!bridge_records[@]}"; do
         record="${bridge_records[$pid]}"
         heartbeat="${bridge_heartbeats[$pid]}"
-        bridged_pids[$pid]=1
 
         root_id=$(jq -r '.rootSessionID // ""' <<<"$record")
         [[ -n "$root_id" ]] || continue
@@ -247,14 +117,6 @@ snapshot() {
             record=$(jq -c '.source = "bridge"' <<<"$record")
         fi
         records+=("$record")
-    done
-
-    mapfile -t pids < <(pgrep -x opencode 2>/dev/null || true)
-    for pid in "${pids[@]}"; do
-        [[ -z ${bridged_pids[$pid]:-} ]] || continue
-        is_tui_process "$pid" || continue
-        record=$(fallback_record "$pid" || true)
-        [[ -n "$record" ]] && records+=("$record")
     done
 
     if [[ ${#records[@]} -eq 0 ]]; then
