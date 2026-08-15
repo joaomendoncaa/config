@@ -183,7 +183,7 @@ Item {
                 width: Math.max(Config.buttonSize * 4, Math.min(Config.buttonSize * 9, desiredWidth))
                 height: Config.buttonSize
                 radius: Config.buttonBorderRadius
-                color: pinChip.warningFlash || pinChip.pendingStyle ? Config.foreground : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent')
+                color: pinChip.warningFlash || pinChip.active ? Config.foreground : (pinChip.pendingStyle ? Config.backgroundColoredSecondary : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent'))
 
                 RowLayout {
                     anchors.fill: parent
@@ -195,7 +195,7 @@ Item {
                         Layout.preferredWidth: Config.buttonSize * 0.7
                         Layout.preferredHeight: Config.buttonSize
                         state: pinChip.modelData.state
-                        fillColor: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
+                        fillColor: pinChip.warningFlash || pinChip.active ? Config.backgroundColored : Config.foreground
                         fontFamily: Config.fontFamily
                         fontSize: Config.fontSize
                         runningFrame: root.service.runningFrame
@@ -208,7 +208,7 @@ Item {
                         elide: Text.ElideRight
                         text: pinChip.modelData.repo
                         textFormat: Text.PlainText
-                        color: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
+                        color: pinChip.warningFlash || pinChip.active ? Config.backgroundColored : Config.foreground
                         font.family: Config.fontFamily
                         font.pixelSize: Config.fontSize
                         font.weight: Font.Bold
@@ -221,7 +221,7 @@ Item {
                         elide: Text.ElideRight
                         text: pinChip.modelData.title
                         textFormat: Text.PlainText
-                        color: pinChip.warningFlash || pinChip.pendingStyle ? Config.backgroundColored : Config.foreground
+                        color: pinChip.warningFlash || pinChip.active ? Config.backgroundColored : Config.foreground
                         font.family: Config.fontFamily
                         font.pixelSize: Config.fontSize
                     }
@@ -238,16 +238,6 @@ Item {
                     }
                 }
 
-                Rectangle {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.bottom
-                    anchors.topMargin: 3
-                    width: 4
-                    height: 4
-                    radius: 2
-                    visible: pinChip.active
-                    color: Config.foreground
-                }
             }
         }
 
