@@ -1,4 +1,3 @@
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import qs.Core
@@ -12,13 +11,11 @@ Rectangle {
     required property int rowIndex
     signal activated()
 
-    readonly property bool pinned: root.service.isPinned(root.modelData.id)
-    readonly property bool autoPinned: root.service.isAutoPinned(root.modelData.id)
     readonly property bool active: root.service.activeAgentId === root.modelData.id
     readonly property bool pendingStyle: root.modelData.state === 'pending'
     readonly property bool warningFlash: root.modelData.state === 'blocked' && root.service.blockedWarningFrame
 
-    color: root.warningFlash || root.active ? Config.foreground : (rowMouse.containsMouse || pinMouse.containsMouse ? Config.backgroundHovered : (root.rowIndex % 2 === 0 ? Config.backgroundColoredSecondary : 'transparent'))
+    color: root.warningFlash || root.active ? Config.foreground : (rowMouse.containsMouse ? Config.backgroundHovered : (root.rowIndex % 2 === 0 ? Config.backgroundColoredSecondary : 'transparent'))
 
     MouseArea {
         id: rowMouse
@@ -106,47 +103,6 @@ Rectangle {
             color: root.warningFlash || root.active ? Config.backgroundColored : Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize
-        }
-
-        Rectangle {
-            id: pinButton
-            Layout.preferredWidth: Config.buttonSize
-            Layout.preferredHeight: Config.buttonSize
-            radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
-            color: root.warningFlash || root.active ? Config.backgroundColored : (root.pinned ? Config.foreground : (pinMouse.containsMouse ? Config.backgroundHovered : 'transparent'))
-
-            Image {
-                id: pinMask
-                anchors.centerIn: parent
-                width: Config.buttonSize * 0.7
-                height: width
-                source: '../../../Assets/solana-pin.svg'
-                sourceSize.width: width
-                sourceSize.height: height
-                visible: false
-            }
-
-            Rectangle {
-                id: pinColor
-                anchors.fill: pinMask
-                color: root.warningFlash || root.active ? Config.foreground : (root.pinned ? Config.backgroundColored : Config.foreground)
-                visible: false
-            }
-
-            OpacityMask {
-                anchors.fill: pinMask
-                source: pinColor
-                maskSource: pinMask
-                opacity: root.pinned ? 1 : 0.55
-            }
-
-            MouseArea {
-                id: pinMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: root.autoPinned ? Qt.ArrowCursor : Qt.PointingHandCursor
-                onClicked: root.service.togglePin(root.modelData.id)
-            }
         }
     }
 

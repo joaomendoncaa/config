@@ -33,5 +33,4 @@ if ! git clone "$GIT_URL" "$TARGET_DIR" 2>/dev/null; then
 fi
 
 tmux new-session -ds "$SESSION_NAME" -c "$TARGET_DIR"
-tmux display-message "✅ session '$SESSION_NAME' ready"
 tmux switch-client -t "$SESSION_NAME"
