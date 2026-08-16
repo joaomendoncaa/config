@@ -6,7 +6,7 @@ import qs.Core
 Rectangle {
     id: root
 
-    required property var notificationService
+    property var notificationService: null
 
     implicitWidth: clockText.implicitWidth + Config.gapInner * 4
     Layout.preferredWidth: implicitWidth
@@ -28,6 +28,7 @@ Rectangle {
         color: Config.foreground
         font.pixelSize: Config.fontSize
         font.family: Config.fontFamily
+        font.weight: Font.Bold
     }
 
     MouseArea {
@@ -36,7 +37,10 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.notificationService.fyi("Calendar integration coming soon", "", "low", 5)
+        onClicked: {
+            if (root.notificationService)
+                root.notificationService.fyi("Calendar integration coming soon", "", "low", 5)
+        }
     }
 
 }

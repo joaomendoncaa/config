@@ -126,7 +126,6 @@ Item {
                 opacity: root.windowReady ? 1 : 0
 
                 CenterBar {
-                    showAux: false
                     anchors.top: parent.top
                     anchors.topMargin: Config.shellPadding + Math.round((Config.height - Config.buttonSize) / 2)
                     anchors.horizontalCenter: parent.horizontalCenter

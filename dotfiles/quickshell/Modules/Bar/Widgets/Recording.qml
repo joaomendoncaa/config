@@ -8,7 +8,7 @@ Rectangle {
 
     property bool isRecording: false
 
-    Layout.preferredWidth: recordingText.implicitWidth + Config.gapInner * 4
+    Layout.preferredWidth: root.isRecording ? recordingText.implicitWidth + Config.gapInner * 4 : 0
     Layout.preferredHeight: Config.buttonSize
     radius: Config.buttonBorderRadius
     color: mouseArea.containsMouse && root.isRecording ? Config.backgroundHovered : "transparent"

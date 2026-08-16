@@ -36,6 +36,7 @@ Item {
     readonly property string dashboardTarget: `https://opencode.ai/workspace/${root.workspaceId}/go`
     readonly property string agentsCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-agents`
     readonly property string usageCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-usage`
+    readonly property int mockAgentCount: 0
 
     function clamp(value, minimum, maximum) {
         return Math.min(maximum, Math.max(minimum, value))
@@ -92,7 +93,38 @@ Item {
         focusProc.running = true
     }
 
+    function loadMockAgents() {
+        var states = ['running', 'idle', 'blocked', 'pending']
+        var repos = ['anomalyco/opencode', 'hyprwm/Hyprland', 'basecamp/omarchy', 'outfoxxed/quickshell', 'anomalyco/dotfiles', 'lab/voxtype', 'stevearc/oil.nvim', 'neovim/neovim', 'microsoft/vscode', 'qt/qtdeclarative']
+        var titles = ['refactor bar layout', 'fix overflow arrows', 'investigate pipewire crash', 'review PR #42', 'migrate to Qt6', 'update docs', 'debug hyprland socket', 'write tests for carousel', 'tune animations', 'chase memory leak']
+        var mock = []
+        var now = Date.now()
+        for (var i = 0; i < root.mockAgentCount; i++) {
+            mock.push({
+                id: 'mock-' + i,
+                title: titles[i % titles.length],
+                repo: repos[i % repos.length],
+                branch: 'feature/mock-' + i,
+                state: states[i % states.length],
+                additions: (i * 7) % 50,
+                deletions: (i * 3) % 20,
+                activityAt: now - i * 60000,
+                createdAt: now - i * 3600000
+            })
+        }
+        root.agents = mock
+        root.agentAvailable = true
+        root.agentLoading = false
+        root.agentRequestPending = false
+        root.agentError = ''
+        root.activeAgentId = mock.length > 2 ? 'mock-2' : ''
+    }
+
     function refreshAgents() {
+        if (root.mockAgentCount > 0) {
+            root.loadMockAgents()
+            return
+        }
         if (root.agentRequestPending || agentProc.running)
             return
         root.agentRequestPending = true
@@ -315,7 +347,7 @@ Item {
 
     Timer {
         interval: 1000
-        running: true
+        running: root.mockAgentCount === 0
         repeat: true
         onTriggered: root.refreshAgents()
     }
