@@ -20,8 +20,7 @@ state_file = "auto"
 # Optional modifier keys that must also be held
 # Example: modifiers = ["LEFTCTRL", "LEFTALT"]
 mode = "toggle"
-enabled = true
-key = "HOME"
+enabled = false
 
 # Activation mode: "push_to_talk" or "toggle"
 # - push_to_talk: Hold hotkey to record, release to transcribe (default)
