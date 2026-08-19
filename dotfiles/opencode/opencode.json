@@ -39,5 +39,8 @@
         "incorrupt": {
             "repository": "$HOME/lab/gilly"
         }
+    },
+    "websearch": {
+      "provider": "random"
     }
 }
