@@ -135,6 +135,8 @@ return {
                 sql = { 'sql_formatter' },
                 sh = { 'shfmt' },
                 lua = { 'stylua' },
+                gdscript = { 'gdscript-formatter', 'gdformat', stop_after_first = true },
+                gd = { 'gdscript-formatter', 'gdformat', stop_after_first = true },
             },
             formatters = {
                 qmlformat = {

@@ -87,7 +87,6 @@ return {
             glsl_analyzer = {},
             tailwindcss = {},
             stylua = {},
-            glsl_analyzer = {},
             html_lsp = {},
             emmet_language_server = {},
             biome = {},
@@ -314,14 +313,6 @@ return {
             handlers = { handle_mason_setup },
         }
 
-        -- connects to the godot editor's built-in LSP over TCP
-        -- (default port 6005, override with the GDScript_Port env var)
-        -- Requires the editor to be open on the project directory
-        vim.lsp.config('gdscript', {
-            cmd = vim.lsp.rpc.connect('127.0.0.1', tonumber(os.getenv 'GDScript_Port' or '6005')),
-            filetypes = { 'gdscript' },
-            root_markers = { 'project.godot', '.git' },
-        })
-        vim.lsp.enable 'gdscript'
+        require('utils.godot').setup()
     end,
 }
