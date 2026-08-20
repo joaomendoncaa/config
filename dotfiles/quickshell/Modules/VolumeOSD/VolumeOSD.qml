@@ -23,7 +23,15 @@ Item {
         return "\uf028";
     }
 
-    Component.onCompleted: Quickshell.execDetached(["rm", "-f", root.statePath])
+    // Create the state file empty (truncating any stale content) so the
+    // FileView poll below never reads a missing file. Deleting it instead
+    // would make every reload() attempt log "File does not exist" until
+    // the next volume change re-creates it.
+    Component.onCompleted: Quickshell.execDetached([
+        "sh",
+        "-c",
+        'mkdir -p "$XDG_RUNTIME_DIR/volume-osd" && : > "$XDG_RUNTIME_DIR/volume-osd/state"'
+    ])
 
     FileView {
         id: stateFile

@@ -38,6 +38,12 @@ Scope {
         id: agentService
     }
 
+    VpnService {
+        id: vpnService
+
+        notificationService: notificationService
+    }
+
     Timer {
         interval: 5000
         running: Profiler.enabled
@@ -66,6 +72,8 @@ Scope {
             barComponent.solanaPanelOpen = false
         if (panel !== 'agents')
             barComponent.agentPanelOpen = false
+        if (panel !== 'vpn')
+            barComponent.vpnPanelOpen = false
     }
 
     function toggleLauncher(mode) {
@@ -186,22 +194,24 @@ Scope {
     }
 
     BlurMask {
-        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen
+        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen
     }
 
     Bar {
         id: barComponent
         isRecording: root.isRecording
-        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen
         onToggleLauncher: root.toggleLauncher('apps')
         onTogglePowerMenu: root.togglePowerMenu()
         onDismissPanels: root.closePanelsExcept('')
         onSolanaPanelOpening: root.closePanelsExcept('solana')
         onNotificationPanelOpening: root.closePanelsExcept('notifications')
         onAgentPanelOpening: root.closePanelsExcept('agents')
+        onVpnPanelOpening: root.closePanelsExcept('vpn')
         priceLabels: root.priceLabels
         agentService: agentService
         notificationService: notificationService
+        vpnService: vpnService
     }
 
     ClipboardCapture {

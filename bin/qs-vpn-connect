@@ -1,0 +1,64 @@
+#!/usr/bin/python3.14
+"""Connect to the fastest FREE Proton VPN server in a given country.
+
+The `protonvpn` CLI forbids location selection (`connect --country`) on the
+free plan even though free servers are available there. This helper drives
+Proton's Python API directly with the already-logged-in session, skipping the
+CLI's free-plan guard, and connects to the best free (tier 0) server in the
+requested country.
+
+Usage:
+    qs-vpn-connect <country-code>   # e.g. qs-vpn-connect NL
+"""
+import asyncio
+import sys
+
+import click
+
+from proton.vpn.cli.core.controller import Controller, Params
+from proton.vpn.session import ServerList
+from proton.vpn.session.servers.types import ServerFeatureEnum
+
+
+async def connect_to_country(country_code: str) -> int:
+    ctx = click.Context(click.Command("qs-vpn-connect"))
+    controller = await Controller.create(params=Params(), click_ctx=ctx)
+
+    if not controller.is_logged_in:
+        print("error: not signed in to Proton VPN", file=sys.stderr)
+        return 2
+
+    try:
+        code = controller.validate_country_input(country_code)
+    except Exception as exc:  # noqa: BLE001 - surface any validation failure
+        print(f"error: invalid country '{country_code}': {exc}", file=sys.stderr)
+        return 2
+
+    server_list = await controller.get_updated_server_list()
+    servers = ServerList.get_servers_in_country_code(server_list.logicals, code)
+    servers = ServerList.get_servers_with_features(
+        servers, exclude_features=ServerFeatureEnum.SECURE_CORE | ServerFeatureEnum.TOR)
+    # user_tier == 0 on the free plan -> only tier-0 (free) servers are usable.
+    servers = ServerList.get_available_servers(servers, controller.user_tier)
+    server = ServerList.get_fastest_server(servers)
+
+    if not server:
+        print(f"error: no free servers available in '{code}'", file=sys.stderr)
+        return 1
+
+    # Connecting via the API (not find_logical_server) bypasses the CLI guard.
+    connection_state = await controller.connect(server)
+    if not connection_state:
+        print(f"error: connection to {server.name} failed", file=sys.stderr)
+        return 1
+
+    location = server.city or server.entry_country_name
+    print(f"connected to {server.name} in {location}")
+    return 0
+
+
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print("usage: qs-vpn-connect <country-code>", file=sys.stderr)
+        sys.exit(2)
+    sys.exit(asyncio.run(connect_to_country(sys.argv[1])))

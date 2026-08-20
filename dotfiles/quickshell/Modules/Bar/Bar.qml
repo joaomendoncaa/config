@@ -20,15 +20,18 @@ PanelWindow {
     property alias notificationCenterOpen: notifButton.popupOpen
     property alias solanaPanelOpen: solanaWidget.popupOpen
     property alias agentPanelOpen: agentWidget.popupVisible
+    property alias vpnPanelOpen: vpnButton.popupOpen
     required property var priceLabels
     required property var agentService
     required property var notificationService
+    required property var vpnService
 
     signal toggleLauncher()
     signal togglePowerMenu()
     signal solanaPanelOpening()
     signal notificationPanelOpening()
     signal agentPanelOpening()
+    signal vpnPanelOpening()
     signal dismissPanels()
 
     function updatePowerMenuPosition() {
@@ -118,6 +121,14 @@ PanelWindow {
             }
 
             Monitor {
+            }
+
+            VpnButton {
+                id: vpnButton
+
+                service: bar.vpnService
+                barWindow: bar
+                onOpening: bar.vpnPanelOpening()
             }
 
             Sink {
