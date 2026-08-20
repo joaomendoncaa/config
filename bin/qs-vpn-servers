@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""Emit the Proton VPN free-server list grouped by country, as compact JSON
+for the Quickshell VPN panel.
+
+Reads the server list cached by the `protonvpn` CLI and prints a small JSON
+document on stdout:
+
+    {"loaded": true, "freePlan": true,
+     "countries": [{"code": "NL", "name": "Netherlands", "city": "Amsterdam",
+                    "load": 95, "count": 35}, ...]}
+
+Free-plan accounts only see free servers (Tier 0) grouped by country; paying
+accounts see all countries with servers any tier. The panel lists countries
+and clicking one connects to the best free server there (see qs-vpn-connect),
+instead of listing every individual server.
+
+If the cache can't be read (missing or mid-write), {"loaded": false, ...} is
+printed so the shell can show a "loading" state and retry instead of crashing.
+"""
+import json
+import os
+import sys
+import time
+
+CACHE_PATH = os.path.expanduser("~/.cache/Proton/VPN/serverlist.json")
+
+# Human-friendly names for the countries that commonly host free (Tier 0)
+# Proton VPN servers. Anything not listed falls back to its two-letter code.
+COUNTRY_NAMES = {
+    "NL": "Netherlands",
+    "US": "United States",
+    "CA": "Canada",
+    "JP": "Japan",
+    "SG": "Singapore",
+    "MX": "Mexico",
+    "RO": "Romania",
+    "NO": "Norway",
+    "CH": "Switzerland",
+    "PL": "Poland",
+    "GB": "United Kingdom",
+    "DE": "Germany",
+    "FR": "France",
+    "SE": "Sweden",
+    "IS": "Iceland",
+    "IE": "Ireland",
+}
+
+
+def load_cache():
+    # The CLI may be rewriting the file; retry briefly before giving up.
+    for _ in range(8):
+        try:
+            with open(CACHE_PATH, "r", encoding="utf-8") as handle:
+                return json.load(handle)
+        except (OSError, ValueError):
+            time.sleep(0.15)
+    return None
+
+
+def main():
+    data = load_cache()
+    if not isinstance(data, dict):
+        print(json.dumps({"loaded": False, "freePlan": True, "countries": []}))
+        return 0
+
+    logical_servers = data.get("LogicalServers") or []
+    max_tier = data.get("MaxTier", 0)
+    include_all = max_tier > 0
+
+    # Group usable servers by country, keeping per-country best load.
+    # On the free plan only tier-0 servers are usable, so paid servers are
+    # excluded entirely -> the panel never offers servers the user can't reach.
+    countries = {}
+    for entry in logical_servers:
+        if not isinstance(entry, dict):
+            continue
+        tier = entry.get("Tier", 0)
+        if not include_all and tier != 0:
+            continue
+
+        code = str(entry.get("ExitCountry") or "??").upper()
+        city = str(entry.get("City") or "")
+        load = entry.get("Load")
+        if not isinstance(load, (int, float)):
+            load = -1
+
+        group = countries.setdefault(code, {"count": 0, "city": None, "best_load": 1000, "has_load": False})
+        group["count"] += 1
+        # Prefer the city bearing the lowest (best) load for display.
+        if not group["city"] and city:
+            group["city"] = city
+        if isinstance(load, (int, float)) and load >= 0:
+            group["has_load"] = True
+            if load < group["best_load"]:
+                group["best_load"] = load
+                if city:
+                    group["city"] = city
+
+    countries_list = []
+    for code, group in countries.items():
+        countries_list.append({
+            "code": code,
+            "name": COUNTRY_NAMES.get(code, code),
+            "city": group["city"] or "",
+            "load": group["best_load"] if group["has_load"] else -1,
+            "count": group["count"],
+        })
+
+    # Sort by country name so the menu is stable and friendly.
+    countries_list.sort(key=lambda c: c["name"].lower())
+    print(json.dumps({
+        "loaded": True,
+        "freePlan": max_tier == 0,
+        "countries": countries_list,
+    }))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
