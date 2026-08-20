@@ -61,13 +61,12 @@ Item {
                 visible: false
             }
 
+            // Static states: foreground when connected, muted when disconnected
             Rectangle {
                 id: fgColor
 
                 anchors.fill: parent
-                color: root.service.busy
-                    ? Config.foregroundSecondary
-                    : root.service.connected ? Config.accent : Config.foreground
+                color: root.service.connected ? Config.foreground : Config.foregroundSecondary
                 visible: false
             }
 
@@ -75,6 +74,85 @@ Item {
                 anchors.fill: parent
                 source: fgColor
                 maskSource: maskImage
+                visible: !root.service.busy
+            }
+
+            // Shimmer loading state (mirrors Sink.qml skeleton)
+            Item {
+                id: shimmerContainer
+
+                anchors.fill: parent
+                clip: true
+                visible: root.service.busy
+
+                Item {
+                    id: shimmerSource
+
+                    anchors.fill: parent
+                    clip: true
+                    visible: false
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: Config.hexWithAlpha(Config.foreground, "66")
+                    }
+
+                    Item {
+                        id: shimmerBand
+
+                        width: shimmerSource.width * 1.8
+                        height: shimmerSource.height * 1.8
+
+                        LinearGradient {
+                            anchors.fill: parent
+                            start: Qt.point(0, 0)
+                            end: Qt.point(parent.width, parent.height)
+                            gradient: Gradient {
+                                GradientStop {
+                                    position: 0
+                                    color: "transparent"
+                                }
+                                GradientStop {
+                                    position: 0.5
+                                    color: Config.foreground
+                                }
+                                GradientStop {
+                                    position: 1
+                                    color: "transparent"
+                                }
+                            }
+                        }
+
+                        ParallelAnimation {
+                            running: root.service.busy
+                            loops: Animation.Infinite
+
+                            NumberAnimation {
+                                target: shimmerBand
+                                property: "x"
+                                from: -shimmerBand.width
+                                to: shimmerSource.width
+                                duration: 1170
+                                easing.type: Easing.Linear
+                            }
+
+                            NumberAnimation {
+                                target: shimmerBand
+                                property: "y"
+                                from: -shimmerBand.height
+                                to: shimmerSource.height
+                                duration: 1170
+                                easing.type: Easing.Linear
+                            }
+                        }
+                    }
+                }
+
+                OpacityMask {
+                    anchors.fill: parent
+                    source: shimmerSource
+                    maskSource: maskImage
+                }
             }
         }
 
