@@ -54,7 +54,7 @@ Item {
                 id: maskImage
 
                 anchors.fill: parent
-                source: "../../../Assets/vpn-shield.svg"
+                source: "../../../Assets/vpn.svg"
                 sourceSize.width: width
                 sourceSize.height: height
                 smooth: true
