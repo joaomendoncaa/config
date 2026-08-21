@@ -193,6 +193,49 @@ Scope {
 
     }
 
+    IpcHandler {
+        target: "submap"
+
+        function set(name: string): void {
+            barComponent.submapName = name
+        }
+
+        function clear(): void {
+            barComponent.submapName = ""
+        }
+
+    }
+
+    // Direct Hyprland submap event - more reliable than lua IPC push
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name === "submap") {
+                // Hyprland sends "" for reset / default, otherwise submap name
+                barComponent.submapName = event.data
+            }
+        }
+    }
+
+    // On quickshell startup, query current submap (in case hyprland is already in a submap)
+    Process {
+        id: submapInitProcess
+        command: ["hyprctl", "submap"]
+        running: true
+        stdout: StdioCollector {
+            id: submapCollector
+            onStreamFinished: {
+                var raw = String(submapCollector.text).trim()
+                // hyprctl returns "default" for no submap, quotes stripped
+                raw = raw.replace(/^"+|"+$/g, "")
+                if (raw === "" || raw === "default")
+                    barComponent.submapName = ""
+                else
+                    barComponent.submapName = raw
+            }
+        }
+    }
+
     BlurMask {
         visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen
     }
