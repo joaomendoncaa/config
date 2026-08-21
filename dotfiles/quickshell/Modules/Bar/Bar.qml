@@ -17,6 +17,7 @@ PanelWindow {
     property real powerMenuY: 0
     property bool contentVisible: true
     property bool isRecording: false
+    property string submapName: ""
     property alias notificationCenterOpen: notifButton.popupOpen
     property alias solanaPanelOpen: solanaWidget.popupOpen
     property alias agentPanelOpen: agentWidget.popupVisible
@@ -96,6 +97,10 @@ PanelWindow {
                 barWindow: bar
                 service: bar.agentService
                 onOpening: bar.agentPanelOpening()
+            }
+
+            Submap {
+                submapName: bar.submapName
             }
 
         }

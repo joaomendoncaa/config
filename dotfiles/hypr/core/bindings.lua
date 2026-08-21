@@ -62,6 +62,16 @@ local function run_sync(sh)
 	end
 end
 
+local function bind_submap_escape()
+	hl.bind("ESCAPE", function()
+		if hl.get_current_submap() ~= "" then
+			hl.dispatch(hl.dsp.submap("reset"))
+		else
+			return { pass_event = true }
+		end
+	end, { submap_universal = true, description = "Exit submap (ESC)" })
+end
+
 -- Bind/unbind is deferred via hl.timer so it never mutates the keybind
 -- list while Hyprland is walking it (same trick as the CTRL+N/P block).
 local function unbind_escape()
@@ -73,6 +83,7 @@ local function unbind_escape()
 		hl.unbind("SUPER + ESCAPE")
 		hl.unbind("ESCAPE")
 		bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
+		bind_submap_escape()
 	end, { timeout = 1, type = "oneshot" })
 end
 
@@ -103,10 +114,16 @@ local function bind_escape()
 		hl.unbind("ESCAPE")
 		hl.bind("SUPER + ESCAPE", function()
 			ptt_cancel()
-		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
+			if hl.get_current_submap() ~= "" then
+				hl.dispatch(hl.dsp.submap("reset"))
+			end
+		end, { submap_universal = true, description = "Dictation: cancel (ESC while holding SUPER+D)" })
 		hl.bind("ESCAPE", function()
 			ptt_cancel()
-		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
+			if hl.get_current_submap() ~= "" then
+				hl.dispatch(hl.dsp.submap("reset"))
+			end
+		end, { submap_universal = true, description = "Dictation: cancel (ESC while holding SUPER+D)" })
 	end, { timeout = 1, type = "oneshot" })
 end
 
@@ -303,6 +320,27 @@ hl.define_submap("comms", "reset", function()
 	end, { description = "Telegram" })
 end)
 hl.bind("SUPER + C", hl.dsp.submap("comms"), { description = "Enter comms submap" })
+
+-- Universal ESC: exit any submap, otherwise pass through to client
+bind_submap_escape()
+
+-- Push submap state to quickshell bar (left-side indicator)
+hl.on("keybinds.submap", function(submap)
+	if submap == "" then
+		hl.exec_cmd(utils.quickshell_ipc("submap", "clear"))
+	else
+		hl.exec_cmd(utils.quickshell_ipc("submap", "set", submap))
+	end
+end)
+
+hl.on("hyprland.start", function()
+	local cur = hl.get_current_submap()
+	if cur == "" then
+		hl.exec_cmd(utils.quickshell_ipc("submap", "clear"))
+	else
+		hl.exec_cmd(utils.quickshell_ipc("submap", "set", cur))
+	end
+end)
 
 hl.window_rule({
 	name = "opencode-panel",
