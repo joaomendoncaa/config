@@ -62,16 +62,6 @@ local function run_sync(sh)
 	end
 end
 
-local function bind_submap_escape()
-	hl.bind("ESCAPE", function()
-		if hl.get_current_submap() ~= "" then
-			hl.dispatch(hl.dsp.submap("reset"))
-		else
-			return { pass_event = true }
-		end
-	end, { submap_universal = true, description = "Exit submap (ESC)" })
-end
-
 -- Bind/unbind is deferred via hl.timer so it never mutates the keybind
 -- list while Hyprland is walking it (same trick as the CTRL+N/P block).
 local function unbind_escape()
@@ -83,7 +73,6 @@ local function unbind_escape()
 		hl.unbind("SUPER + ESCAPE")
 		hl.unbind("ESCAPE")
 		bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
-		bind_submap_escape()
 	end, { timeout = 1, type = "oneshot" })
 end
 
@@ -114,16 +103,10 @@ local function bind_escape()
 		hl.unbind("ESCAPE")
 		hl.bind("SUPER + ESCAPE", function()
 			ptt_cancel()
-			if hl.get_current_submap() ~= "" then
-				hl.dispatch(hl.dsp.submap("reset"))
-			end
-		end, { submap_universal = true, description = "Dictation: cancel (ESC while holding SUPER+D)" })
+		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
 		hl.bind("ESCAPE", function()
 			ptt_cancel()
-			if hl.get_current_submap() ~= "" then
-				hl.dispatch(hl.dsp.submap("reset"))
-			end
-		end, { submap_universal = true, description = "Dictation: cancel (ESC while holding SUPER+D)" })
+		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
 	end, { timeout = 1, type = "oneshot" })
 end
 
@@ -272,6 +255,7 @@ hl.define_submap("toggles", "reset", function()
 		hl.dispatch(hl.dsp.exec_cmd("pamixer -t"))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Toggle audio mute" })
+	hl.bind("ESCAPE", hl.dsp.submap("reset"), { description = "Exit submap (ESC)" })
 end)
 hl.bind("SUPER + T", hl.dsp.submap("toggles"), { description = "Enter toggles submap" })
 
@@ -289,6 +273,7 @@ hl.define_submap("twitter", "reset", function()
 		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://pro.x.com"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Open X Pro" })
+	hl.bind("ESCAPE", hl.dsp.submap("reset"), { description = "Exit submap (ESC)" })
 end)
 hl.bind("SUPER + X", hl.dsp.submap("twitter"), { description = "Enter twitter submap" })
 
@@ -318,11 +303,9 @@ hl.define_submap("comms", "reset", function()
 		hl.dispatch(hl.dsp.exec_cmd("Telegram"))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Telegram" })
+	hl.bind("ESCAPE", hl.dsp.submap("reset"), { description = "Exit submap (ESC)" })
 end)
 hl.bind("SUPER + C", hl.dsp.submap("comms"), { description = "Enter comms submap" })
-
--- Universal ESC: exit any submap, otherwise pass through to client
-bind_submap_escape()
 
 -- Push submap state to quickshell bar (left-side indicator)
 hl.on("keybinds.submap", function(submap)
