@@ -83,6 +83,19 @@ utils.window("chrome-nngceckbapebfimnlniiiahkandclblb-Default", { no_screen_shar
 
 utils.window("^(Emulator)$", { float = true })
 
+-- Godot game windows launched from the editor (F5) map as "Godot" and only rename to " (DEBUG)" afterwards.
+-- Static rules are evaluated at map time only, so catch them via the title event instead.
+local godot_debug_floated = {}
+hl.on("window.title", function(w)
+	if godot_debug_floated[w.address] or w.class ~= "Godot_Engine" or not w.title:find(" (DEBUG)", 1, true) then
+		return
+	end
+
+	godot_debug_floated[w.address] = true
+	hl.dispatch(hl.dsp.window.float({ window = "address:" .. w.address, action = "on" }))
+	hl.dispatch(hl.dsp.window.center({ window = "address:" .. w.address }))
+end)
+
 utils.window(".*[Rr]esolve.*", { float = true, stay_focused = true })
 
 utils.window("GeForceNOW", { idle_inhibit = "fullscreen" })
