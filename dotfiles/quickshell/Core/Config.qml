@@ -15,11 +15,8 @@ QtObject {
     readonly property int cursorBlinkInterval: 530
     readonly property string fontFamily: "JetBrainsMonoNL Nerd Font"
     readonly property int shellPadding: 10
-
-    // Notification ding — played by the daemon so apps can keep their own sounds off
     readonly property string notificationSoundFile: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/quickshell/Assets/sounds/notification-ding.ogg"
-    readonly property int notificationSoundVolume: 60 // percent 0-100
-
+    readonly property int notificationSoundVolume: 85
     property string foreground: "#FFFFFF"
     property string accent: "#509475"
     property int borderSize: 2
@@ -32,43 +29,45 @@ QtObject {
     property string backgroundColoredSecondary: "#131313"
     property string backgroundColoredTertiary: "#262626"
     property string backgroundHovered: "#40FFFFFF"
-    property var env: ({})
+    property var env: ({
+    })
+    property var envFile
+    property var themeFile
 
     function parseEnv(raw) {
         var lines = String(raw || '').split('\n');
-        var result = {};
+        var result = {
+        };
         for (var i = 0; i < lines.length; i++) {
             var line = lines[i].trim();
             if (line === '' || line[0] === '#')
                 continue;
+
             var eq = line.indexOf('=');
             if (eq > 0)
                 result[line.substring(0, eq)] = line.substring(eq + 1).trim();
+
         }
         env = result;
     }
 
-    property var envFile: FileView {
-        path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/bash/.env"
-        onLoaded: parseEnv(text())
-        printErrors: false
-    }
-
-    property var themeFile
-
     function hexToRgb(hexColor) {
-        if (!hexColor || hexColor.length !== 7 || !hexColor.startsWith("#")) {
-            return {r: 0, g: 0, b: 0};
-        }
+        if (!hexColor || hexColor.length !== 7 || !hexColor.startsWith("#"))
+            return {
+            "r": 0,
+            "g": 0,
+            "b": 0
+        };
+
         return {
-            r: parseInt(hexColor.substring(1, 3), 16) / 255,
-            g: parseInt(hexColor.substring(3, 5), 16) / 255,
-            b: parseInt(hexColor.substring(5, 7), 16) / 255
+            "r": parseInt(hexColor.substring(1, 3), 16) / 255,
+            "g": parseInt(hexColor.substring(3, 5), 16) / 255,
+            "b": parseInt(hexColor.substring(5, 7), 16) / 255
         };
     }
 
     function rgbToHex(r, g, b) {
-        var toHex = function(v) {
+        var toHex = function toHex(v) {
             var s = Math.round(v * 255).toString(16);
             return s.length === 1 ? "0" + s : s;
         };
@@ -79,39 +78,62 @@ QtObject {
         var max = Math.max(r, g, b);
         var min = Math.min(r, g, b);
         var h, s, l = (max + min) / 2;
-
         if (max === min) {
             h = s = 0;
         } else {
             var d = max - min;
             s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
             switch (max) {
-                case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-                case g: h = ((b - r) / d + 2) / 6; break;
-                case b: h = ((r - g) / d + 4) / 6; break;
+            case r:
+                h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                break;
+            case g:
+                h = ((b - r) / d + 2) / 6;
+                break;
+            case b:
+                h = ((r - g) / d + 4) / 6;
+                break;
             }
         }
-        return {h: h, s: s, l: l};
+        return {
+            "h": h,
+            "s": s,
+            "l": l
+        };
     }
 
     function hslToRgb(h, s, l) {
-        if (s === 0) {
-            return {r: l, g: l, b: l};
-        }
-        var hue2rgb = function(p, q, t) {
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1/6) return p + (q - p) * 6 * t;
-            if (t < 1/2) return q;
-            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+        if (s === 0)
+            return {
+            "r": l,
+            "g": l,
+            "b": l
+        };
+
+        var hue2rgb = function hue2rgb(p, q, t) {
+            if (t < 0)
+                t += 1;
+
+            if (t > 1)
+                t -= 1;
+
+            if (t < 1 / 6)
+                return p + (q - p) * 6 * t;
+
+            if (t < 1 / 2)
+                return q;
+
+            if (t < 2 / 3)
+                return p + (q - p) * (2 / 3 - t) * 6;
+
             return p;
         };
         var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         var p = 2 * l - q;
         return {
-            r: hue2rgb(p, q, h + 1/3),
-            g: hue2rgb(p, q, h),
-            b: hue2rgb(p, q, h - 1/3)
+            "r": hue2rgb(p, q, h + 1 / 3),
+            "g": hue2rgb(p, q, h),
+            "b": hue2rgb(p, q, h - 1 / 3)
         };
     }
 
@@ -148,6 +170,12 @@ QtObject {
         }
     }
 
+    envFile: FileView {
+        path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/bash/.env"
+        onLoaded: parseEnv(text())
+        printErrors: false
+    }
+
     themeFile: FileView {
         path: Quickshell.env("HOME") + "/.config/theme/colors.json"
         watchChanges: true
@@ -155,4 +183,5 @@ QtObject {
         onFileChanged: reload()
         printErrors: false
     }
+
 }

@@ -50,6 +50,17 @@ Item {
             width: Config.buttonSize * 0.7
             height: Config.buttonSize * 0.7
 
+            readonly property bool showBadge: root.service.connected && !root.service.busy && root.service.countryCode.length === 2
+            // Quadrant is 65% of the button; map it into icon coordinates to
+            // know which part of the shield to cut.
+            readonly property real quadrantSize: Config.buttonSize * 0.65
+            readonly property real iconSize: Config.buttonSize * 0.7
+            readonly property real iconMargin: (Config.buttonSize - iconSize) / 2
+            readonly property real holeX: Math.max(0, Config.buttonSize - quadrantSize - iconMargin)
+            readonly property real holeY: holeX
+            readonly property real holeW: Math.max(0, iconSize - holeX)
+            readonly property real holeH: holeW
+
             Image {
                 id: maskImage
 
@@ -70,11 +81,52 @@ Item {
                 visible: false
             }
 
+            // L-shaped white mask leaving bottom-right quadrant transparent.
+            // Used to cut the shield in the same quadrant where the ISO text sits.
+            Item {
+                id: quadrantMask
+
+                anchors.fill: parent
+                visible: false
+
+                Rectangle {
+                    width: parent.width
+                    height: iconContainer.holeY
+                    color: "white"
+                }
+
+                Rectangle {
+                    y: iconContainer.holeY
+                    width: iconContainer.holeX
+                    height: iconContainer.holeH
+                    color: "white"
+                }
+            }
+
+            // Combined mask: shield shape intersected with L-shape (shield minus quadrant hole)
+            OpacityMask {
+                id: combinedMask
+
+                anchors.fill: parent
+                source: quadrantMask
+                maskSource: maskImage
+                visible: false
+            }
+
+            // Normal shield (full) when no badge
             OpacityMask {
                 anchors.fill: parent
                 source: fgColor
                 maskSource: maskImage
-                visible: !root.service.busy
+                visible: !root.service.busy && !iconContainer.showBadge
+            }
+
+            // Clipped shield (quadrant cut) when badge is shown
+            OpacityMask {
+                anchors.fill: parent
+                source: fgColor
+                maskSource: combinedMask
+                visible: !root.service.busy && iconContainer.showBadge
             }
 
             // Shimmer loading state (mirrors Sink.qml skeleton)
@@ -169,6 +221,42 @@ Item {
                 else
                     root.togglePanel()
             }
+        }
+
+        // --- Country badge (bottom-right quadrant) -----------------------------
+        // Layer 1: quadrant clip - the actual shield cut is done inside
+        // iconContainer via combinedMask; this Item just reserves the
+        // quadrant on top of the button (no solid background) and keeps
+        // the requested 2-layer structure.
+        Item {
+            id: badgeClipLayer
+
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            width: parent.width * 0.65
+            height: parent.height * 0.65
+            visible: iconContainer.showBadge
+            z: 2
+        }
+
+        // Layer 2: ISO code on top of the clipped quadrant.
+        Text {
+            id: badgeLabel
+
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            width: parent.width * 0.65
+            height: parent.height * 0.65
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            visible: iconContainer.showBadge
+            text: root.service.countryCode
+            color: Config.foreground
+            font.family: Config.fontFamily
+            font.pixelSize: Math.round(height * 0.58)
+            font.bold: true
+            font.weight: Font.ExtraBold
+            z: 3
         }
     }
 

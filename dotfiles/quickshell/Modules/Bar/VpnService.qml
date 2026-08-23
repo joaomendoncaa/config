@@ -26,6 +26,26 @@ Item {
     property int load: -1
     property string protocol: ""
 
+    // Derived two-letter ISO country code of the active connection (e.g. "US",
+    // "NL"), guessed from serverName using the known country list. Empty when
+    // disconnected or when the code cannot be determined.
+    readonly property string countryCode: {
+        if (!root.connected || !root.serverName)
+            return ""
+        var sn = root.serverName.toUpperCase()
+        var cs = root.countries || []
+        for (var i = 0; i < cs.length; i++) {
+            var c = (cs[i].code || "").toUpperCase()
+            if (c.length === 2 && sn.indexOf(c) !== -1)
+                return c
+        }
+        // Proton names are like "US-FREE#70", "NL#53", "JP#12" - the country
+        // prefix is two letters followed by a non-letter (dash, hash, or EOS).
+        var m = sn.match(/^([A-Z]{2})(?:[^A-Z0-9]|$)/)
+        if (m) return m[1]
+        return ""
+    }
+
     // True while a connect/disconnect is in flight.
     property bool busy: false
 
