@@ -16,6 +16,10 @@ QtObject {
     readonly property string fontFamily: "JetBrainsMonoNL Nerd Font"
     readonly property int shellPadding: 10
 
+    // Notification ding — played by the daemon so apps can keep their own sounds off
+    readonly property string notificationSoundFile: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/quickshell/Assets/sounds/notification-ding.ogg"
+    readonly property int notificationSoundVolume: 60 // percent 0-100
+
     property string foreground: "#FFFFFF"
     property string accent: "#509475"
     property int borderSize: 2

@@ -339,6 +339,45 @@ Item {
         if (_popupRefsByOriginalId[wrapper.originalId] === wrapper) delete _popupRefsByOriginalId[wrapper.originalId]
     }
 
+    // -----------------------------------------------------------------------
+    // Sounds — daemon-side ding so apps can keep their own sounds disabled
+    // -----------------------------------------------------------------------
+    property double _lastSoundAt: 0
+
+    Process { id: notificationSoundProc; running: false }
+
+    function playNotificationSound(notification) {
+        var hints = {}
+        try {
+            if (notification && notification.hints) hints = notification.hints
+        } catch (e) {}
+
+        // Freedesktop spec: app explicitly asks for silence
+        if (String(hints["suppress-sound"]) === "true") return
+
+        // Coalesce burst arrivals into a single ding
+        var now = Date.now()
+        if (now - service._lastSoundAt < 150) return
+        service._lastSoundAt = now
+
+        // Honor sound-file hints, fall back to the configured default
+        var file = String(hints["sound-file"] || "")
+        if (file.indexOf("/") !== 0) file = Config.notificationSoundFile
+
+        var vol = Math.max(0, Math.min(100, Config.notificationSoundVolume)) / 100
+        if (notificationSoundProc.running) notificationSoundProc.running = false
+        notificationSoundProc.command = ["paplay", "--volume=" + Math.round(vol * 65536), file]
+        notificationSoundProc.running = true
+    }
+
+    function presentWithSound(snapshot, notification, allowSound) {
+        Qt.callLater(function() {
+            if (service.popupsBlocked) return
+            if (allowSound) service.playNotificationSound(notification)
+            showPopup(snapshot)
+        })
+    }
+
     function handleNotification(notification) {
         notification.tracked = true
         var snapshot = snapshotOf(notification)
@@ -349,6 +388,7 @@ Item {
 
         // Rules engine — evaluate before any processing
         var rule = N.evaluateRules(service.notificationRules, snapshot)
+        var allowSound = !rule || rule.sound !== false
         if (rule) {
             switch (rule.action) {
             case "ignore":
@@ -363,20 +403,14 @@ Item {
             case "popup_only":
                 if (rule.urgencyOverride !== undefined) snapshot.urgency = rule.urgencyOverride
                 if (!service.doNotDisturb || shouldBypassDnd(notification)) {
-                    Qt.callLater(function() {
-                        if (service.popupsBlocked) return
-                        showPopup(snapshot)
-                    })
+                    presentWithSound(snapshot, notification, allowSound)
                 }
                 return
             case "no_history":
                 if (rule.urgencyOverride !== undefined) snapshot.urgency = rule.urgencyOverride
                 snapshot._noHistory = true
                 if (!service.doNotDisturb || shouldBypassDnd(notification)) {
-                    Qt.callLater(function() {
-                        if (service.popupsBlocked) return
-                        showPopup(snapshot)
-                    })
+                    presentWithSound(snapshot, notification, allowSound)
                 }
                 return
             case "default":
@@ -390,10 +424,7 @@ Item {
                 notification.tracked = false
                 return
             }
-            Qt.callLater(function() {
-                if (service.popupsBlocked) return
-                showPopup(snapshot)
-            })
+            presentWithSound(snapshot, notification, allowSound)
             return
         }
 
@@ -407,10 +438,7 @@ Item {
             return
         }
 
-        Qt.callLater(function() {
-            if (service.popupsBlocked) return
-            showPopup(snapshot)
-        })
+        presentWithSound(snapshot, notification, allowSound)
     }
 
     function addToPending(snapshot) {

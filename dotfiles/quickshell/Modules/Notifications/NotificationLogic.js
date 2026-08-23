@@ -221,7 +221,8 @@ function imageExtension(srcPath) {
 // Notification Rules Engine
 // Rules are evaluated in order; first match wins.
 // Each rule: { match: {appName?, desktopEntry?, summary?, body?}, matchType: "contains"|"exact"|"regex",
-//              action: "ignore"|"mute"|"popup_only"|"no_history"|"default", urgencyOverride?: int }
+//              action: "ignore"|"mute"|"popup_only"|"no_history"|"default", urgencyOverride?: int,
+//              sound?: bool (default true — set false to skip the notification ding) }
 // ---------------------------------------------------------------------------
 
 function evaluateRules(rules, snapshot) {
