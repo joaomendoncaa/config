@@ -2,7 +2,7 @@
 id: git-commit
 name: Git Commit
 description: Generates conventional commit messages
-model: opencode/deepseek-v4-flash-free
+model: opencode/deepseek-v4-flash
 permissions:
   - action: deny
     permission: "*"

@@ -3,7 +3,7 @@
     "share": "manual",
     "autoupdate": true,
     "default_agent": "build",
-    "model": "opencode-go/deepseek-v4-flash-free",
+    "model": "opencode-go/deepseek-v4-flash",
     "references": {
         "config": {
             "path": "~/.config.jmmm.sh",
@@ -41,6 +41,6 @@
         }
     },
     "websearch": {
-      "provider": "random"
+        "provider": "random"
     }
 }
