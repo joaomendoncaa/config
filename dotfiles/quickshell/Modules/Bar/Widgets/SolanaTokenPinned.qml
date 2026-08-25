@@ -234,7 +234,11 @@ Item {
     HyprlandFocusGrab {
         id: focusGrab
         active: root.popupOpen && popupLoader.item !== null
-        windows: popupLoader.item ? (root.barWindow ? [popupLoader.item, root.barWindow] : [popupLoader.item]) : []
+        // Only the popup may be whitelisted. Including barWindow makes the
+        // compositor deliver wl_keyboard::enter to the bar surface instead of
+        // the popup, so TextInputs in the panel never receive keys.
+        // Tradeoff: clicking anywhere on the bar dismisses the panel.
+        windows: popupLoader.item ? [popupLoader.item] : []
         onActiveChanged: {
             if (active && popupLoader.item)
                 Qt.callLater(popupLoader.item.focusSearch)

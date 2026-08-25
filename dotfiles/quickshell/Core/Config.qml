@@ -27,6 +27,7 @@ QtObject {
     property string background: "transparent"
     property string backgroundColored: "#000000"
     property string backgroundColoredSecondary: "#131313"
+    property string backgroundSecondary: "#131313"
     property string backgroundColoredTertiary: "#262626"
     property string backgroundHovered: "#40FFFFFF"
     property var env: ({
@@ -161,6 +162,7 @@ QtObject {
             background = "transparent";
             backgroundColored = c.background || "#000000";
             backgroundColoredSecondary = lighten(backgroundColored, 0.075);
+            backgroundSecondary = backgroundColoredSecondary;
             backgroundColoredTertiary = lighten(backgroundColored, 0.15);
             foregroundSelected = c.selection_foreground || "#000000";
             foregroundSecondary = hexWithAlpha(foreground, "60");

@@ -356,7 +356,7 @@ Item {
             anchor.window: root.barWindow
             color: 'transparent'
             implicitWidth: Math.min(panel.panelWidth, (root.barWindow && root.barWindow.screen ? root.barWindow.screen.width : 1920) - Config.gapsOut * 2)
-            implicitHeight: Math.min(panel.desiredHeight, Math.max(Config.buttonSize * 8, (root.barWindow && root.barWindow.screen ? root.barWindow.screen.height : 1080) - anchor.rect.y - Config.gapsOut))
+            implicitHeight: Math.max(Config.buttonSize * 8, (root.barWindow && root.barWindow.screen ? root.barWindow.screen.height : 1080) - anchor.rect.y - Config.gapsOut - 12)
 
             onVisibleChanged: {
                 if (!visible && root.popupVisible)

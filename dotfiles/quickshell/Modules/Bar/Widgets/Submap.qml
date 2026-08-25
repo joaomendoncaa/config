@@ -8,7 +8,6 @@ Rectangle {
 
     property string submapName: ""
 
-    // Friendly labels for known submaps; falls back to raw name
     readonly property var labels: ({
             "toggles": "SUPER+T",
             "twitter": "SUPER+X",
@@ -18,10 +17,7 @@ Rectangle {
     readonly property string displayText: {
         if (!submapName)
             return ""
-        var prefix = labels[submapName]
-        if (prefix)
-            return prefix + "  ›  " + submapName
-        return submapName
+        return labels[submapName] || submapName
     }
 
     Layout.preferredWidth: submapName !== "" ? row.implicitWidth + Config.gapInner * 4 : 0
@@ -29,9 +25,7 @@ Rectangle {
     Layout.maximumWidth: submapName !== "" ? row.implicitWidth + Config.gapInner * 4 : 0
     implicitWidth: row.implicitWidth + Config.gapInner * 4
     radius: Config.buttonBorderRadius
-    color: mouseArea.containsMouse ? Config.accent : Config.backgroundColoredSecondary
-    border.width: 1
-    border.color: Config.accent
+    color: Config.backgroundSecondary
     visible: submapName !== ""
     clip: true
 
@@ -48,36 +42,13 @@ Rectangle {
         anchors.centerIn: parent
         spacing: Config.gapInner
 
-        // Record dot indicator
-        Rectangle {
-            Layout.preferredWidth: 8
-            Layout.preferredHeight: 8
-            radius: 4
-            color: Config.accent
-
-            SequentialAnimation on opacity {
-                running: root.submapName !== ""
-                loops: Animation.Infinite
-                NumberAnimation { from: 1.0; to: 0.4; duration: 700; easing.type: Easing.InOutSine }
-                NumberAnimation { from: 0.4; to: 1.0; duration: 700; easing.type: Easing.InOutSine }
-            }
-        }
-
         Text {
             id: label
             text: root.displayText
-            color: root.submapName !== "" ? Config.foreground : "transparent"
+            color: Config.foreground
             font.pixelSize: Config.fontSize - 1
             font.family: Config.fontFamily
             font.weight: Font.Medium
-        }
-
-        Text {
-            text: "· ESC to cancel"
-            color: Config.foregroundSecondary
-            font.pixelSize: Config.fontSize - 3
-            font.family: Config.fontFamily
-            visible: root.submapName !== ""
         }
     }
 

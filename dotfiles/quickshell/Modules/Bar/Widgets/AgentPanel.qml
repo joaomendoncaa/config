@@ -14,10 +14,6 @@ Rectangle {
     readonly property int rowHeight: Math.round(Config.buttonSize * 1.65)
     readonly property int headerHeight: Math.round(Config.buttonSize * 2.2)
     readonly property int footerHeight: root.service.usageSupported ? Math.round(Config.buttonSize * 3.15) : 0
-    readonly property int minimumPanelHeight: 440
-    readonly property int visibleRows: Math.min(8, root.service.agentCount)
-    readonly property int bodyRows: root.service.agentLoading || !root.service.agentAvailable || root.service.agentCount === 0 ? 3 : Math.max(1, root.visibleRows)
-    readonly property int desiredHeight: Math.max(root.minimumPanelHeight, root.headerHeight + root.footerHeight + root.bodyRows * root.rowHeight)
 
     color: Config.backgroundColored
     radius: Config.borderRadius

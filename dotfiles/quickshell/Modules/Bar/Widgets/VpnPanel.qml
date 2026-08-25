@@ -7,57 +7,39 @@ Rectangle {
 
     required property var service
 
-    readonly property int panelWidth: Math.round(Config.buttonSize * 16)
-    readonly property int buttonHeight: 34
-    readonly property int rowHeight: Math.round(Config.buttonSize * 1.7)
-    readonly property int maximumListHeight: Math.round(Config.buttonSize * 14)
-    readonly property int footerHeight: Math.round(Config.buttonSize * 2)
-    readonly property int listHeight: Math.min(
-        root.maximumListHeight,
-        Math.max(root.rowHeight, root.service.countries.length * root.rowHeight) + (root.showListFooter ? root.footerHeight : 0))
-    // shellPadding (list top margin + button bottom margin) and
-    // gapInner (gap between the list and the button) are part of the panel's
-    // vertical budget.
-    readonly property int desiredHeight: Config.shellPadding + root.listHeight + Config.gapInner + root.buttonHeight + Config.shellPadding
+    readonly property int panelWidth: Math.round(Config.buttonSize * 18)
+    readonly property int headerHeight: Math.round(Config.buttonSize * 1.3)
+    readonly property int mapSideMargin: Config.shellPadding
+    // Native map viewBox is 784.077 x 458.627; keep the aspect ratio.
+    readonly property real mapAspect: 458.627 / 784.077
+    readonly property int mapWidth: root.panelWidth - 2 * root.mapSideMargin
+    readonly property int mapHeight: Math.round(root.mapWidth * root.mapAspect)
+
+    // Total vertical budget: top padding + header + gap + map + bottom padding.
+    readonly property int desiredHeight: Config.shellPadding + root.headerHeight + Config.gapInner + root.mapHeight + Config.shellPadding
 
     readonly property bool connecting: root.service.busy && root.service._pendingGoal === "connected"
     readonly property bool disconnecting: root.service.busy && root.service._pendingGoal === "disconnected"
     readonly property bool connected: root.service.connected
 
-    // Country the user last asked to connect to; highlighted + shows a spinner
+    // Country the user last asked to connect to; highlighted + spinner state
     // while a connect is in flight. Cleared once the busy state settles.
     property string pendingCountry: ""
 
-    // Countries with the currently-connected country pinned to the top.
-    // Matching uses the same code-substring rule as the row highlight so the
-    // "first item" always agrees with the "highlighted item".
-    readonly property var orderedCountries: {
-        if (!root.connected || !root.service.serverName)
-            return root.service.countries
-        var sn = root.service.serverName.toUpperCase()
-        var idx = -1
-        for (var i = 0; i < root.service.countries.length; i++) {
-            var code = (root.service.countries[i].code || "").toUpperCase()
-            if (code && sn.indexOf(code) >= 0) {
-                idx = i
-                break
-            }
-        }
-        if (idx <= 0)
-            return root.service.countries
-        var out = root.service.countries.slice()
-        out.unshift(out.splice(idx, 1)[0])
+    // Header label: hovered available country wins, then the active one.
+    readonly property string headerCountryName: map.hoveringAvailable
+        ? map.countryName(map.hoveredCode)
+        : root.connected && root.service.countryCode ? map.countryName(root.service.countryCode.toLowerCase()) : ""
+
+    // "US" -> flag emoji via regional indicator symbols.
+    function flagEmoji(code) {
+        if (!code || code.length !== 2)
+            return ""
+        var out = ""
+        for (var i = 0; i < 2; i++)
+            out += String.fromCodePoint(0x1F1E6 + code.toUpperCase().charCodeAt(i) - 65)
         return out
     }
-
-    // Footer message shows only when there is genuinely nothing to list.
-    // The height and the text visibility must stay in sync, otherwise the
-    // message renders on top of the last result row of a populated list.
-    readonly property bool showListFooter: root.service.countries.length === 0
-
-    readonly property string listFooterText: root.service.serverListLoaded
-        ? "No free servers found"
-        : "Loading servers\u2026"
 
     signal dismissed()
 
@@ -98,66 +80,70 @@ Rectangle {
         anchors.fill: parent
         spacing: 0
 
-        // --- Server list (scrollable) ----------------------------------------
-        ListView {
-            id: serverList
-
+        // --- Header: flag + country + IP, disconnect button -------------------
+        Item {
             Layout.fillWidth: true
-            Layout.preferredHeight: root.listHeight
+            Layout.preferredHeight: root.headerHeight
             Layout.topMargin: Config.shellPadding
-            Layout.leftMargin: Config.shellPadding
-            Layout.rightMargin: Config.shellPadding
-            clip: true
-            boundsBehavior: Flickable.StopAtBounds
-            spacing: 2
-            model: root.orderedCountries
+            Layout.leftMargin: root.mapSideMargin
+            Layout.rightMargin: root.mapSideMargin
 
-            delegate: VpnCountryRow {
-                width: serverList.width
-                current: root.service.busy
-                    ? root.pendingCountry === (modelData && modelData.code)
-                    : root.connected && root.service.serverName &&
-                        root.service.serverName.toUpperCase().indexOf((modelData && modelData.code) || "") >= 0
-                connecting: root.service.busy && root.pendingCountry === (modelData && modelData.code)
-                disabled: root.service.busy && root.pendingCountry !== (modelData && modelData.code)
-                onClicked: root.selectCountry(modelData ? modelData.code : "")
-            }
-
-            footer: Item {
-                width: serverList.width
-                height: root.showListFooter ? root.footerHeight : 0
+            RowLayout {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Config.gapInner
 
                 Text {
-                    anchors.centerIn: parent
-                    visible: root.showListFooter
-                    text: root.listFooterText
+                    visible: root.headerCountryName.length > 0
+                    text: root.flagEmoji(map.hoveringAvailable ? map.hoveredCode : root.service.countryCode)
+                    font.pixelSize: Config.fontSize
+                }
+
+                Text {
+                    text: root.headerCountryName
+                    color: map.hoveringAvailable ? Config.foregroundSecondary : Config.foreground
+                    font.family: Config.fontFamily
+                    font.pixelSize: Config.fontSize
+                    font.bold: true
+                    visible: root.headerCountryName.length > 0
+                }
+
+                // Public IP: hidden while loading, struck through on failure.
+                Text {
+                    visible: root.connected && !map.hoveringAvailable && !root.service.ipFetching && !root.service.ipFailed && root.service.publicIp.length > 0
+                    text: root.service.publicIp
                     color: Config.foregroundSecondary
                     font.family: Config.fontFamily
                     font.pixelSize: Config.fontSize
                 }
-            }
-        }
 
-        // --- Connect / disconnect button (bottom) ------------------------------
-        Item {
-            Layout.fillWidth: true
-            Layout.minimumHeight: root.buttonHeight
-            Layout.preferredHeight: root.buttonHeight
-            Layout.topMargin: Config.gapInner
-            Layout.bottomMargin: Config.shellPadding
-            Layout.leftMargin: Config.shellPadding
-            Layout.rightMargin: Config.shellPadding
+                Text {
+                    visible: root.connected && !map.hoveringAvailable && !root.service.ipFetching && root.service.ipFailed
+                    text: "0.0.0.0"
+                    color: Config.foregroundSecondary
+                    font.family: Config.fontFamily
+                    font.pixelSize: Config.fontSize
+                    font.strikeout: true
+                }
+            }
 
             Rectangle {
                 id: connectButton
 
-                anchors.fill: parent
+                // Get out of the way while a country is hovered so the full
+                // name has room in the header.
+                visible: map.hoveredCode.length === 0
+
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                implicitWidth: buttonLabel.implicitWidth + Config.gapOuter
+                height: parent.height
                 radius: Config.borderRadius
-                color: connectMouse.containsMouse && !root.service.busy
-                    ? Config.backgroundHovered
-                    : root.connected ? Config.accent : Config.foreground
+                color: connectMouse.containsMouse && !root.service.busy ? Config.backgroundHovered : root.connected ? Config.accent : Config.foreground
 
                 Text {
+                    id: buttonLabel
+
                     anchors.centerIn: parent
                     text: {
                         if (root.service.busy)
@@ -166,9 +152,7 @@ Rectangle {
                             return "Disconnect"
                         return "Connect"
                     }
-                    color: connectMouse.containsMouse
-                        ? Config.foreground
-                        : Config.foregroundSelected
+                    color: connectMouse.containsMouse ? Config.foreground : Config.foregroundSelected
                     font.family: Config.fontFamily
                     font.pixelSize: Config.fontSize
                     font.bold: true
@@ -184,6 +168,21 @@ Rectangle {
                     onClicked: root.toggleConnection()
                 }
             }
+        }
+
+        // --- World map ---------------------------------------------------------
+        VpnWorldMap {
+            id: map
+
+            Layout.fillWidth: true
+            Layout.preferredHeight: root.mapHeight
+            Layout.topMargin: Config.gapInner
+            Layout.leftMargin: root.mapSideMargin
+            Layout.rightMargin: root.mapSideMargin
+            Layout.bottomMargin: Config.shellPadding
+            service: root.service
+            pendingCode: root.pendingCountry
+            onCountryClicked: code => root.selectCountry(code)
         }
     }
 }

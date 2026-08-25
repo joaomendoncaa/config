@@ -26,6 +26,12 @@ Item {
     property int load: -1
     property string protocol: ""
 
+    // Public IP of the active connection, fetched via an echo service while
+    // connected. "" while loading; ipFailed distinguishes a failed lookup.
+    property string publicIp: ""
+    property bool ipFetching: false
+    property bool ipFailed: false
+
     // Derived two-letter ISO country code of the active connection (e.g. "US",
     // "NL"), guessed from serverName using the known country list. Empty when
     // disconnected or when the code cannot be determined.
@@ -137,6 +143,23 @@ Item {
     // Connect to a country selected from the panel list.
     function selectCountry(code) {
         root.startConnectCountry(code)
+    }
+
+    // Resolve the public IP via an echo service. Only runs while connected;
+    // clears state immediately when disconnected.
+    function refreshPublicIp() {
+        if (!root.connected) {
+            root.publicIp = ""
+            root.ipFailed = false
+            root.ipFetching = false
+            return
+        }
+        if (root.ipFetching || ipProcess.running)
+            return
+        root.ipFetching = true
+        root.ipFailed = false
+        ipProcess.command = ["curl", "-sf", "--max-time", "6", "https://api.ipify.org"]
+        ipProcess.running = true
     }
 
     function parseStatus(text) {
@@ -297,6 +320,40 @@ Item {
             }
             root.pollNow()
         }
+    }
+
+    // --- Public IP lookup ------------------------------------------------------
+
+    Process {
+        id: ipProcess
+
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.ipFetching = false
+                var ip = ipProcess.stdout.text.trim()
+                if (/^(\d{1,3}\.){3}\d{1,3}$/.test(ip))
+                    root.publicIp = ip
+                else
+                    root.ipFailed = true
+            }
+        }
+
+        onExited: (exitCode, exitStatus) => {
+            root.ipFetching = false
+            if (exitCode !== 0)
+                root.ipFailed = true
+        }
+    }
+
+    // Re-resolve whenever the connection state settles (new country, reconnect).
+    onConnectedChanged: root.refreshPublicIp()
+    onBusyChanged: {
+        // A connect/disconnect just finished (or started); re-check once the
+        // status poll confirms the new state.
+        if (!root.busy)
+            root.refreshPublicIp()
     }
 
     // Safety net: clear the busy state even if the CLI hangs.

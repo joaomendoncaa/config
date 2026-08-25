@@ -62,6 +62,16 @@ local function run_sync(sh)
 	end
 end
 
+-- Power menu (global). Stored so PTT can temporarily disable it without
+-- calling hl.unbind("SUPER + ESCAPE") which would also delete per-submap ESC
+-- bindings (hl.unbind matches by displayKey, ignoring submap).
+local power_menu_bind = hl.bind("SUPER + ESCAPE", hl.dsp.exec_cmd(utils.quickshell_ipc("power-menu", "toggle")), { description = "Power menu" })
+
+-- PTT hijack binds. Created once, toggled via :set_enabled() instead of
+-- hl.unbind/hl.bind to avoid nuking submap-scoped ESC keybinds.
+local ptt_esc_bind = nil
+local ptt_super_esc_bind = nil
+
 -- Bind/unbind is deferred via hl.timer so it never mutates the keybind
 -- list while Hyprland is walking it (same trick as the CTRL+N/P block).
 local function unbind_escape()
@@ -70,9 +80,9 @@ local function unbind_escape()
 	end
 	esc_bound = false
 	hl.timer(function()
-		hl.unbind("SUPER + ESCAPE")
-		hl.unbind("ESCAPE")
-		bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
+		if ptt_esc_bind then ptt_esc_bind:set_enabled(false) end
+		if ptt_super_esc_bind then ptt_super_esc_bind:set_enabled(false) end
+		if power_menu_bind then power_menu_bind:set_enabled(true) end
 	end, { timeout = 1, type = "oneshot" })
 end
 
@@ -93,22 +103,38 @@ local function ptt_cancel()
 	run_sync(RESTORE_CMD)
 end
 
+local function ensure_ptt_binds()
+	if ptt_esc_bind then return end
+	ptt_super_esc_bind = hl.bind("SUPER + ESCAPE", function()
+		ptt_cancel()
+		if hl.get_current_submap() ~= "" then
+			hl.dispatch(hl.dsp.submap("reset"))
+		end
+	end, { description = "Dictation: cancel (ESC while holding SUPER+D)", submap_universal = true })
+	ptt_esc_bind = hl.bind("ESCAPE", function()
+		ptt_cancel()
+		if hl.get_current_submap() ~= "" then
+			hl.dispatch(hl.dsp.submap("reset"))
+		end
+	end, { description = "Dictation: cancel (ESC while holding SUPER+D)", submap_universal = true })
+	ptt_esc_bind:set_enabled(false)
+	ptt_super_esc_bind:set_enabled(false)
+end
+
 local function bind_escape()
 	if esc_bound then
 		return
 	end
 	esc_bound = true
 	hl.timer(function()
-		hl.unbind("SUPER + ESCAPE")
-		hl.unbind("ESCAPE")
-		hl.bind("SUPER + ESCAPE", function()
-			ptt_cancel()
-		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
-		hl.bind("ESCAPE", function()
-			ptt_cancel()
-		end, { description = "Dictation: cancel (ESC while holding SUPER+D)" })
+		if power_menu_bind then power_menu_bind:set_enabled(false) end
+		ensure_ptt_binds()
+		if ptt_esc_bind then ptt_esc_bind:set_enabled(true) end
+		if ptt_super_esc_bind then ptt_super_esc_bind:set_enabled(true) end
 	end, { timeout = 1, type = "oneshot" })
 end
+
+ensure_ptt_binds()
 
 hl.bind(
 	"SUPER + D",
@@ -146,7 +172,6 @@ hl.on("input.keyboard.key", function(keycode, _, state)
 end)
 bind("SUPER + F", "Full screen", hl.dsp.window.fullscreen({ mode = "fullscreen" }))
 hl.bind("SUPER + SHIFT + V", hl.dsp.window.float({ action = "toggle" }), { description = "Toggle Float" })
-bind("SUPER + ESCAPE", "Power menu", utils.quickshell_ipc("power-menu", "toggle"))
 hl.bind(
 	"SUPER + ALT + RETURN",
 	hl.dsp.exec_cmd('uwsm-app -- xdg-terminal-exec --dir="$(omarchy-cmd-terminal-cwd)" tmux attach'),
@@ -262,15 +287,16 @@ hl.bind("SUPER + T", hl.dsp.submap("toggles"), { description = "Enter toggles su
 -- Twitter submap (SUPER + X): launch, x.com, pro.x.com.
 hl.define_submap("twitter", "reset", function()
 	hl.bind("X", function()
-		hl.dispatch(hl.dsp.exec_cmd("$HOME/.config.jmmm.sh/bin/launch-twitter"))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "X" "https://x.com"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "X Pro" "https://pro.x.com"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Launch Twitter" })
 	hl.bind("T", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://x.com"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "X" "https://x.com"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Open X/Twitter" })
 	hl.bind("P", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://pro.x.com"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "X Pro" "https://pro.x.com"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Open X Pro" })
 	hl.bind("ESCAPE", hl.dsp.submap("reset"), { description = "Exit submap (ESC)" })
@@ -280,27 +306,31 @@ hl.bind("SUPER + X", hl.dsp.submap("twitter"), { description = "Enter twitter su
 -- Comms submap (SUPER + C): chat, messages, discord, mail, whatsapp, telegram.
 hl.define_submap("comms", "reset", function()
 	hl.bind("C", function()
-		hl.dispatch(hl.dsp.exec_cmd("$HOME/.config.jmmm.sh/bin/launch-comms"))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Discord" "https://discord.com/channels/"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "WhatsApp" "https://web.whatsapp.com/"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus "Telegram" "Telegram"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Proton Mail" "https://mail.proton.me/u/0/inbox"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Launch comms" })
 	hl.bind("G", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://messages.google.com/web/conversations"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Google Messages" })
 	hl.bind("D", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://discord.com/channels/"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Discord" "https://discord.com/channels/"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Discord" })
 	hl.bind("P", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://mail.proton.me/u/0/inbox"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Proton Mail" "https://mail.proton.me/u/0/inbox"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Proton Mail" })
 	hl.bind("W", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-webapp "https://web.whatsapp.com/"'))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "WhatsApp" "https://web.whatsapp.com/"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "WhatsApp" })
 	hl.bind("T", function()
-		hl.dispatch(hl.dsp.exec_cmd("Telegram"))
+		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus "Telegram" "Telegram"'))
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Telegram" })
 	hl.bind("ESCAPE", hl.dsp.submap("reset"), { description = "Exit submap (ESC)" })
@@ -413,7 +443,6 @@ bind("SHIFT + XF86AudioPlay", "Switch media source", "omarchy-audio-source-switc
 bind("SUPER + W", "Close window", hl.dsp.window.close())
 bind("CTRL + ALT + DELETE", "Close all windows", "qs-power-window-close-all")
 
-bind("SUPER + T", "Toggle window floating/tiling", hl.dsp.window.float({ action = "toggle" }))
 bind("SUPER + CTRL + F", "Tiled full screen", "omarchy-hyprland-window-tiled-fullscreen-toggle")
 bind("SUPER + ALT + F", "Full width", hl.dsp.window.fullscreen({ mode = "maximized" }))
 bind("SUPER + O", "Pop window out (float & pin)", "omarchy-hyprland-window-pop")
