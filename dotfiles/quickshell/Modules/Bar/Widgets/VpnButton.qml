@@ -72,12 +72,12 @@ Item {
                 visible: false
             }
 
-            // Static states: foreground when connected, muted when disconnected
+            // Shield is always plain foreground; connection state is shown by the country badge
             Rectangle {
                 id: fgColor
 
                 anchors.fill: parent
-                color: root.service.connected ? Config.foreground : Config.foregroundSecondary
+                color: Config.foreground
                 visible: false
             }
 
