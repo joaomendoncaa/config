@@ -6,6 +6,14 @@ function gi() {
 	curl -sL "https://www.toptal.com/developers/gitignore/api/$@"
 }
 
+dlp() {
+	if [[ -z "${1:-}" || -z "${2:-}" ]]; then
+		echo "Usage: dlp <url> <output-name>" >&2
+		return 1
+	fi
+	yt-dlp -o "${2}.%(ext)s" "$1"
+}
+
 function add_to_path() {
 	if [[ ":$PATH:" != *":$1:"* ]]; then
 		export PATH="$1:$PATH"
