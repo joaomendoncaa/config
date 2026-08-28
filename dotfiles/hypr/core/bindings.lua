@@ -193,6 +193,11 @@ hl.bind(
 	{ description = "Clipboard Manager" }
 )
 hl.bind("SUPER + S", hl.dsp.layout("togglesplit"), { description = "Toggle Split" })
+bind("SUPER + grave", "Toggle scratchpad (Quake console)", hl.dsp.workspace.toggle_special("scratchpad"))
+bind("SUPER + SHIFT + grave", "Move window to scratchpad", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
+-- Code fallback: physical key left of 1 (works regardless of layout, where grave may be \ or « on PT)
+bind("SUPER + code:49", "Toggle scratchpad (Quake console)", hl.dsp.workspace.toggle_special("scratchpad"))
+bind("SUPER + SHIFT + code:49", "Move window to scratchpad", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
 hl.bind(
 	"SUPER + RETURN",
 	hl.dsp.exec_cmd(terminal .. " --dir=$(omarchy-cmd-terminal-cwd)"),

@@ -22,6 +22,7 @@ PanelWindow {
     property alias solanaPanelOpen: solanaWidget.popupOpen
     property alias agentPanelOpen: agentWidget.popupVisible
     property alias vpnPanelOpen: vpnButton.popupOpen
+    property alias weatherPanelOpen: weatherWidget.popupOpen
     required property var priceLabels
     required property var agentService
     required property var notificationService
@@ -33,6 +34,7 @@ PanelWindow {
     signal notificationPanelOpening()
     signal agentPanelOpening()
     signal vpnPanelOpening()
+    signal weatherPanelOpening()
     signal dismissPanels()
 
     function updatePowerMenuPosition() {
@@ -123,6 +125,14 @@ PanelWindow {
                 service: bar.priceLabels
                 barWindow: bar
                 onOpening: bar.solanaPanelOpening()
+            }
+
+            Weather {
+                id: weatherWidget
+
+                barWindow: bar
+                notificationService: bar.notificationService
+                onOpening: bar.weatherPanelOpening()
             }
 
             Monitor {

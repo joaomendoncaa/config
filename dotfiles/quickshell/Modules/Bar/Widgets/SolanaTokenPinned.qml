@@ -231,14 +231,37 @@ Item {
         }
     }
 
+    property bool barInGrab: false
+
+    Timer {
+        id: barWhitelistTimer
+        interval: 80
+        onTriggered: {
+            if (root.popupOpen) {
+                root.barInGrab = true
+                if (popupLoader.item) Qt.callLater(popupLoader.item.focusSearch)
+            }
+        }
+    }
+
+    onPopupOpenChanged: {
+        if (popupOpen) {
+            barInGrab = false
+            barWhitelistTimer.restart()
+        } else {
+            barWhitelistTimer.stop()
+            barInGrab = false
+        }
+    }
+
     HyprlandFocusGrab {
         id: focusGrab
         active: root.popupOpen && popupLoader.item !== null
-        // Only the popup may be whitelisted. Including barWindow makes the
-        // compositor deliver wl_keyboard::enter to the bar surface instead of
-        // the popup, so TextInputs in the panel never receive keys.
-        // Tradeoff: clicking anywhere on the bar dismisses the panel.
-        windows: popupLoader.item ? [popupLoader.item] : []
+        windows: {
+            if (!popupLoader.item) return []
+            if (root.barInGrab && root.barWindow) return [popupLoader.item, root.barWindow]
+            return [popupLoader.item]
+        }
         onActiveChanged: {
             if (active && popupLoader.item)
                 Qt.callLater(popupLoader.item.focusSearch)

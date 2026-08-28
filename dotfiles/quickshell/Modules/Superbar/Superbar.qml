@@ -301,11 +301,23 @@ PanelWindow {
         return Quickshell.iconPath(name, true);
     }
 
+    property bool keyboardPrime: false
+
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "superbar"
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
+    WlrLayershell.keyboardFocus: visible ? (keyboardPrime ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.Exclusive) : WlrKeyboardFocus.None
     exclusionMode: ExclusionMode.Ignore
+
+    Timer {
+        id: keyboardPrimeTimer
+        interval: 75
+        onTriggered: {
+            root.keyboardPrime = true
+            Qt.callLater(function() { keyCatcher.forceActiveFocus() })
+        }
+    }
+
     Component.onCompleted: {
         if (initialMode !== "apps")
             setSearchMode(initialMode);
@@ -316,6 +328,13 @@ PanelWindow {
         initialized = true;
     }
     onVisibleChanged: {
+        if (visible) {
+            root.keyboardPrime = false
+            keyboardPrimeTimer.restart()
+        } else {
+            keyboardPrimeTimer.stop()
+            root.keyboardPrime = false
+        }
         if (!visible || !initialized)
             return;
 

@@ -74,6 +74,8 @@ Scope {
             barComponent.agentPanelOpen = false
         if (panel !== 'vpn')
             barComponent.vpnPanelOpen = false
+        if (panel !== 'weather')
+            barComponent.weatherPanelOpen = false
     }
 
     function toggleLauncher(mode) {
@@ -237,13 +239,13 @@ Scope {
     }
 
     BlurMask {
-        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen
+        visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen || barComponent.weatherPanelOpen
     }
 
     Bar {
         id: barComponent
         isRecording: root.isRecording
-        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen
+        contentVisible: !root.fullscreen || root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen || barComponent.weatherPanelOpen
         onToggleLauncher: root.toggleLauncher('apps')
         onTogglePowerMenu: root.togglePowerMenu()
         onDismissPanels: root.closePanelsExcept('')
@@ -251,6 +253,7 @@ Scope {
         onNotificationPanelOpening: root.closePanelsExcept('notifications')
         onAgentPanelOpening: root.closePanelsExcept('agents')
         onVpnPanelOpening: root.closePanelsExcept('vpn')
+        onWeatherPanelOpening: root.closePanelsExcept('weather')
         priceLabels: root.priceLabels
         agentService: agentService
         notificationService: notificationService

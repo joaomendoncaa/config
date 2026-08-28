@@ -18,7 +18,7 @@
             "branch": "main",
             "description": "Use for updating hyprland configurations"
         },
-        "omarchy-4": {
+        "omarchy-quattro": {
             "repository": "github.com/basecamp/omarchy",
             "branch": "quattro",
             "description": "Use for any question/implementation regarding Omarchy: Quattro (the 4th major release of Omarchy)"

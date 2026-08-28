@@ -25,3 +25,5 @@ hl.config((function()
 	end
 	return config
 end)())
+
+require("core.qconsole")
