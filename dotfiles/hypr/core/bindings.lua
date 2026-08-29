@@ -2,6 +2,28 @@ local utils = require("core.utils")
 local terminal = "uwsm app -- xdg-terminal-exec"
 local bind = utils.bind
 
+-- Quake scratchpad: keyboard resizes center floating windows (DefaultFloatingAlgorithm
+-- pos.translate(-Δ/2)). Wrap resize dispatches so the console stays at monitor.y=0
+-- without polling. Only fires when the active window is the scratchpad.
+local SCRATCH_CLASS = 'com.mitchellh.ghostty.scratchpad'
+local function pin_scratchpad()
+    hl.timer(function()
+        local win = hl.get_active_window()
+        if win and win.class == SCRATCH_CLASS and win.monitor and win.at then
+            if win.at.x ~= win.monitor.x or win.at.y ~= win.monitor.y then
+                hl.dispatch(hl.dsp.window.move({ x = win.monitor.x, y = win.monitor.y, window = win }))
+            end
+        end
+    end, { timeout = 5, type = 'oneshot' })
+end
+
+local function resize_pinned(dx, dy)
+    return function()
+        hl.dispatch(hl.dsp.window.resize({ x = dx, y = dy, relative = true }))
+        pin_scratchpad()
+    end
+end
+
 hl.unbind("SUPER + W")
 hl.unbind("SHIFT + F11")
 hl.unbind("SUPER + SHIFT + V")
@@ -244,26 +266,10 @@ hl.bind("SUPER + SHIFT + L", hl.dsp.window.swap({ direction = "r" }), { descript
 hl.bind("SUPER + SHIFT + K", hl.dsp.window.swap({ direction = "u" }), { description = "Swap Up" })
 hl.bind("SUPER + SHIFT + J", hl.dsp.window.swap({ direction = "d" }), { description = "Swap Down" })
 
-hl.bind(
-	"SUPER + CTRL + H",
-	hl.dsp.window.resize({ x = -80, y = 0, relative = true }),
-	{ description = "Resize Left", repeating = true }
-)
-hl.bind(
-	"SUPER + CTRL + L",
-	hl.dsp.window.resize({ x = 80, y = 0, relative = true }),
-	{ description = "Resize Right", repeating = true }
-)
-hl.bind(
-	"SUPER + CTRL + K",
-	hl.dsp.window.resize({ x = 0, y = -80, relative = true }),
-	{ description = "Resize Up", repeating = true }
-)
-hl.bind(
-	"SUPER + CTRL + J",
-	hl.dsp.window.resize({ x = 0, y = 80, relative = true }),
-	{ description = "Resize Down", repeating = true }
-)
+hl.bind("SUPER + CTRL + H", resize_pinned(-80, 0), { description = "Resize Left", repeating = true })
+hl.bind("SUPER + CTRL + L", resize_pinned(80, 0), { description = "Resize Right", repeating = true })
+hl.bind("SUPER + CTRL + K", resize_pinned(0, -80), { description = "Resize Up", repeating = true })
+hl.bind("SUPER + CTRL + J", resize_pinned(0, 80), { description = "Resize Down", repeating = true })
 
 hl.bind("SUPER + TAB", hl.dsp.focus({ workspace = "previous" }), { description = "Switch to last visited workspace" })
 hl.bind("SUPER + CTRL + TAB", hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
@@ -504,36 +510,20 @@ end)
 bind("CTRL + ALT + TAB", "Focus on next monitor", hl.dsp.focus({ monitor = "+1" }))
 bind("CTRL + ALT + SHIFT + TAB", "Focus on previous monitor", hl.dsp.focus({ monitor = "-1" }))
 
-bind("SUPER + code:20", "Expand window left", hl.dsp.window.resize({ x = -100, y = 0, relative = true }))
-bind("SUPER + code:21", "Shrink window left", hl.dsp.window.resize({ x = 100, y = 0, relative = true }))
-bind("SUPER + SHIFT + code:20", "Shrink window up", hl.dsp.window.resize({ x = 0, y = -100, relative = true }))
-bind("SUPER + SHIFT + code:21", "Expand window down", hl.dsp.window.resize({ x = 0, y = 100, relative = true }))
+bind("SUPER + code:20", "Expand window left", resize_pinned(-100, 0))
+bind("SUPER + code:21", "Shrink window left", resize_pinned(100, 0))
+bind("SUPER + SHIFT + code:20", "Shrink window up", resize_pinned(0, -100))
+bind("SUPER + SHIFT + code:21", "Expand window down", resize_pinned(0, 100))
 
-bind("SUPER + ALT + code:20", "Expand window left a little", hl.dsp.window.resize({ x = -25, y = 0, relative = true }))
-bind("SUPER + ALT + code:21", "Shrink window left a little", hl.dsp.window.resize({ x = 25, y = 0, relative = true }))
-bind(
-	"SUPER + SHIFT + ALT + code:20",
-	"Shrink window up a little",
-	hl.dsp.window.resize({ x = 0, y = -25, relative = true })
-)
-bind(
-	"SUPER + SHIFT + ALT + code:21",
-	"Expand window down a little",
-	hl.dsp.window.resize({ x = 0, y = 25, relative = true })
-)
+bind("SUPER + ALT + code:20", "Expand window left a little", resize_pinned(-25, 0))
+bind("SUPER + ALT + code:21", "Shrink window left a little", resize_pinned(25, 0))
+bind("SUPER + SHIFT + ALT + code:20", "Shrink window up a little", resize_pinned(0, -25))
+bind("SUPER + SHIFT + ALT + code:21", "Expand window down a little", resize_pinned(0, 25))
 
-bind("SUPER + CTRL + code:20", "Expand window left a lot", hl.dsp.window.resize({ x = -300, y = 0, relative = true }))
-bind("SUPER + CTRL + code:21", "Shrink window left a lot", hl.dsp.window.resize({ x = 300, y = 0, relative = true }))
-bind(
-	"SUPER + CTRL + SHIFT + code:20",
-	"Shrink window up a lot",
-	hl.dsp.window.resize({ x = 0, y = -300, relative = true })
-)
-bind(
-	"SUPER + CTRL + SHIFT + code:21",
-	"Expand window down a lot",
-	hl.dsp.window.resize({ x = 0, y = 300, relative = true })
-)
+bind("SUPER + CTRL + code:20", "Expand window left a lot", resize_pinned(-300, 0))
+bind("SUPER + CTRL + code:21", "Shrink window left a lot", resize_pinned(300, 0))
+bind("SUPER + CTRL + SHIFT + code:20", "Shrink window up a lot", resize_pinned(0, -300))
+bind("SUPER + CTRL + SHIFT + code:21", "Expand window down a lot", resize_pinned(0, 300))
 
 bind("SUPER + mouse_down", "Zoom in", function()
 	local zoom = hl.get_config("cursor.zoom_factor") or 1

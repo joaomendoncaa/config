@@ -42,5 +42,18 @@
     },
     "websearch": {
         "provider": "random"
+    },
+    "mcp": {
+        "chrome-devtools": {
+            "type": "local",
+            "command": [
+                "npx",
+                "-y",
+                "chrome-devtools-mcp@latest",
+                "--isolated",
+                "--executablePath=/opt/helium-browser-bin/helium"
+            ],
+            "enabled": true
+        }
     }
 }

@@ -1,3 +1,4 @@
+import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -264,10 +265,41 @@ Item {
         radius: Config.buttonBorderRadius
         color: mouseArea.containsMouse || root.popupOpen ? Config.backgroundHovered : "transparent"
 
-        Text {
-            id: barLabel
+        Item {
+            id: barIconContainer
             anchors.centerIn: parent
-            text: root.label || "—"
+            width: parent.width * 0.72
+            height: parent.height * 0.72
+            visible: root.label !== ""
+
+            Image {
+                id: barMask
+                anchors.fill: parent
+                source: root.label ? "../../../Assets/" + root.label + ".svg" : ""
+                sourceSize.width: width * 2
+                sourceSize.height: height * 2
+                smooth: true
+                visible: false
+            }
+            Rectangle {
+                id: barFg
+                anchors.fill: parent
+                color: Config.foreground
+                visible: false
+            }
+            OpacityMask {
+                anchors.fill: parent
+                source: barFg
+                maskSource: barMask
+                visible: root.label !== ""
+            }
+        }
+
+        Text {
+            id: barLabelFallback
+            anchors.centerIn: parent
+            visible: root.label === ""
+            text: "—"
             color: Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize + 2
@@ -598,11 +630,43 @@ Item {
                                     anchors.verticalCenter: parent.verticalCenter
                                     spacing: 16
 
-                                    Text {
+                                    Item {
                                         id: heroIcon
                                         anchors.verticalCenter: parent.verticalCenter
                                         anchors.verticalCenterOffset: 5
-                                        text: root.label || "—"
+                                        width: 64
+                                        height: 64
+                                        visible: root.label !== ""
+
+                                        Image {
+                                            id: heroMask
+                                            anchors.fill: parent
+                                            source: root.label ? "../../../Assets/" + root.label + ".svg" : ""
+                                            sourceSize.width: width * 2
+                                            sourceSize.height: height * 2
+                                            smooth: true
+                                            visible: false
+                                        }
+                                        Rectangle {
+                                            id: heroFg
+                                            anchors.fill: parent
+                                            color: Config.foreground
+                                            visible: false
+                                        }
+                                        OpacityMask {
+                                            anchors.fill: parent
+                                            source: heroFg
+                                            maskSource: heroMask
+                                            visible: root.label !== ""
+                                        }
+                                    }
+
+                                    Text {
+                                        id: heroFallback
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        anchors.verticalCenterOffset: 5
+                                        visible: root.label === ""
+                                        text: "—"
                                         color: Config.foreground
                                         font.family: Config.fontFamily
                                         font.pixelSize: 64
@@ -885,12 +949,33 @@ Item {
                                             required property int index
                                             spacing: 10
 
-                                            Text {
+                                            Item {
                                                 anchors.verticalCenter: parent.verticalCenter
-                                                text: root.dayIcon(modelData)
-                                                color: Config.foreground
-                                                font.family: Config.fontFamily
-                                                font.pixelSize: 24
+                                                width: 24
+                                                height: 24
+                                                visible: root.dayIcon(modelData) !== ""
+
+                                                Image {
+                                                    id: forecastMask
+                                                    anchors.fill: parent
+                                                    source: root.dayIcon(modelData) ? "../../../Assets/" + root.dayIcon(modelData) + ".svg" : ""
+                                                    sourceSize.width: width * 2
+                                                    sourceSize.height: height * 2
+                                                    smooth: true
+                                                    visible: false
+                                                }
+                                                Rectangle {
+                                                    id: forecastFg
+                                                    anchors.fill: parent
+                                                    color: Config.foreground
+                                                    visible: false
+                                                }
+                                                OpacityMask {
+                                                    anchors.fill: parent
+                                                    source: forecastFg
+                                                    maskSource: forecastMask
+                                                    visible: root.dayIcon(modelData) !== ""
+                                                }
                                             }
 
                                             Column {
