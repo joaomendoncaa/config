@@ -211,6 +211,7 @@ Rectangle {
                     text: root.styledBody
                     textFormat: Text.StyledText
                     color: root.bodyColor
+                    linkColor: Config.accent
                     font.family: Config.fontFamily
                     font.pixelSize: root.bodyFontSize
                     wrapMode: Text.WordWrap
