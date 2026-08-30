@@ -4,6 +4,9 @@
     "autoupdate": true,
     "default_agent": "build",
     "model": "opencode-go/deepseek-v4-flash",
+    "websearch": {
+        "provider": "random"
+    },
     "references": {
         "config": {
             "path": "~/.config.jmmm.sh",
@@ -40,9 +43,7 @@
             "repository": "$HOME/lab/gilly"
         }
     },
-    "websearch": {
-        "provider": "random"
-    },
+    "plugins": ["/home/joao/.config/ponytail-pr/.opencode/plugins/ponytail-v2.mjs"],
     "mcp": {
         "chrome-devtools": {
             "type": "local",
