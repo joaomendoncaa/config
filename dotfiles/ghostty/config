@@ -7,8 +7,7 @@ window-decoration = none
 window-padding-x = 12
 confirm-close-surface = false
 
-# Slowdown mouse scrolling
-mouse-scroll-multiplier = 0.95
+mouse-scroll-multiplier = 1
 
 # Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
 async-backend = epoll
