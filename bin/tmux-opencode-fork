@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# tmux-opencode-fork: selection → new opencode window (right/left like a/A).
+
+PLACEMENT="-a"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -b|--before) PLACEMENT="-b"; shift ;;
+        -a|--after) PLACEMENT="-a"; shift ;;
+        *) shift ;;
+    esac
+done
+
+selection=$(cat)
+if [[ -z "${selection//[[:space:]]/}" ]]; then
+    selection=$(tmux save-buffer - 2>/dev/null || true)
+fi
+if [[ -z "${selection//[[:space:]]/}" ]]; then
+    tmux display "No selection"
+    exit 0
+fi
+
+prompt_file=$(mktemp /tmp/tmux-opencode-prompt.XXXXXX)
+printf "%s" "$selection" >"$prompt_file"
+chmod 600 "$prompt_file"
+
+tmux new-window "$PLACEMENT" -n "opencode" "opencode2 --prompt \"\$(cat '$prompt_file')\" --auto; rm -f '$prompt_file'"
