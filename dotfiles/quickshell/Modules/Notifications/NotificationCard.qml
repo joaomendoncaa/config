@@ -45,7 +45,6 @@ Rectangle {
     property real _expiryProgress: 1
     readonly property color dimColor: Qt.darker(Config.foreground, 1.4)
     readonly property color bodyColor: Qt.darker(Config.foreground, 1.15)
-    readonly property color accentColor: urgency === 2 ? Config.accent : (urgency === 0 ? dimColor : Config.accent)
 
     signal closeRequested()
     signal cardClicked()
@@ -203,39 +202,6 @@ Rectangle {
                         elide: Text.ElideRight
                         maximumLineCount: 2
                     }
-
-                    Canvas {
-                        id: busySpinner
-
-                        Layout.preferredWidth: 14
-                        Layout.preferredHeight: 14
-                        Layout.alignment: Qt.AlignVCenter
-                        antialiasing: true
-                        visible: root.busy
-
-                        onPaint: {
-                            var ctx = getContext("2d")
-                            ctx.reset()
-                            ctx.lineWidth = 2
-                            ctx.strokeStyle = root.accentColor
-                            ctx.lineCap = "round"
-                            ctx.beginPath()
-                            ctx.arc(width / 2, height / 2, width / 2 - 3, -Math.PI / 2, Math.PI * 0.8)
-                            ctx.stroke()
-                        }
-
-                        onVisibleChanged: {
-                            if (visible) requestPaint()
-                        }
-
-                        RotationAnimation on rotation {
-                            from: 0
-                            to: 360
-                            duration: 700
-                            loops: Animation.Infinite
-                            running: root.busy
-                        }
-                    }
                 }
 
                 Text {
@@ -348,6 +314,45 @@ Rectangle {
         bottomRightRadius: root.cornerRadius
         topLeftRadius: 0
         topRightRadius: 0
+    }
+
+    Rectangle {
+        id: busyBar
+
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: 3
+        visible: !root.dismissing && root.busy
+        z: 1
+        clip: true
+        color: Config.hexWithAlpha(Config.foreground, "28")
+        bottomLeftRadius: root.cornerRadius
+        bottomRightRadius: root.cornerRadius
+
+        Rectangle {
+            id: busyIndicator
+
+            width: parent.width * 0.38
+            height: parent.height
+            color: Config.foreground
+            x: -width
+
+            SequentialAnimation on x {
+                loops: Animation.Infinite
+                running: busyBar.visible
+                NumberAnimation {
+                    from: -busyIndicator.width
+                    to: busyBar.width
+                    duration: 1050
+                    easing.type: Easing.InOutQuad
+                }
+
+                PauseAnimation {
+                    duration: 100
+                }
+            }
+        }
     }
 
 }
