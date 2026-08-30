@@ -66,7 +66,7 @@ git log --oneline -20 >"$LOG_FILE" 2>/dev/null
 
 notif "Sending LLM request for commit message" 1
 
-RAW=$(timeout 30 \
+RAW=$(timeout 90 \
 	opencode run \
 	--format json \
 	--agent "Git Commit" \
