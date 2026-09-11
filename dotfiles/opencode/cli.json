@@ -1,26 +1,29 @@
 {
-  "theme": {
-    "name": "system"
+  "animations": true,
+  "diffs": {
+    "view": "split",
+    "wrap": "word"
   },
   "keybinds": {
-    "model.cycle_recent": "none",
     "model.cycle_favorite": "f2",
     "model.cycle_favorite_reverse": "f1",
-    "session.line.up": "ctrl+alt+p",
-    "session.line.down": "ctrl+alt+n"
+    "model.cycle_recent": "none",
+    "session.line.down": "ctrl+alt+n",
+    "session.line.up": "ctrl+alt+p"
   },
-  "diffs": {
-    "wrap": "word",
-    "view": "split"
-  },
+  "plugins": [
+    "/home/joao/.config/opencode/ramo"
+  ],
   "session": {
-    "sidebar": "hide",
+    "image_preview": true,
     "scrollbar": false,
-    "thinking": "show",
-    "image_preview": true
+    "sidebar": "hide",
+    "thinking": "show"
   },
   "tabs": {
     "enabled": false
   },
-  "animations": true
+  "theme": {
+    "name": "system"
+  }
 }

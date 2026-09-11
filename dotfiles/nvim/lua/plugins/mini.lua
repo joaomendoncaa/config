@@ -47,6 +47,7 @@ return {
             },
         })
         setup 'comment'
+        setup 'align'
         setup 'cursorword'
 
         setup('ai', { n_lines = 1000 })

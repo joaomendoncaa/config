@@ -1,36 +1,97 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ $# -ne 1 ]; then
-	tmux display-message "Usage: sourcer owner/repo or https://github.com/owner/repo"
-	exit 1
+# sourcer: clone (or fork+clone) a GitHub repo into ~/lab and create a detached tmux session.
+# Async-safe: invoke with `run-shell -b`; progress via quickshell `fyi`, never blocks tmux.
+# Usage: sourcer [clone|fork] <owner/repo|github-url> [client_tty]
+#   The prompt form `sourcer "fork owner/repo"` also works.
+
+FYI_BIN="$(command -v fyi 2>/dev/null || echo "$HOME/.config.jmmm.sh/bin/fyi")"
+
+notify() {
+    local summary="$1" body="${2:-}" urgency="${3:-normal}" command="${4:-}" group="${5:-}" busy="${6:-0}"
+    "$FYI_BIN" "$summary" "$body" "$urgency" 0 "$command" "$group" "" "$busy" 2>/dev/null || true
+}
+
+fail() {
+    local msg="$1"
+    notify "❌ $SESSION_NAME" "$msg" critical "$SWITCH_CMD" "$GROUP"
+    exit 1
+}
+
+MODE="clone"
+if [[ $# -ge 1 && ("$1" == "clone" || "$1" == "fork") ]]; then
+    MODE="$1"
+    shift
+fi
+if [[ $# -lt 1 ]]; then
+    "$FYI_BIN" "❌ sourcer" "Usage: sourcer [clone|fork] owner/repo or https://github.com/owner/repo" critical 0 2>/dev/null || true
+    exit 1
 fi
 
 INPUT="$1"
+TTY="${2:-}"
+# Allow `fork owner/repo` typed into the single tmux prompt.
+if [[ "$INPUT" =~ ^(clone|fork)[[:space:]]+(.+)$ ]]; then
+    MODE="${BASH_REMATCH[1]}"
+    INPUT="${BASH_REMATCH[2]}"
+fi
 
 if [[ "$INPUT" == *"github.com"* ]]; then
-	INPUT="${INPUT#*://}"
-	INPUT="${INPUT#*github.com/}"
-	INPUT="${INPUT%.git}"
-	INPUT="${INPUT%/}"
+    INPUT="${INPUT#*://}"
+    INPUT="${INPUT#*github.com/}"
+    INPUT="${INPUT%.git}"
+    INPUT="${INPUT%/}"
 fi
 
 OWNER=$(dirname "$INPUT")
 REPO=$(basename "$INPUT")
+if [[ "$OWNER" == "." || -z "$REPO" ]]; then
+    "$FYI_BIN" "❌ sourcer" "Usage: sourcer [clone|fork] owner/repo or https://github.com/owner/repo" critical 0 2>/dev/null || true
+    exit 1
+fi
 SESSION_NAME="${REPO//./-}"
-
 TARGET_DIR="$HOME/lab/$REPO"
 GIT_URL="https://github.com/$OWNER/$REPO.git"
-
-if [ -d "$TARGET_DIR" ]; then
-	tmux display-message "❌ Directory $TARGET_DIR already exists"
-	exit 1
+GROUP="sourcer-$SESSION_NAME"
+if [[ -n "$TTY" ]]; then
+    SWITCH_CMD="tmux switch-client -c '$TTY' -t '$SESSION_NAME'"
+else
+    SWITCH_CMD="uwsm app -- xdg-terminal-exec tmux attach -t '$SESSION_NAME'"
 fi
 
-if ! git clone "$GIT_URL" "$TARGET_DIR" 2>/dev/null; then
-	tmux display-message "❌ Failed to clone $INPUT"
-	exit 1
+notify "⏳ $MODE $OWNER/$REPO" "Session '$SESSION_NAME' is building in the background" low "$SWITCH_CMD" "$GROUP" 1
+
+ensure_session() {
+    if tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
+        return 0
+    fi
+    tmux new-session -d -s "$SESSION_NAME" -c "$TARGET_DIR"
+}
+
+if [[ -d "$TARGET_DIR" ]]; then
+    if ensure_session; then
+        notify "✅ $SESSION_NAME ready" "$TARGET_DIR" low "$SWITCH_CMD" "$GROUP"
+    else
+        fail "directory exists but session '$SESSION_NAME' could not start"
+    fi
+    exit 0
 fi
 
-tmux new-session -ds "$SESSION_NAME" -c "$TARGET_DIR"
-tmux switch-client -t "$SESSION_NAME"
+LOG=$(mktemp "/tmp/sourcer-$SESSION_NAME.XXXXXX")
+trap 'rm -f "$LOG"' EXIT
+
+if [[ "$MODE" == "fork" ]]; then
+    command -v gh >/dev/null 2>&1 || fail "gh CLI not found (needed for fork)"
+    ME="$(gh api user -q .login 2>"$LOG" || true)"
+    [[ -n "$ME" ]] || fail "gh not authenticated — run 'gh auth login' ($(tail -c 300 "$LOG"))"
+    if ! gh repo view "$ME/$REPO" >/dev/null 2>&1; then
+        gh repo fork "$OWNER/$REPO" --clone=false >>"$LOG" 2>&1 || fail "fork failed ($(tail -c 300 "$LOG"))"
+    fi
+    gh repo clone "$ME/$REPO" "$TARGET_DIR" >>"$LOG" 2>&1 || git clone "https://github.com/$ME/$REPO.git" "$TARGET_DIR" >>"$LOG" 2>&1 || fail "clone of fork failed ($(tail -c 300 "$LOG"))"
+else
+    git clone "$GIT_URL" "$TARGET_DIR" >>"$LOG" 2>&1 || fail "clone failed ($(tail -c 300 "$LOG"))"
+fi
+
+ensure_session || fail "cloned but session '$SESSION_NAME' could not start"
+notify "✅ $SESSION_NAME ready" "$TARGET_DIR" low "$SWITCH_CMD" "$GROUP"
