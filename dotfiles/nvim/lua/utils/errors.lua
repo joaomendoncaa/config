@@ -15,7 +15,7 @@ if not vim._schedule_wrapped then
                         return
                     end
                 end
-                error(err)
+                error(err, 0)
             end
         end)
     end

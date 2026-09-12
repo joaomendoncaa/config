@@ -15,32 +15,6 @@ return {
     config = function()
         local plugin = require 'blink.cmp'
 
-        -- HACK: blink.cmp's Neovim 0.13 compat layer has wrong argument order for vim.pos API
-        if vim.fn.has 'nvim-0.13' == 1 then
-            local utils = require 'blink.cmp.lib.utils'
-            utils.get_vim_pos_cursor = function(buf, pos)
-                if pos then
-                    if buf == 0 then
-                        buf = vim.api.nvim_get_current_buf()
-                    end
-                else
-                    local win = buf
-                    if win == 0 then
-                        win = vim.api.nvim_get_current_win()
-                    end
-                    buf = vim.api.nvim_win_get_buf(win)
-                    pos = vim.api.nvim_win_get_cursor(win)
-                end
-                return vim.pos.cursor(pos, { buf = buf })
-            end
-            utils.get_vim_pos = function(buf, row, col)
-                return vim.pos(row, col, { buf = buf })
-            end
-            utils.vim_pos_to_cursor = function(pos)
-                return { pos:to_cursor() }
-            end
-        end
-
         local key = require('utils.misc').key
         local commands = require 'utils.commands'
         local disabled_filetypes = { '', 'NvimTree', 'DressingInput', 'SnacksInput', 'TelescopePrompt' }
@@ -59,7 +33,7 @@ return {
             end
 
             vim.b.completion = not vim.b.completion
-            vim.notify('Blink is now ' .. vim.b.completion and 'enabled' or 'disabled', vim.log.levels.INFO)
+            vim.notify('Blink is now ' .. (vim.b.completion and 'enabled' or 'disabled'), vim.log.levels.INFO)
         end
 
         key('n', '<leader>sS', toggle_blink, 'Toggle Blink [S]ugestions')
