@@ -253,9 +253,10 @@ Item {
             text: root.service.countryCode
             color: Config.foreground
             font.family: Config.fontFamily
-            font.pixelSize: Math.round(height * 0.58)
+            font.pixelSize: Math.round(height * 0.62)
             font.bold: true
             font.weight: Font.ExtraBold
+            font.letterSpacing: 1
             z: 3
         }
     }
