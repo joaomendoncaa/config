@@ -1,62 +1,60 @@
 {
-  "$schema": "https://opencode.ai/config.json",
-  "autoupdate": true,
-  "default_agent": "build",
-  "mcp": {
-    "chrome-devtools": {
-      "command": [
-        "npx",
-        "-y",
-        "chrome-devtools-mcp@latest",
-        "--isolated",
-        "--executablePath=/opt/helium-browser-bin/helium"
-      ],
-      "enabled": true,
-      "type": "local"
+    "$schema": "https://opencode.ai/config.json",
+    "autoupdate": true,
+    "default_agent": "build",
+    "mcp": {
+        "chrome-devtools": {
+            "command": [
+                "npx",
+                "-y",
+                "chrome-devtools-mcp@latest",
+                "--isolated",
+                "--executablePath=/opt/helium-browser-bin/helium"
+            ],
+            "enabled": true,
+            "type": "local"
+        }
+    },
+    "model": "opencode-go/deepseek-v4.1-flash",
+    "plugins": ["/home/joao/.config/opencode/plugins/ponytail-v2-bridge"],
+    "references": {
+        "config": {
+            "description": "Use for personal configuration files",
+            "path": "~/.config.jmmm.sh"
+        },
+        "dms": {
+            "repository": "https://github.com/AvengeMedia/DankMaterialShell"
+        },
+        "herdr": {
+            "branch": "master",
+            "description": "Use for any question regarding herdr",
+            "repository": "https://github.com/ogulcancelik/herdr"
+        },
+        "hyprland": {
+            "branch": "main",
+            "description": "Use for updating hyprland configurations",
+            "repository": "github.com/hyprwm/Hyprland"
+        },
+        "incorrupt": {
+            "repository": "$HOME/lab/gilly"
+        },
+        "oil": {
+            "branch": "master",
+            "description": "Use for any question regarding {oil,oil.nvim}",
+            "repository": "https://github.com/stevearc/oil.nvim"
+        },
+        "omarchy-quattro": {
+            "branch": "quattro",
+            "description": "Use for any question/implementation regarding Omarchy: Quattro (the 4th major release of Omarchy)",
+            "repository": "github.com/basecamp/omarchy"
+        },
+        "voxtype": {
+            "description": "Use for patching voxtype",
+            "path": "~/lab/voxtype"
+        }
+    },
+    "share": "manual",
+    "websearch": {
+        "provider": "random"
     }
-  },
-  "model": "opencode-go/deepseek-v4-flash",
-  "plugins": [
-    "/home/joao/.config/opencode/plugins/ponytail-v2-bridge"
-  ],
-  "references": {
-    "config": {
-      "description": "Use for personal configuration files",
-      "path": "~/.config.jmmm.sh"
-    },
-    "dms": {
-      "repository": "https://github.com/AvengeMedia/DankMaterialShell"
-    },
-    "herdr": {
-      "branch": "master",
-      "description": "Use for any question regarding herdr",
-      "repository": "https://github.com/ogulcancelik/herdr"
-    },
-    "hyprland": {
-      "branch": "main",
-      "description": "Use for updating hyprland configurations",
-      "repository": "github.com/hyprwm/Hyprland"
-    },
-    "incorrupt": {
-      "repository": "$HOME/lab/gilly"
-    },
-    "oil": {
-      "branch": "master",
-      "description": "Use for any question regarding {oil,oil.nvim}",
-      "repository": "https://github.com/stevearc/oil.nvim"
-    },
-    "omarchy-quattro": {
-      "branch": "quattro",
-      "description": "Use for any question/implementation regarding Omarchy: Quattro (the 4th major release of Omarchy)",
-      "repository": "github.com/basecamp/omarchy"
-    },
-    "voxtype": {
-      "description": "Use for patching voxtype",
-      "path": "~/lab/voxtype"
-    }
-  },
-  "share": "manual",
-  "websearch": {
-    "provider": "random"
-  }
 }
