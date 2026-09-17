@@ -18,7 +18,7 @@
     "image_preview": true,
     "scrollbar": false,
     "sidebar": "hide",
-    "thinking": "show"
+    "thinking": "hide"
   },
   "tabs": {
     "enabled": false

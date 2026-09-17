@@ -278,7 +278,7 @@ hl.define_submap("toggles", "reset", function()
 	hl.bind("T", function()
 		hl.dispatch(
 			hl.dsp.exec_cmd(
-				[[bash -c 'if [ "$(omarchy-theme-current)" = "Snow" ]; then omarchy-theme-set mars; else omarchy-theme-set snow; fi; ~/.config.jmmm.sh/bin/nvim-theme-sync']]
+				[[bash -c 'if [ "$(omarchy-theme-current)" = "Snow" ]; then omarchy-theme-set mars; else omarchy-theme-set snow; fi']]
 			)
 		)
 		hl.dispatch(hl.dsp.submap("reset"))

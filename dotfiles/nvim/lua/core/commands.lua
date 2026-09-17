@@ -61,7 +61,11 @@ local buffer_messages = function()
 end
 
 local auto_highlight_yank = function()
-    vim.highlight.on_yank()
+    if vim.hl.hl_op then
+        vim.hl.hl_op()
+    else
+        vim.hl.on_yank()
+    end
 end
 
 local auto_keep_unique_sidebar = function()
