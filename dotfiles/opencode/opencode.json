@@ -16,7 +16,6 @@
         }
     },
     "model": "opencode-go/deepseek-v4.1-flash",
-    "plugins": ["/home/joao/.config/opencode/plugins/ponytail-v2-bridge"],
     "references": {
         "config": {
             "description": "Use for personal configuration files",
