@@ -491,22 +491,8 @@ bind("SUPER + SHIFT + RIGHT", "Swap window to the right", hl.dsp.window.swap({ d
 bind("SUPER + SHIFT + UP", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
 bind("SUPER + SHIFT + DOWN", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
 
-bind("ALT + TAB", "Terminal: Tmux last-window / Normal: Cycle next window", function()
-	if utils.is_window_terminal() then
-		utils.send_shortcut_once("ALT", "Tab")()
-	else
-		hl.dispatch(hl.dsp.window.cycle_next())
-	end
-end)
-
-bind("ALT + SHIFT + TAB", "Terminal: Tmux last-window / Normal: Cycle prev window", function()
-	if utils.is_window_terminal() then
-		utils.send_shortcut_once("ALT", "Tab")()
-	else
-		hl.dispatch(hl.dsp.window.cycle_next({ next = false }))
-	end
-end)
-
+bind("ALT + TAB", "Cycle next window", hl.dsp.window.cycle_next())
+bind("ALT + SHIFT + TAB", "Cycle previous window", hl.dsp.window.cycle_next({ next = false }))
 bind("CTRL + ALT + TAB", "Focus on next monitor", hl.dsp.focus({ monitor = "+1" }))
 bind("CTRL + ALT + SHIFT + TAB", "Focus on previous monitor", hl.dsp.focus({ monitor = "-1" }))
 
