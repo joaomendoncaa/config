@@ -36,15 +36,7 @@ Rectangle {
                 spacing: Config.gapInner * 2
 
                 Text {
-                    text: `${root.service.blockedCount} blocked`
-                    color: Config.foreground
-                    font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize
-                    font.weight: Font.Medium
-                }
-
-                Text {
-                    text: `${root.service.pendingCount} pending`
+                    text: `${root.service.agentCount} agents · ${root.service.runningCount} running`
                     color: Config.foreground
                     font.family: Config.fontFamily
                     font.pixelSize: Config.fontSize

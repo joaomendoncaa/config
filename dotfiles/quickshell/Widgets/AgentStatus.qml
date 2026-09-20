@@ -8,18 +8,12 @@ Item {
     property string fontFamily: 'monospace'
     property real fontSize: 16
     property int runningFrame: 0
-    property int blockedFrame: 0
     readonly property var runningFrames: ['⣶', '⣧', '⣏', '⡟', '⠿', '⢻', '⣹', '⣼']
-    readonly property var blockedFrames: ['·', '·', '·', '·', '⚠', '·', '·', '⚠', '·']
     readonly property string glyph: {
         if (root.state === 'running')
             return root.runningFrames[root.runningFrame % root.runningFrames.length]
         if (root.state === 'idle')
             return '✓'
-        if (root.state === 'blocked')
-            return root.blockedFrames[root.blockedFrame % root.blockedFrames.length]
-        if (root.state === 'pending')
-            return '!'
         return '?'
     }
 

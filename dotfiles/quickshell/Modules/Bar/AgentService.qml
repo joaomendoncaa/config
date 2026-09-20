@@ -12,11 +12,9 @@ Item {
     property bool panelOpen: false
     property real nowMs: Date.now()
     property int runningFrame: 0
-    property int blockedFrame: 0
     property int hatchPhase: 0
 
     readonly property var runningFrames: ['⣶', '⣧', '⣏', '⡟', '⠿', '⢻', '⣹', '⣼']
-    readonly property var blockedFrames: ['·', '·', '·', '·', '⚠', '·', '·', '⚠', '·']
     readonly property bool agentLoading: root.adapter ? root.adapter.agentLoading : false
     readonly property bool agentAvailable: root.adapter ? root.adapter.agentAvailable : false
     readonly property string agentError: root.adapter ? root.adapter.agentError : 'agent adapter unavailable'
@@ -32,12 +30,9 @@ Item {
     readonly property bool dashboardAvailable: root.adapter && root.dashboardLabel.length > 0
     readonly property int agentCount: root.agentAvailable ? root.agents.length : 0
     readonly property int runningCount: root.countState('running')
-    readonly property int blockedCount: root.countState('blocked')
-    readonly property int pendingCount: root.countState('pending')
     readonly property var pinnedAgents: root.collectPinnedAgents()
     readonly property real primaryUsageRemaining: root.usageAvailable && root.usageWindows.length > 0 ? Number(root.usageWindows[0].actual) || 0 : 0
     readonly property bool usageWarning: root.hasUsageWarning()
-    readonly property bool blockedWarningFrame: root.blockedCount > 0 && root.blockedFrames[root.blockedFrame % root.blockedFrames.length] === '⚠'
 
     OpenCodeAgentAdapter {
         id: openCodeAdapter
@@ -53,15 +48,11 @@ Item {
     }
 
     function stateRank(state) {
-        if (state === 'blocked')
-            return 0
         if (state === 'running')
-            return 1
-        if (state === 'pending')
-            return 2
+            return 0
         if (state === 'idle')
-            return 3
-        return 4
+            return 1
+        return 2
     }
 
     function sortAgents(items) {
@@ -93,9 +84,9 @@ Item {
         persistTimer.restart()
     }
 
-    function focusAgent(agentId) {
+    function focusAgent(agent) {
         if (root.adapter)
-            root.adapter.focusAgent(agentId)
+            root.adapter.focusAgent(agent)
     }
 
     function refreshAgents() {
@@ -180,13 +171,6 @@ Item {
         running: root.runningCount > 0
         repeat: true
         onTriggered: root.runningFrame = (root.runningFrame + 1) % root.runningFrames.length
-    }
-
-    Timer {
-        interval: 180
-        running: root.blockedCount > 0
-        repeat: true
-        onTriggered: root.blockedFrame = (root.blockedFrame + 1) % root.blockedFrames.length
     }
 
     Timer {

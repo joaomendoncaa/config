@@ -25,5 +25,8 @@
   },
   "theme": {
     "name": "system"
+  },
+  "prompt": {
+    "image_preview": true
   }
 }

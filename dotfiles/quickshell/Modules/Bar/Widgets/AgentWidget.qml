@@ -228,15 +228,13 @@ Item {
                 delegate: Rectangle {
                     id: pinChip
                     required property var modelData
-                    readonly property bool pendingStyle: pinChip.modelData.state === 'pending'
-                    readonly property bool warningFlash: pinChip.modelData.state === 'blocked' && root.service.blockedWarningFrame
                     readonly property bool active: root.service.activeAgentId === pinChip.modelData.id
                     readonly property real desiredWidth: Config.gapInner * 4 + Config.buttonSize * 0.7 + Math.min(repoText.implicitWidth, Config.buttonSize * 3.5) + Math.min(titleText.implicitWidth, Config.buttonSize * 5)
 
                     width: Math.max(Config.buttonSize * 4, Math.min(Config.buttonSize * 9, desiredWidth))
                     height: Config.buttonSize
                     radius: Config.buttonBorderRadius
-                    color: pinChip.warningFlash || pinChip.active ? Config.foreground : (pinChip.pendingStyle ? Config.backgroundColoredSecondary : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent'))
+                    color: pinChip.active ? Config.foreground : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent')
 
                     RowLayout {
                         anchors.fill: parent
@@ -248,11 +246,10 @@ Item {
                             Layout.preferredWidth: Config.buttonSize * 0.7
                             Layout.preferredHeight: Config.buttonSize
                             state: pinChip.modelData.state
-                            fillColor: pinChip.warningFlash || pinChip.active ? Config.backgroundColored : Config.foreground
+                            fillColor: pinChip.active ? Config.backgroundColored : Config.foreground
                             fontFamily: Config.fontFamily
                             fontSize: Config.fontSize
                             runningFrame: root.service.runningFrame
-                            blockedFrame: root.service.blockedFrame
                         }
 
                         Text {
@@ -261,7 +258,7 @@ Item {
                             elide: Text.ElideRight
                             text: pinChip.modelData.repo
                             textFormat: Text.PlainText
-                            color: pinChip.warningFlash || pinChip.active ? Config.backgroundColored : Config.foreground
+                            color: pinChip.active ? Config.backgroundColored : Config.foreground
                             font.family: Config.fontFamily
                             font.pixelSize: Config.fontSize
                             font.weight: Font.Bold
@@ -274,7 +271,7 @@ Item {
                             elide: Text.ElideRight
                             text: pinChip.modelData.title
                             textFormat: Text.PlainText
-                            color: pinChip.warningFlash || pinChip.active ? Config.backgroundColored : Config.foreground
+                            color: pinChip.active ? Config.backgroundColored : Config.foreground
                             font.family: Config.fontFamily
                             font.pixelSize: Config.fontSize
                         }
@@ -287,7 +284,7 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             root.popupVisible = false
-                            root.service.focusAgent(pinChip.modelData.id)
+                            root.service.focusAgent(pinChip.modelData)
                         }
                     }
 

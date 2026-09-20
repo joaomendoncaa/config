@@ -12,10 +12,8 @@ Rectangle {
     signal activated()
 
     readonly property bool active: root.service.activeAgentId === root.modelData.id
-    readonly property bool pendingStyle: root.modelData.state === 'pending'
-    readonly property bool warningFlash: root.modelData.state === 'blocked' && root.service.blockedWarningFrame
 
-    color: root.warningFlash || root.active ? Config.foreground : (rowMouse.containsMouse ? Config.backgroundHovered : (root.rowIndex % 2 === 0 ? Config.backgroundColoredSecondary : 'transparent'))
+    color: root.active ? Config.foreground : (rowMouse.containsMouse ? Config.backgroundHovered : (root.rowIndex % 2 === 0 ? Config.backgroundColoredSecondary : 'transparent'))
 
     MouseArea {
         id: rowMouse
@@ -23,7 +21,7 @@ Rectangle {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         onClicked: {
-            root.service.focusAgent(root.modelData.id)
+            root.service.focusAgent(root.modelData)
             root.activated()
         }
     }
@@ -38,11 +36,10 @@ Rectangle {
             Layout.preferredWidth: Config.buttonSize * 0.7
             Layout.preferredHeight: Config.buttonSize
             state: root.modelData.state
-            fillColor: root.warningFlash || root.active ? Config.backgroundColored : Config.foreground
+            fillColor: root.active ? Config.backgroundColored : Config.foreground
             fontFamily: Config.fontFamily
             fontSize: Config.fontSize
             runningFrame: root.service.runningFrame
-            blockedFrame: root.service.blockedFrame
         }
 
         RowLayout {
@@ -57,7 +54,7 @@ Rectangle {
                 elide: Text.ElideRight
                 text: root.modelData.repo
                 textFormat: Text.PlainText
-                color: root.warningFlash || root.active ? Config.backgroundColored : Config.foreground
+                color: root.active ? Config.backgroundColored : Config.foreground
                 font.family: Config.fontFamily
                 font.pixelSize: Config.fontSize
                 font.weight: Font.Bold
@@ -66,7 +63,7 @@ Rectangle {
             Text {
                 opacity: root.modelData.branch.length > 0 ? 1 : 0
                 text: '↳'
-                color: root.warningFlash || root.active ? Config.backgroundColored : Config.foregroundSecondary
+                color: root.active ? Config.backgroundColored : Config.foregroundSecondary
                 font.family: Config.fontFamily
                 font.pixelSize: Config.fontSize
             }
@@ -78,7 +75,7 @@ Rectangle {
                 elide: Text.ElideRight
                 text: root.modelData.branch
                 textFormat: Text.PlainText
-                color: root.warningFlash || root.active ? Config.backgroundColored : Config.foreground
+                color: root.active ? Config.backgroundColored : Config.foreground
                 font.family: Config.fontFamily
                 font.pixelSize: Config.fontSize
                 font.weight: Font.Bold
@@ -91,7 +88,7 @@ Rectangle {
             elide: Text.ElideRight
             text: root.modelData.title
             textFormat: Text.PlainText
-            color: root.warningFlash || root.active ? Config.backgroundColored : Config.foreground
+            color: root.active ? Config.backgroundColored : Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize
         }
@@ -100,7 +97,7 @@ Rectangle {
             Layout.preferredWidth: Config.buttonSize * 5
             horizontalAlignment: Text.AlignRight
             text: root.modelData.additions > 0 || root.modelData.deletions > 0 ? `+${root.modelData.additions} -${root.modelData.deletions}` : ''
-            color: root.warningFlash || root.active ? Config.backgroundColored : Config.foreground
+            color: root.active ? Config.backgroundColored : Config.foreground
             font.family: Config.fontFamily
             font.pixelSize: Config.fontSize
         }

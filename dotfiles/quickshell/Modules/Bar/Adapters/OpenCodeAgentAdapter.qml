@@ -3,6 +3,8 @@ import Quickshell
 import Quickshell.Io
 import qs.Core
 
+// Agents come from the ramo daemon (exact per-pane sessions and titles),
+// via `ramo agents` / `ramo focus`. Usage meters still come from bin/opencode-usage.
 Item {
     id: root
 
@@ -12,7 +14,6 @@ Item {
     property bool agentRequestPending: false
     property string agentError: ''
     property string activeAgentId: ''
-    property bool agentRefreshQueued: false
     property bool usageLoading: true
     property bool usageAvailable: false
     property bool usageRequestPending: false
@@ -34,9 +35,8 @@ Item {
     readonly property string settingsPath: `${Quickshell.env('HOME')}/.config/quickshell/opencode.json`
     readonly property string workspaceId: Config.env.QUICKSHELL_OPENCODE_WORKSPACE_ID || 'wrk_01KEYSE6SWHFGJ2DB8C2690QJ2'
     readonly property string dashboardTarget: `https://opencode.ai/workspace/${root.workspaceId}/go`
-    readonly property string agentsCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-agents`
+    readonly property string agentsCommand: `${Quickshell.env('HOME')}/.cargo/bin/ramo`
     readonly property string usageCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-usage`
-    readonly property int mockAgentCount: 0
 
     function clamp(value, minimum, maximum) {
         return Math.min(maximum, Math.max(minimum, value))
@@ -86,68 +86,19 @@ Item {
         ]
     }
 
-    function focusAgent(sessionId) {
-        if (!sessionId || focusProc.running)
+    function focusAgent(agent) {
+        if (!agent || !agent.session || focusProc.running)
             return
-        focusProc.command = [root.agentsCommand, 'focus', sessionId]
+        focusProc.command = [root.agentsCommand, 'focus', agent.session, agent.paneId || '', String(agent.window), String(agent.pane)]
         focusProc.running = true
     }
 
-    function loadMockAgents() {
-        var states = ['running', 'idle', 'blocked', 'pending']
-        var repos = ['anomalyco/opencode', 'hyprwm/Hyprland', 'basecamp/omarchy', 'outfoxxed/quickshell', 'anomalyco/dotfiles', 'lab/voxtype', 'stevearc/oil.nvim', 'neovim/neovim', 'microsoft/vscode', 'qt/qtdeclarative']
-        var titles = ['refactor bar layout', 'fix overflow arrows', 'investigate pipewire crash', 'review PR #42', 'migrate to Qt6', 'update docs', 'debug hyprland socket', 'write tests for carousel', 'tune animations', 'chase memory leak']
-        var mock = []
-        var now = Date.now()
-        for (var i = 0; i < root.mockAgentCount; i++) {
-            mock.push({
-                id: 'mock-' + i,
-                title: titles[i % titles.length],
-                repo: repos[i % repos.length],
-                branch: 'feature/mock-' + i,
-                state: states[i % states.length],
-                additions: (i * 7) % 50,
-                deletions: (i * 3) % 20,
-                activityAt: now - i * 60000,
-                createdAt: now - i * 3600000
-            })
-        }
-        root.agents = mock
-        root.agentAvailable = true
-        root.agentLoading = false
-        root.agentRequestPending = false
-        root.agentError = ''
-        root.activeAgentId = mock.length > 2 ? 'mock-2' : ''
-    }
-
     function refreshAgents() {
-        if (root.mockAgentCount > 0) {
-            root.loadMockAgents()
-            return
-        }
         if (root.agentRequestPending || agentProc.running)
             return
         root.agentRequestPending = true
         agentWatchdog.restart()
         agentProc.running = true
-    }
-
-    function onHyprEvent(line) {
-        var separator = line.indexOf('>>')
-        var eventName = separator > 0 ? line.substring(0, separator) : String(line)
-        if (['activewindow', 'activewindowv2', 'workspace', 'workspacev2'].indexOf(eventName) === -1)
-            return
-        if (agentProc.running || root.agentRequestPending)
-            root.agentRefreshQueued = true
-        else
-            root.refreshAgents()
-    }
-
-    function drainAgentQueue() {
-        if (!root.agentRefreshQueued)
-            return
-        root.agentRefreshQueued = false
-        root.refreshAgents()
     }
 
     function parseAgents(output) {
@@ -163,10 +114,14 @@ Item {
                     continue
                 normalized.push({
                     id: agent.id,
+                    session: agent.session || '',
+                    window: Number(agent.window) || 0,
+                    pane: Number(agent.pane) || 0,
+                    paneId: agent.paneId || '',
                     title: agent.title || 'New session',
                     repo: agent.repo || '',
                     branch: agent.branch || '',
-                    state: ['running', 'idle', 'blocked', 'pending', 'unknown'].indexOf(agent.state) === -1 ? 'unknown' : agent.state,
+                    state: ['running', 'idle', 'unknown'].indexOf(agent.state) === -1 ? 'unknown' : agent.state,
                     additions: Number(agent.additions) || 0,
                     deletions: Number(agent.deletions) || 0,
                     activityAt: Number(agent.activityAt) || 0,
@@ -182,7 +137,6 @@ Item {
             root.agentError = ''
             root.activeAgentId = String(data.activeAgentId || '')
             agentWatchdog.stop()
-            Qt.callLater(root.drainAgentQueue)
         } catch (error) {
             root.agents = []
             root.agentAvailable = false
@@ -191,7 +145,6 @@ Item {
             root.agentError = String(error)
             root.activeAgentId = ''
             agentWatchdog.stop()
-            Qt.callLater(root.drainAgentQueue)
         }
     }
 
@@ -243,7 +196,7 @@ Item {
 
     Process {
         id: agentProc
-        command: [root.agentsCommand, 'snapshot']
+        command: [root.agentsCommand, 'agents']
 
         stdout: StdioCollector {
             onStreamFinished: root.parseAgents(text)
@@ -266,7 +219,6 @@ Item {
                 root.agentError = 'collector exited with status ' + exitCode
                 root.activeAgentId = ''
             }
-            Qt.callLater(root.drainAgentQueue)
         }
     }
 
@@ -346,8 +298,8 @@ Item {
     }
 
     Timer {
-        interval: 1000
-        running: root.mockAgentCount === 0
+        interval: 2000
+        running: true
         repeat: true
         onTriggered: root.refreshAgents()
     }
@@ -379,16 +331,5 @@ Item {
     Component.onCompleted: {
         root.refreshAgents()
         root.refreshUsage()
-    }
-
-    readonly property string hyprSignature: Quickshell.env('HYPRLAND_INSTANCE_SIGNATURE')
-
-    Socket {
-        id: hyprSocket
-        path: root.hyprSignature ? `${Quickshell.env('XDG_RUNTIME_DIR')}/hypr/${root.hyprSignature}/.socket2.sock` : ''
-        connected: root.hyprSignature.length > 0
-        parser: SplitParser {
-            onRead: msg => root.onHyprEvent(String(msg))
-        }
     }
 }

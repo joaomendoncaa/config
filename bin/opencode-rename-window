@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Name tmux windows after the opencode agent running in their active pane.
 # Status comes from the TUI bridge records under $RUNTIME_DIR (same contract as
-# bin/opencode-agents); no bridge record means the window is left untouched.
+# `ramo agents`); no bridge record means the window is left untouched.
 
 RUNTIME_BASE="${XDG_RUNTIME_DIR:-/tmp/opencode-dashboard-$UID}"
 RUNTIME_DIR="$RUNTIME_BASE/opencode-dashboard"
