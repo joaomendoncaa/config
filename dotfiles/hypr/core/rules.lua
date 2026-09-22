@@ -119,6 +119,12 @@ hl.layer_rule({
 })
 utils.window({ class = "^org.quickshell$", title = "^Omarchy shell \226\128\147 dev gallery$" }, { maximize = true })
 
+-- Helium --app windows (all launch-webapp/comms/twitter apps) spawn floating
+-- natively (dialog-type hint, centered, app-remembered size). Tile them all;
+-- the specific float rules below (PiP, Meet, webcam, ChatGPT, Translate)
+-- come later and still win for their own windows.
+utils.window({ class = "Helium", initial_title = ".*_/" }, { tile = true })
+
 -- Picture-in-picture.
 utils.window({ title = "(Picture.?in.?[Pp]icture)" }, { tag = "+pip" })
 utils.window({ tag = "pip" }, {
@@ -180,12 +186,12 @@ hl.layer_rule({ match = { namespace = "^(shell-bar|superbar|power-menu)$" }, no_
 
 hl.window_rule({ match = { class = "(Alacritty|kitty|foot)" }, scroll_touchpad = 1.5 })
 hl.window_rule({ match = { class = "com.mitchellh.ghostty" }, scroll_touchpad = 0.2 })
-hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, float = true })
-hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, size = { 600, 800 } })
-hl.window_rule({ match = { class = "chrome-chatgpt.com__-Default" }, move = { 1947, 47 } })
-hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, float = true })
-hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, size = { 600, 800 } })
-hl.window_rule({ match = { class = "chrome-translate.google.pt__-Default" }, move = { 1343, 47 } })
+-- ChatGPT / Translate webapps (--app): class is the browser (Helium since
+-- omarchy-launch-webapp defaulted to helium.desktop), so match the app URL in
+-- initial_title instead of the dead chrome-*-Default classes.
+-- Coords are the original absolute values (2560-wide layout).
+utils.window({ initial_title = "chatgpt\\.com_/" }, { float = true, size = { 600, 800 }, move = { 1947, 47 } })
+utils.window({ initial_title = "translate\\.google\\..*/" }, { float = true, size = { 600, 800 }, move = { 1343, 47 } })
 hl.window_rule({ match = { initial_class = "steam_app_230410" }, render_unfocused = true })
 hl.window_rule({ match = { initial_class = "Aether" }, float = true })
 hl.window_rule({ match = { initial_class = "Aether" }, size = { 1259, 1000 } })

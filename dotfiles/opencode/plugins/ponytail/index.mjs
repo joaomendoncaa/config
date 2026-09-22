@@ -10,12 +10,12 @@ import fs from 'fs';
 import path from 'path';
 
 const require = createRequire(import.meta.url);
-const { getDefaultMode } = require('/home/joao/.config/ponytail-pr/hooks/ponytail-config');
-const { getPonytailInstructions } = require('/home/joao/.config/ponytail-pr/hooks/ponytail-instructions');
-const { parseCommandFile } = require('/home/joao/.config/ponytail-pr/.opencode/plugins/ponytail-frontmatter.cjs');
+const { getDefaultMode, writeDefaultMode } = require('/home/joao/.config/ponytail/hooks/ponytail-config');
+const { getPonytailInstructions } = require('/home/joao/.config/ponytail/hooks/ponytail-instructions');
+const { parseCommandFile } = require('/home/joao/.config/ponytail/.opencode/plugins/ponytail-frontmatter.cjs');
 
-const commandDir = '/home/joao/.config/ponytail-pr/.opencode/command';
-const skillsDir = '/home/joao/.config/ponytail-pr/skills';
+const commandDir = '/home/joao/.config/ponytail/.opencode/command';
+const skillsDir = '/home/joao/.config/ponytail/skills';
 
 function skillDefinitions() {
     return fs.readdirSync(skillsDir, { withFileTypes: true }).flatMap((entry) => {
@@ -54,6 +54,10 @@ export default {
                     name,
                     description: parsed.description,
                     execute: async ({ sessionID, prompt, delivery }) => {
+                        if (name === 'ponytail') {
+                            const requested = String(prompt.text || '').trim().split(/\s+/)[0].toLowerCase() || 'full';
+                            writeDefaultMode(requested);
+                        }
                         // opencode validates `skills`/`agents`/`files` as arrays
                         const text = expandCommandTemplate(parsed.template, prompt.text || '');
                         const clean = { sessionID, text, delivery };
