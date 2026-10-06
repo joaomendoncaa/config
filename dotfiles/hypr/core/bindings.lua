@@ -185,7 +185,7 @@ hl.on("input.keyboard.key", function(keycode, _, state)
 	if ptt_state == "pending" then
 		ptt_end()
 		run_sync(TOGGLE_CMD)
-		voxtype_record("toggle")
+		voxtype_record("toggle --no-auto-submit")
 	elseif ptt_state == "hold" then
 		ptt_end()
 		voxtype_record("stop")
