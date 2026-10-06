@@ -583,7 +583,7 @@ do
 	end
 
 	hl.on("window.active", function(window)
-		if window and window.class == "helium" then
+		if window and window.class and window.class:lower() == "helium" then
 			hl.timer(bind_nav, { timeout = 1, type = "oneshot" })
 		else
 			hl.timer(unbind_nav, { timeout = 1, type = "oneshot" })
@@ -597,9 +597,19 @@ do
 	hl.on("layer.closed", function()
 		hl.timer(function()
 			local w = hl.get_active_window()
-			if w and w.class == "helium" then
+			if w and w.class and w.class:lower() == "helium" then
 				bind_nav()
 			end
 		end, { timeout = 1, type = "oneshot" })
+	end)
+
+	-- Reload while Helium is focused fires no window.active, so check once at start.
+	hl.on("hyprland.start", function()
+		hl.timer(function()
+			local w = hl.get_active_window()
+			if w and w.class and w.class:lower() == "helium" then
+				bind_nav()
+			end
+		end, { timeout = 500, type = "oneshot" })
 	end)
 end

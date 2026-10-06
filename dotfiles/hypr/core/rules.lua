@@ -150,6 +150,9 @@ utils.window({ tag = "chromium-based-browser", title = "^Meet - .+" }, {
 
 utils.window("qemu", { tag = "-default-opacity", opacity = "1 1" })
 
+-- Barebones NixOS VM (bin/vm-nixos): pin to workspace 10.
+utils.window({ title = "vm-nixos" }, { workspace = "10" })
+
 utils.window(
 	"com.libretro.RetroArch",
 	{ fullscreen = true, tag = "-default-opacity", opacity = "1 1", idle_inhibit = "fullscreen" }
