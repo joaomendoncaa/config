@@ -44,7 +44,8 @@ PanelWindow {
     }
 
     implicitHeight: Config.height + Config.shellPadding
-    exclusiveZone: Config.height
+    exclusiveZone: contentVisible ? Config.height : 0
+    visible: contentVisible
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "shell-bar"
