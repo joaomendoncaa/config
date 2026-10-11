@@ -1,19 +1,11 @@
--- Quake console: scratchpad overlay that drops from the top, covering 50% of screen.
 -- Ported from Omarchy quattro default/hypr/qconsole.lua:1
+-- Special workspaces: https://wiki.hypr.land/Configuring/Basics/Dispatchers
 -- Bindings live in core/bindings.lua (SUPER + grave / SUPER + SHIFT + grave).
 
--- How much of the usable screen the console covers, measured from the top.
-local share = 0.5
+-- Percent of the usable screen height the console covers from the top (1-100).
+local height = 50
 
--- Seed the console with a terminal the first time it opens, rather than at boot,
--- so nothing is running until it is wanted. The exec rule has to pin the
--- workspace itself: Hyprland only tags a spawn with the workspace it came from
--- while misc.initial_workspace_tracking is on, and we turn it off (see
--- config/misc.lua). Using the [workspace ...] prefix ensures placement.
--- Use ghostty with isolated top padding so the window can sit behind the bar (y=0)
--- while text stays below it. The --class and --window-padding-y CLI overrides keep
--- normal ghostty (window-padding-x 12) untouched — only the scratchpad instance
--- gets the extra top inset. Bar stays transparent (Bar.qml Config.background).
+-- It seeds the workspace with the terminal.
 local seed = "[workspace special:scratchpad silent] ghostty --class=com.mitchellh.ghostty.scratchpad --window-padding-y=40,2 -e tmux new -A -s scratchpad -c /home/joao"
 
 -- Dimming only applies while a special workspace is open, so the console gets
@@ -69,8 +61,9 @@ local function fit()
     -- has to come out before the reserved area (already logical) comes off.
     local reserved = monitor.reserved
     local usable = monitor.height / monitor.scale - reserved.top - reserved.bottom
+    local frac = math.min(100, math.max(1, height)) / 100
 
-    cover(math.max(0, math.floor(usable * (1 - share))))
+    cover(math.max(0, math.floor(usable * (1 - frac))))
 end
 
 -- Until a monitor can be read, cover the whole work area rather than leaving
@@ -93,4 +86,36 @@ hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 2, bezier =
 -- background, while --window-padding-y=40 keeps text below the bar.
 -- Normal ghostty stays tiled with 0.97 opacity via core/rules.lua:159; scratchpad
 -- is opaque to match the bar's seam when behind it.
-hl.window_rule({ match = { class = "com\\.mitchellh\\.ghostty\\.scratchpad" }, float = true, move = { "0", "0" }, size = { "monitor_w", "(monitor_h * 0.5) + 40" }, opacity = "1 1", animation = "slide top" })
+hl.window_rule({ match = { class = "com\\.mitchellh\\.ghostty\\.scratchpad" }, float = true, move = { "0", "0" }, size = { "monitor_w", "(monitor_h * " .. (math.min(100, math.max(1, height)) / 100) .. ") + 40" }, opacity = "1 1", animation = "slide top" })
+
+-- Children spawned from the console land on special:scratchpad and open hidden
+-- behind it. Bounce every window to the regular workspace the console is over:
+-- active_workspace stays underlying while special shows. Only the initial
+-- console stays.
+local SCRATCH_CLASS = "com.mitchellh.ghostty.scratchpad"
+hl.on("window.open", function(w)
+    if not w or not w.workspace or w.workspace.name ~= "special:scratchpad" then
+        return
+    end
+    if w.class == SCRATCH_CLASS then
+        local alone = true
+        for _, o in ipairs(hl.get_workspace_windows("special:scratchpad") or {}) do
+            if o.address ~= w.address then
+                alone = false
+                break
+            end
+        end
+        if alone then
+            return
+        end
+    end
+    local mon = w.monitor or hl.get_active_monitor()
+    local under = mon and mon.active_workspace
+    if not under or under.name == "special:scratchpad" then
+        under = hl.get_active_workspace()
+    end
+    if not under or under.name == "special:scratchpad" then
+        return
+    end
+    hl.dispatch(hl.dsp.window.move({ workspace = under.name, follow = false, window = "address:" .. w.address }))
+end)
