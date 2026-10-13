@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Pam
 import Quickshell.Wayland
@@ -20,6 +21,7 @@ Item {
     property int spinnerIndex: 0
     readonly property var spinnerFrames: ["|", "/", "-", "\\"]
     property bool windowReady: false
+    readonly property bool fullscreen: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.hasFullscreen
 
     function lock() {
         if (locked)
@@ -92,7 +94,7 @@ Item {
         timeout: Config.idleLockTimeout
         respectInhibitors: true
         onIsIdleChanged: {
-            if (mon.isIdle && root.idleEnabled)
+            if (mon.isIdle && root.idleEnabled && !root.fullscreen)
                 root.lock();
 
         }

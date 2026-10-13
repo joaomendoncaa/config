@@ -19,12 +19,14 @@ utils.window(
 
 -- Browser tags and styling.
 utils.window(
-	"((google-)?[cC]hrom(e|ium)|[bB]rave-browser|[mM]icrosoft-edge|Vivaldi-stable|helium)",
+	"((google-)?[cC]hrom(e|ium)|[bB]rave-browser|[mM]icrosoft-edge|Vivaldi-stable|[hH]elium)",
 	{ tag = "+chromium-based-browser" }
 )
 utils.window("([fF]irefox|zen|librewolf)", { tag = "+firefox-based-browser" })
 utils.window({ tag = "chromium-based-browser" }, { tag = "-default-opacity", tile = true, opacity = "1.0 0.97" })
 utils.window({ tag = "firefox-based-browser" }, { tag = "-default-opacity", opacity = "1.0 0.97" })
+utils.window({ tag = "chromium-based-browser" }, { idle_inhibit = "fullscreen" })
+utils.window({ tag = "firefox-based-browser" }, { idle_inhibit = "fullscreen" })
 
 utils.window("(chrome-youtube.com__-Default|chrome-app.zoom.us__wc_home-Default)", { tag = "-chromium-based-browser" })
 utils.window("(chrome-youtube.com__-Default|chrome-app.zoom.us__wc_home-Default)", { tag = "-default-opacity" })
