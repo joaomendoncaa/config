@@ -241,6 +241,20 @@ Item {
             visible: root.listVisible
             clip: true
 
+            MouseArea {
+                z: -1
+                anchors.fill: parent
+                acceptedButtons: Qt.NoButton
+                hoverEnabled: false
+                onWheel: wheel => {
+                    var maxX = Math.max(0, agentList.contentWidth - agentList.width)
+                    if (maxX <= 0)
+                        return
+                    var delta = wheel.angleDelta.y + wheel.angleDelta.x
+                    agentList.contentX = Math.max(0, Math.min(maxX, agentList.contentX - delta))
+                }
+            }
+
             ListView {
                 id: agentList
 
@@ -277,7 +291,8 @@ Item {
                     width: Math.max(Config.buttonSize * 4, Math.min(Config.buttonSize * 30, desiredWidth))
                     height: Config.buttonSize
                     radius: Config.buttonBorderRadius
-                    color: pinChip.active ? Config.foreground : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent')
+                    readonly property bool hovered: chipMouse.containsMouse
+                    color: pinChip.active || pinChip.hovered ? Config.foreground : Config.backgroundSecondary
 
                     RowLayout {
                         anchors.fill: parent
@@ -290,7 +305,7 @@ Item {
                             Layout.preferredWidth: Config.buttonSize * 0.7
                             Layout.preferredHeight: Config.buttonSize
                             state: pinChip.modelData.state
-                            fillColor: pinChip.active ? Config.backgroundColored : Config.foreground
+                            fillColor: (pinChip.active || pinChip.hovered) ? Config.backgroundColored : Config.foreground
                             fontFamily: Config.fontFamily
                             fontSize: Config.fontSize
                             runningFrame: root.service.runningFrame
@@ -303,7 +318,7 @@ Item {
                             elide: Text.ElideRight
                             text: pinChip.modelData.repo
                             textFormat: Text.PlainText
-                            color: pinChip.active ? Config.backgroundColored : Config.foreground
+                            color: (pinChip.active || pinChip.hovered) ? Config.backgroundColored : Config.foreground
                             font.family: Config.fontFamily
                             font.pixelSize: Config.fontSize
                             font.weight: Font.Bold
@@ -318,7 +333,7 @@ Item {
                             elide: Text.ElideRight
                             text: pinChip.modelData.title
                             textFormat: Text.PlainText
-                            color: pinChip.active ? Config.backgroundColored : Config.foreground
+                            color: (pinChip.active || pinChip.hovered) ? Config.backgroundColored : Config.foreground
                             font.family: Config.fontFamily
                             font.pixelSize: Config.fontSize
                         }
@@ -333,20 +348,15 @@ Item {
                             root.popupVisible = false
                             root.service.focusAgent(pinChip.modelData)
                         }
+                        onWheel: wheel => {
+                            var maxX = Math.max(0, agentList.contentWidth - agentList.width)
+                            if (maxX <= 0)
+                                return
+                            var delta = wheel.angleDelta.y + wheel.angleDelta.x
+                            agentList.contentX = Math.max(0, Math.min(maxX, agentList.contentX - delta))
+                        }
                     }
 
-                }
-            }
-
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.NoButton
-                onWheel: wheel => {
-                    var maxX = Math.max(0, agentList.contentWidth - agentList.width)
-                    if (maxX <= 0)
-                        return
-                    var delta = wheel.angleDelta.y + wheel.angleDelta.x
-                    agentList.contentX = Math.max(0, Math.min(maxX, agentList.contentX - delta))
                 }
             }
         }
