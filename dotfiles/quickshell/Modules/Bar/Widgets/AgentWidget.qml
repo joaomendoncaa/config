@@ -163,6 +163,49 @@ Item {
         }
 
         Rectangle {
+            id: workingButton
+            visible: root.service.runningCount > 0
+            width: workingRow.implicitWidth + Config.gapInner * 2
+            height: Config.buttonSize
+            radius: Config.buttonBorderRadius
+            color: workingMouse.containsMouse ? Config.backgroundHovered : 'transparent'
+
+            Row {
+                id: workingRow
+                anchors.centerIn: parent
+                spacing: Config.gapInner
+
+                AgentStatus {
+                    width: Config.buttonSize * 0.7
+                    height: Config.buttonSize
+                    anchors.verticalCenter: parent.verticalCenter
+                    state: root.service.runningCount > 0 ? 'running' : 'idle'
+                    fillColor: Config.foreground
+                    fontFamily: Config.fontFamily
+                    fontSize: Config.fontSize
+                    runningFrame: root.service.runningFrame
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: root.service.runningCount
+                    color: Config.foreground
+                    font.family: Config.fontFamily
+                    font.pixelSize: Config.fontSize
+                    font.weight: Font.Bold
+                }
+            }
+
+            MouseArea {
+                id: workingMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.togglePanel()
+            }
+        }
+
+        Rectangle {
             id: arrowLeft
 
             width: Config.buttonSize
@@ -229,9 +272,9 @@ Item {
                     id: pinChip
                     required property var modelData
                     readonly property bool active: root.service.activeAgentId === pinChip.modelData.id
-                    readonly property real desiredWidth: Config.gapInner * 4 + Config.buttonSize * 0.7 + Math.min(repoText.implicitWidth, Config.buttonSize * 3.5) + Math.min(titleText.implicitWidth, Config.buttonSize * 5)
+                    readonly property real desiredWidth: Config.gapInner * 6 + Config.buttonSize * 0.7 + Math.min(repoText.implicitWidth, Config.buttonSize * 7) + Math.min(titleText.implicitWidth, Config.buttonSize * 20)
 
-                    width: Math.max(Config.buttonSize * 4, Math.min(Config.buttonSize * 9, desiredWidth))
+                    width: Math.max(Config.buttonSize * 4, Math.min(Config.buttonSize * 30, desiredWidth))
                     height: Config.buttonSize
                     radius: Config.buttonBorderRadius
                     color: pinChip.active ? Config.foreground : (chipMouse.containsMouse ? Config.backgroundHovered : 'transparent')
@@ -243,6 +286,7 @@ Item {
                         spacing: Config.gapInner
 
                         AgentStatus {
+                            Layout.alignment: Qt.AlignVCenter
                             Layout.preferredWidth: Config.buttonSize * 0.7
                             Layout.preferredHeight: Config.buttonSize
                             state: pinChip.modelData.state
@@ -254,7 +298,8 @@ Item {
 
                         Text {
                             id: repoText
-                            Layout.maximumWidth: Config.buttonSize * 3.5
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.maximumWidth: Config.buttonSize * 7
                             elide: Text.ElideRight
                             text: pinChip.modelData.repo
                             textFormat: Text.PlainText
@@ -266,6 +311,8 @@ Item {
 
                         Text {
                             id: titleText
+                            Layout.alignment: Qt.AlignVCenter
+                            Layout.leftMargin: Config.gapInner
                             Layout.fillWidth: true
                             Layout.minimumWidth: 0
                             elide: Text.ElideRight

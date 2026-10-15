@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOME_DIR="${HOME:-/home/joao}"
+T3_HOME="${T3CODE_HOME:-$HOME_DIR/.t3-dev}"
+UDATA="$T3_HOME/userdata"
+DB="$UDATA/statev2.sqlite"
+
+fail() {
+    jq -cn --arg error "$1" '{ok: false, error: $error}'
+    exit 1
+}
+
+command -v sqlite3 >/dev/null 2>&1 || fail 'sqlite3 is required'
+command -v jq >/dev/null 2>&1 || fail 'jq is required'
+[[ -f "$DB" ]] || fail "state db not found: $DB"
+
+origin="$(jq -r '.origin // empty' "$UDATA/server-runtime.json" 2>/dev/null || true)"
+[[ -n "$origin" ]] || origin='http://127.0.0.1:3773'
+env_id="$(cat "$UDATA/environment-id" 2>/dev/null || true)"
+[[ -n "$env_id" ]] || env_id='local'
+
+section() {
+    sqlite3 -json "$DB" "
+SELECT $1 AS pinned,
+    t.thread_id AS id,
+    json_extract(t.payload_json, '$.title') AS title,
+    p.title AS repo,
+    json_extract(t.payload_json, '$.branch') AS branch,
+    json_extract(t.payload_json, '$.worktreePath') AS worktreePath,
+    r.status AS run_status,
+    json_extract(t.payload_json, '$.updatedAt') AS updatedAt,
+    json_extract(t.payload_json, '$.createdAt') AS createdAt
+FROM orchestration_v2_projection_threads t
+LEFT JOIN projection_projects p ON p.project_id = t.project_id
+LEFT JOIN orchestration_v2_projection_runs r ON r.thread_id = t.thread_id
+    AND r.ordinal = (SELECT MAX(ordinal) FROM orchestration_v2_projection_runs WHERE thread_id = t.thread_id)
+WHERE t.deleted_at IS NULL AND t.archived_at IS NULL
+    AND (json_extract(t.payload_json, '$.lineage.relationshipToParent') IS NULL
+        OR json_extract(t.payload_json, '$.lineage.relationshipToParent') != 'subagent')
+    AND $2
+ORDER BY $3"
+}
+
+NOT_SNOOZED="(json_extract(t.payload_json, '\$.snoozedUntil') IS NULL
+        OR strftime('%s', json_extract(t.payload_json, '\$.snoozedUntil')) <= strftime('%s', 'now'))"
+NOT_SETTLED="(json_extract(t.payload_json, '\$.settledOverride') IS NULL
+        OR json_extract(t.payload_json, '\$.settledOverride') != 'settled')"
+
+pinned=$(section 1 "$NOT_SETTLED
+    AND json_extract(t.payload_json, '\$.pinnedAt') IS NOT NULL
+    AND $NOT_SNOOZED" \
+    "json_extract(t.payload_json, '\$.pinOrderKey') ASC NULLS LAST,
+    json_extract(t.payload_json, '\$.createdAt') DESC, t.thread_id ASC") || fail 'pinned query failed'
+
+active=$(section 0 "$NOT_SETTLED
+    AND json_extract(t.payload_json, '\$.pinnedAt') IS NULL
+    AND $NOT_SNOOZED" \
+    "CASE WHEN json_extract(t.payload_json, '\$.activeOrderKey') IS NULL THEN 0 ELSE 1 END ASC,
+    max(json_extract(t.payload_json, '\$.createdAt'),
+        coalesce(json_extract(t.payload_json, '\$.unsettledAt'), '')) DESC,
+    json_extract(t.payload_json, '\$.activeOrderKey') ASC,
+    t.thread_id ASC") || fail 'active query failed'
+
+snoozed=$(section 0 "json_extract(t.payload_json, '\$.snoozedUntil') IS NOT NULL
+    AND strftime('%s', json_extract(t.payload_json, '\$.snoozedUntil')) > strftime('%s', 'now')" \
+    "json_extract(t.payload_json, '\$.snoozedUntil') ASC, t.thread_id ASC") || fail 'snoozed query failed'
+
+rows=$(jq -c -s 'add | map(select(.id != null and .id != ""))' \
+    <(printf '%s' "$pinned") <(printf '%s' "$active") <(printf '%s' "$snoozed")) || fail 'result parse failed'
+
+jq -c --arg origin "$origin" --arg env "$env_id" '
+    def ms: try ((. // "") | fromdateiso8601 * 1000 | floor) catch 0;
+    {
+        ok: true,
+        activeAgentId: null,
+        agents: [.[]
+            | .run_status as $rs
+            | {
+                id: .id,
+                session: "",
+                url: "\($origin)/\($env)/\(.id)",
+                window: 0,
+                pane: 0,
+                paneId: "",
+                title: (.title // "New session"),
+                repo: (.repo // ""),
+                branch: (.branch // ((.worktreePath // "" | split("/") | last) // "")),
+                state: (if (["preparing", "queued", "starting", "running"] | index($rs)) then "running" else "idle" end),
+                additions: 0,
+                deletions: 0,
+                activityAt: (.updatedAt | ms),
+                createdAt: (.createdAt | ms),
+                pinned: (.pinned == 1)
+            }]
+    }' <<<"$rows"

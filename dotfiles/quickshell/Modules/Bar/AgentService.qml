@@ -14,7 +14,7 @@ Item {
     property int runningFrame: 0
     property int hatchPhase: 0
 
-    readonly property var runningFrames: ['⣶', '⣧', '⣏', '⡟', '⠿', '⢻', '⣹', '⣼']
+    readonly property var runningFrames: ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏']
     readonly property bool agentLoading: root.adapter ? root.adapter.agentLoading : false
     readonly property bool agentAvailable: root.adapter ? root.adapter.agentAvailable : false
     readonly property string agentError: root.adapter ? root.adapter.agentError : 'agent adapter unavailable'
@@ -29,7 +29,7 @@ Item {
     readonly property string dashboardLabel: root.adapter && root.adapter.dashboardLabel ? root.adapter.dashboardLabel : ''
     readonly property bool dashboardAvailable: root.adapter && root.dashboardLabel.length > 0
     readonly property int agentCount: root.agentAvailable ? root.agents.length : 0
-    readonly property int runningCount: root.countState('running')
+    readonly property int runningCount: root.agents.filter(function(a) { return a.state === 'running' }).length
     readonly property var pinnedAgents: root.collectPinnedAgents()
     readonly property real primaryUsageRemaining: root.usageAvailable && root.usageWindows.length > 0 ? Number(root.usageWindows[0].actual) || 0 : 0
     readonly property bool usageWarning: root.hasUsageWarning()
@@ -38,45 +38,16 @@ Item {
         id: openCodeAdapter
     }
 
-    function countState(state) {
-        var count = 0
-        for (var i = 0; i < root.agents.length; i++) {
-            if (root.agents[i].state === state)
-                count++
-        }
-        return count
-    }
-
-    function stateRank(state) {
-        if (state === 'running')
-            return 0
-        if (state === 'idle')
-            return 1
-        return 2
-    }
-
-    function sortAgents(items) {
-        var sorted = items.slice()
-        sorted.sort(function(left, right) {
-            var stateDifference = root.stateRank(left.state) - root.stateRank(right.state)
-            if (stateDifference !== 0)
-                return stateDifference
-            return (Number(right.activityAt) || 0) - (Number(left.activityAt) || 0)
-        })
-        return sorted
-    }
-
     function syncAgents() {
         var source = root.adapter && Array.isArray(root.adapter.agents) ? root.adapter.agents : []
-        var sorted = root.sortAgents(source)
-        if (JSON.stringify(sorted) !== JSON.stringify(root.agents))
-            root.agents = sorted
+        if (JSON.stringify(source) !== JSON.stringify(root.agents))
+            root.agents = source
     }
 
     function collectPinnedAgents() {
         if (!root.agentAvailable)
             return []
-        return root.agents
+        return root.agents.filter(function(agent) { return agent.pinned === true })
     }
 
     function togglePinsHidden() {

@@ -3,8 +3,8 @@ import Quickshell
 import Quickshell.Io
 import qs.Core
 
-// Agents come from the ramo daemon (exact per-pane sessions and titles),
-// via `ramo agents` / `ramo focus`. Usage meters still come from bin/opencode-usage.
+// Agents come from bin/t3-agents (fork sqlite, exact T3 sidebar order),
+// clicked rows open the thread URL. Usage meters still come from bin/opencode-usage.
 Item {
     id: root
 
@@ -35,7 +35,7 @@ Item {
     readonly property string settingsPath: `${Quickshell.env('HOME')}/.config/quickshell/opencode.json`
     readonly property string workspaceId: Config.env.QUICKSHELL_OPENCODE_WORKSPACE_ID || 'wrk_01KEYSE6SWHFGJ2DB8C2690QJ2'
     readonly property string dashboardTarget: `https://opencode.ai/workspace/${root.workspaceId}/go`
-    readonly property string agentsCommand: `${Quickshell.env('HOME')}/.cargo/bin/ramo`
+    readonly property string agentsCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/t3-agents`
     readonly property string usageCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-usage`
 
     function clamp(value, minimum, maximum) {
@@ -87,7 +87,13 @@ Item {
     }
 
     function focusAgent(agent) {
-        if (!agent || !agent.session || focusProc.running)
+        if (!agent || focusProc.running)
+            return
+        if (agent.url) {
+            Quickshell.execDetached(['xdg-open', agent.url])
+            return
+        }
+        if (!agent.session)
             return
         focusProc.command = [root.agentsCommand, 'focus', agent.session, agent.paneId || '', String(agent.window), String(agent.pane)]
         focusProc.running = true
@@ -115,6 +121,7 @@ Item {
                 normalized.push({
                     id: agent.id,
                     session: agent.session || '',
+                    url: agent.url || '',
                     window: Number(agent.window) || 0,
                     pane: Number(agent.pane) || 0,
                     paneId: agent.paneId || '',
@@ -125,7 +132,8 @@ Item {
                     additions: Number(agent.additions) || 0,
                     deletions: Number(agent.deletions) || 0,
                     activityAt: Number(agent.activityAt) || 0,
-                    createdAt: Number(agent.createdAt) || 0
+                    createdAt: Number(agent.createdAt) || 0,
+                    pinned: agent.pinned === true
                 })
             }
 

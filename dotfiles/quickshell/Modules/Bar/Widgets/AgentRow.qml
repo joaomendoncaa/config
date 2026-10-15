@@ -33,6 +33,7 @@ Rectangle {
         spacing: Config.gapInner * 2
 
         AgentStatus {
+            Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: Config.buttonSize * 0.7
             Layout.preferredHeight: Config.buttonSize
             state: root.modelData.state
@@ -43,6 +44,7 @@ Rectangle {
         }
 
         RowLayout {
+            Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: false
             Layout.preferredWidth: Config.buttonSize * 8.5
             Layout.minimumWidth: Config.buttonSize * 6
@@ -83,6 +85,7 @@ Rectangle {
         }
 
         Text {
+            Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             elide: Text.ElideRight
@@ -94,6 +97,7 @@ Rectangle {
         }
 
         Text {
+            Layout.alignment: Qt.AlignVCenter
             Layout.preferredWidth: Config.buttonSize * 5
             horizontalAlignment: Text.AlignRight
             text: root.modelData.additions > 0 || root.modelData.deletions > 0 ? `+${root.modelData.additions} -${root.modelData.deletions}` : ''
