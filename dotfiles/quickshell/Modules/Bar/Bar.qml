@@ -44,8 +44,9 @@ PanelWindow {
     }
 
     implicitHeight: Config.height + Config.shellPadding
-    exclusiveZone: contentVisible ? Config.height : 0
-    visible: contentVisible
+    exclusiveZone: Config.height
+    visible: true
+    mask: contentVisible ? null : clickThrough
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "shell-bar"
@@ -53,6 +54,10 @@ PanelWindow {
     anchors.left: true
     anchors.right: true
     margins.top: Config.shellPadding
+
+    Region {
+        id: clickThrough
+    }
 
     Updates {
         id: barUpdates
