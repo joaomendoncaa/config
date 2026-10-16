@@ -64,6 +64,8 @@ Item {
     property var countries: []
 
     property bool _statusRunning: false
+    property bool _gateRunning: false
+    property string _gateState: ""
     property bool _serverListRunning: false
     property string _pendingGoal: ""
     property string _connectError: ""
@@ -232,6 +234,35 @@ Item {
     }
 
     // --- Status polling ------------------------------------------------------
+    // Cheap gate (~1ms stat): the daemon persists connection parameters to
+    // ~/.cache/Proton/VPN/connection/ iff connected - the same file the CLI
+    // itself reads. Poll this at high frequency; only run the expensive
+    // `protonvpn status` (~0.6s CPU cold CPython start) when the gate flips
+    // or details are still unknown.
+    function pollGate() {
+        if (root._gateRunning || gateProcess.running)
+            return
+        root._gateRunning = true
+        gateProcess.running = true
+    }
+
+    Process {
+        id: gateProcess
+
+        command: ["bash", "-c", "test -n \"$(ls -A ~/.cache/Proton/VPN/connection/ 2>/dev/null)\""]
+        running: false
+
+        onExited: (exitCode, exitStatus) => {
+            root._gateRunning = false
+            var gate = exitCode === 0 ? "connected" : "disconnected"
+            if (gate !== root._gateState) {
+                root._gateState = gate
+                root.refresh()
+            } else if (root.state === "unknown") {
+                root.refresh()
+            }
+        }
+    }
 
     Process {
         id: statusProcess
@@ -368,16 +399,18 @@ Item {
         }
     }
 
-    // Poll status every few seconds so the UI tracks external changes
-    // (auto-reconnect, manual `protonvpn` usage, daemon events).
+    // Poll the cheap gate every few seconds so the UI tracks external changes
+    // (auto-reconnect, manual `protonvpn` usage, daemon events). The gate is
+    // ~1ms; the full `protonvpn status` only runs when it flips.
+    // ponytail: gate avoids cold-starting CPython (~0.6s CPU) every poll
     Timer {
         id: statusTimer
 
         interval: 3000
         running: true
         repeat: true
-        triggeredOnStart: true
-        onTriggered: root.refresh()
+        triggeredOnStart: false
+        onTriggered: root.pollGate()
     }
 
     // --- Server list -----------------------------------------------------------
