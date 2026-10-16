@@ -21,7 +21,12 @@ end)
 hl.config((function()
 	local config = {}
 	for f in io.popen("ls " .. os.getenv("HOME") .. "/.config/hypr/config/"):lines() do
-		config[f:sub(1, -5)] = require("config." .. f:sub(1, -5))
+		-- Side-effect modules (hl.monitor, ...) return nothing;
+		-- require yields true for those, which hl.config rejects as unknown keys.
+		local mod = require("config." .. f:sub(1, -5))
+		if type(mod) == "table" then
+			config[f:sub(1, -5)] = mod
+		end
 	end
 	return config
 end)())

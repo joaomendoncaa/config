@@ -54,13 +54,23 @@ local SPEAKERS_SINK = "alsa_output.usb-Logitech_Logi_Z407_00000000-01.analog-ste
 local DUCK_VOLUME = "20%"
 local DUCKED_VOL_FILE = "$XDG_RUNTIME_DIR/voxtype/ducked-vol"
 
-local DUCK_CMD = 'sink="$(pactl get-default-sink)"; f="' .. DUCKED_VOL_FILE
-	.. '"; if [ "$sink" = "' .. SPEAKERS_SINK .. '" ] && [ ! -f "$f" ]; then pactl get-sink-volume "$sink" | grep -o "[0-9]*%" | head -n1 > "$f"; pactl set-sink-volume "$sink" '
-	.. DUCK_VOLUME .. '; fi'
-local RESTORE_CMD = 'f="' .. DUCKED_VOL_FILE .. '"; if [ -f "$f" ]; then pactl set-sink-volume "' .. SPEAKERS_SINK
+local DUCK_CMD = 'sink="$(pactl get-default-sink)"; f="'
+	.. DUCKED_VOL_FILE
+	.. '"; if [ "$sink" = "'
+	.. SPEAKERS_SINK
+	.. '" ] && [ ! -f "$f" ]; then pactl get-sink-volume "$sink" | grep -o "[0-9]*%" | head -n1 > "$f"; pactl set-sink-volume "$sink" '
+	.. DUCK_VOLUME
+	.. "; fi"
+local RESTORE_CMD = 'f="'
+	.. DUCKED_VOL_FILE
+	.. '"; if [ -f "$f" ]; then pactl set-sink-volume "'
+	.. SPEAKERS_SINK
 	.. '" "$(cat "$f")"; rm -f "$f"; fi'
 local TOGGLE_CMD = 'state="$(cat "$XDG_RUNTIME_DIR/voxtype/state" 2>/dev/null || printf idle)"; if [ "$state" = "idle" ] || [ "$state" = "stopped" ]; then '
-	.. DUCK_CMD .. '; else ' .. RESTORE_CMD .. '; fi'
+	.. DUCK_CMD
+	.. "; else "
+	.. RESTORE_CMD
+	.. "; fi"
 
 local function run_sync(sh)
 	local p = io.popen("bash -c '" .. sh .. "' 2>/dev/null")
@@ -73,7 +83,11 @@ end
 -- Power menu (global). Stored so PTT can temporarily disable it without
 -- calling hl.unbind("SUPER + ESCAPE") which would also delete per-submap ESC
 -- bindings (hl.unbind matches by displayKey, ignoring submap).
-local power_menu_bind = hl.bind("SUPER + ESCAPE", hl.dsp.exec_cmd(utils.quickshell_ipc("power-menu", "toggle")), { description = "Power menu" })
+local power_menu_bind = hl.bind(
+	"SUPER + ESCAPE",
+	hl.dsp.exec_cmd(utils.quickshell_ipc("power-menu", "toggle")),
+	{ description = "Power menu" }
+)
 
 -- PTT hijack binds. Created once, toggled via :set_enabled() instead of
 -- hl.unbind/hl.bind to avoid nuking submap-scoped ESC keybinds.
@@ -88,9 +102,15 @@ local function unbind_escape()
 	end
 	esc_bound = false
 	hl.timer(function()
-		if ptt_esc_bind then ptt_esc_bind:set_enabled(false) end
-		if ptt_super_esc_bind then ptt_super_esc_bind:set_enabled(false) end
-		if power_menu_bind then power_menu_bind:set_enabled(true) end
+		if ptt_esc_bind then
+			ptt_esc_bind:set_enabled(false)
+		end
+		if ptt_super_esc_bind then
+			ptt_super_esc_bind:set_enabled(false)
+		end
+		if power_menu_bind then
+			power_menu_bind:set_enabled(true)
+		end
 	end, { timeout = 1, type = "oneshot" })
 end
 
@@ -112,7 +132,9 @@ local function ptt_cancel()
 end
 
 local function ensure_ptt_binds()
-	if ptt_esc_bind then return end
+	if ptt_esc_bind then
+		return
+	end
 	ptt_super_esc_bind = hl.bind("SUPER + ESCAPE", function()
 		ptt_cancel()
 		if hl.get_current_submap() ~= "" then
@@ -135,34 +157,36 @@ local function bind_escape()
 	end
 	esc_bound = true
 	hl.timer(function()
-		if power_menu_bind then power_menu_bind:set_enabled(false) end
+		if power_menu_bind then
+			power_menu_bind:set_enabled(false)
+		end
 		ensure_ptt_binds()
-		if ptt_esc_bind then ptt_esc_bind:set_enabled(true) end
-		if ptt_super_esc_bind then ptt_super_esc_bind:set_enabled(true) end
+		if ptt_esc_bind then
+			ptt_esc_bind:set_enabled(true)
+		end
+		if ptt_super_esc_bind then
+			ptt_super_esc_bind:set_enabled(true)
+		end
 	end, { timeout = 1, type = "oneshot" })
 end
 
 ensure_ptt_binds()
 
-hl.bind(
-	"SUPER + D",
-	function()
-		if ptt_state ~= "idle" then
+hl.bind("SUPER + D", function()
+	if ptt_state ~= "idle" then
+		return
+	end
+	ptt_state = "pending"
+	bind_escape()
+	ptt_timer = hl.timer(function()
+		if ptt_state ~= "pending" then
 			return
 		end
-		ptt_state = "pending"
-		bind_escape()
-		ptt_timer = hl.timer(function()
-			if ptt_state ~= "pending" then
-				return
-			end
 		ptt_state = "hold"
 		run_sync(DUCK_CMD)
 		voxtype_record("start --auto-submit")
-		end, { timeout = PTT_THRESHOLD_MS, type = "oneshot" })
-	end,
-	{ description = "Dictate (tap: toggle, hold: push-to-talk)" }
-)
+	end, { timeout = PTT_THRESHOLD_MS, type = "oneshot" })
+end, { description = "Dictate (tap: toggle, hold: push-to-talk)" })
 
 hl.on("input.keyboard.key", function(keycode, _, state)
 	if keycode ~= SUPER_D_KEYCODE or state ~= 0 then
@@ -314,11 +338,19 @@ hl.define_submap("comms", "reset", function()
 		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "WhatsApp" "https://web.whatsapp.com/"'))
 		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus "Telegram" "Telegram"'))
 		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Proton Mail" "https://mail.proton.me/u/0/inbox"'))
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"'))
+		hl.dispatch(
+			hl.dsp.exec_cmd(
+				'omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"'
+			)
+		)
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Launch comms" })
 	hl.bind("G", function()
-		hl.dispatch(hl.dsp.exec_cmd('omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"'))
+		hl.dispatch(
+			hl.dsp.exec_cmd(
+				'omarchy-launch-or-focus-webapp "Google Messages" "https://messages.google.com/web/conversations"'
+			)
+		)
 		hl.dispatch(hl.dsp.submap("reset"))
 	end, { description = "Google Messages" })
 	hl.bind("D", function()
