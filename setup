@@ -113,6 +113,7 @@ symlink "$HOME/.gitconfig" "$CONFIG/dotfiles/git/.gitconfig"
 symlink "$HOME/.bashrc" "$CONFIG/dotfiles/bash/.bashrc"
 symlink "$HOME/biome.json" "$CONFIG/dotfiles/biome/config.json"
 symlink "$HOME/.local/bin/toggle-sink" "$CONFIG/bin/toggle-sink"
+symlink "$HOME/.local/bin/blur-cam" "$CONFIG/bin/blur-cam"
 symlink "$HOME/Wallpapers" "$CONFIG/wallpapers"
 
 echo "Setup complete!"

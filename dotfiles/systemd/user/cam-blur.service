@@ -1,0 +1,17 @@
+[Unit]
+Description=GPU webcam background blur (RVM on CUDA -> v4l2 loopback)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+# A persistent failure (e.g. loopback module missing) must back off, not hammer the display GPU.
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=%h/.config.jmmm.sh/dotfiles/obs/gpu-blur/cam-blur.sh --model /usr/share/obs/obs-plugins/obs-backgroundremoval/models/selfie_multiclass_256x256.with_runtime_opt.ort
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

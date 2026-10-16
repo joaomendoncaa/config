@@ -1,0 +1,10 @@
+# Period-correct stack for Pascal GPUs (sm_61): ORT 1.17 + CUDA 11 + cuDNN 8.
+# Newer stacks ship no Pascal kernels (cuBLAS failure 8 / cuDNN 5003).
+onnxruntime-gpu==1.17.1
+numpy==1.26.4
+opencv-python-headless
+pyfakewebcam
+nvidia-cublas-cu11
+nvidia-cuda-runtime-cu11
+nvidia-cudnn-cu11==8.9.6.50
+nvidia-cufft-cu11

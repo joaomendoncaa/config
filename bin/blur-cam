@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Webcam blur switch. off = service stopped = literally zero resources.
+# on/raw only consume while something (OBS, browser) reads the loopback.
+# Usage: blur-cam on|off|raw|toggle|status
+set -euo pipefail
+
+MODE="${XDG_RUNTIME_DIR:-/tmp}/cam-blur.mode"
+
+case "${1:-status}" in
+on)
+    systemctl --user start cam-blur.service
+    echo blur >"$MODE"
+    ;;
+raw)
+    systemctl --user start cam-blur.service
+    echo raw >"$MODE"
+    ;;
+off) systemctl --user stop cam-blur.service ;;
+toggle)
+    if systemctl --user is-active -q cam-blur.service; then
+        systemctl --user stop cam-blur.service
+    else
+        systemctl --user start cam-blur.service
+    fi
+    ;;
+status) ;;
+*)
+    echo "usage: blur-cam on|off|raw|toggle|status" >&2
+    exit 1
+    ;;
+esac
+
+echo "service: $(systemctl --user is-active cam-blur.service)"
+echo "mode: $(cat "$MODE" 2>/dev/null || echo raw)"
