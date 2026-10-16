@@ -26,4 +26,4 @@ hl.config((function()
 	return config
 end)())
 
-require("core.qconsole")
+require("core.quake")

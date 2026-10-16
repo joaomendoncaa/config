@@ -1,27 +1,13 @@
 local utils = require("core.utils")
+local quake = require("core.quake")
 local terminal = "uwsm app -- xdg-terminal-exec"
 local bind = utils.bind
 
--- Quake scratchpad: keyboard resizes center floating windows (DefaultFloatingAlgorithm
--- pos.translate(-Δ/2)). Wrap resize dispatches so the console stays at monitor.y=0
--- without polling. Only fires when the active window is the scratchpad.
-local SCRATCH_CLASS = 'com.mitchellh.ghostty.scratchpad'
-local function pin_scratchpad()
-    hl.timer(function()
-        local win = hl.get_active_window()
-        if win and win.class == SCRATCH_CLASS and win.monitor and win.at then
-            if win.at.x ~= win.monitor.x or win.at.y ~= win.monitor.y then
-                hl.dispatch(hl.dsp.window.move({ x = win.monitor.x, y = win.monitor.y, window = win }))
-            end
-        end
-    end, { timeout = 5, type = 'oneshot' })
-end
-
-local function resize_pinned(dx, dy)
-    return function()
-        hl.dispatch(hl.dsp.window.resize({ x = dx, y = dy, relative = true }))
-        pin_scratchpad()
-    end
+local function window_resize(dx, dy)
+	return function()
+		hl.dispatch(hl.dsp.window.resize({ x = dx, y = dy, relative = true }))
+		pin_quake()
+	end
 end
 
 hl.unbind("SUPER + W")
@@ -215,11 +201,18 @@ hl.bind(
 	{ description = "Clipboard Manager" }
 )
 hl.bind("SUPER + S", hl.dsp.layout("togglesplit"), { description = "Toggle Split" })
-bind("SUPER + grave", "Toggle scratchpad (Quake console)", hl.dsp.workspace.toggle_special("scratchpad"))
-bind("SUPER + SHIFT + grave", "Move window to scratchpad", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
+bind(
+	"SUPER + SHIFT + grave",
+	"Move window to Quake",
+	hl.dsp.window.move({ workspace = "special:quake", follow = false })
+)
 -- Code fallback: physical key left of 1 (works regardless of layout, where grave may be \ or « on PT)
-bind("SUPER + code:49", "Toggle scratchpad (Quake console)", hl.dsp.workspace.toggle_special("scratchpad"))
-bind("SUPER + SHIFT + code:49", "Move window to scratchpad", hl.dsp.window.move({ workspace = "special:scratchpad", follow = false }))
+bind("SUPER + code:49", "Quake", quake.toggle)
+bind(
+	"SUPER + SHIFT + code:49",
+	"Move window to Quake",
+	hl.dsp.window.move({ workspace = "special:quake", follow = false })
+)
 hl.bind(
 	"SUPER + RETURN",
 	hl.dsp.exec_cmd(terminal .. " --dir=$(omarchy-cmd-terminal-cwd)"),
@@ -266,10 +259,10 @@ hl.bind("SUPER + SHIFT + L", hl.dsp.window.swap({ direction = "r" }), { descript
 hl.bind("SUPER + SHIFT + K", hl.dsp.window.swap({ direction = "u" }), { description = "Swap Up" })
 hl.bind("SUPER + SHIFT + J", hl.dsp.window.swap({ direction = "d" }), { description = "Swap Down" })
 
-hl.bind("SUPER + CTRL + H", resize_pinned(-80, 0), { description = "Resize Left", repeating = true })
-hl.bind("SUPER + CTRL + L", resize_pinned(80, 0), { description = "Resize Right", repeating = true })
-hl.bind("SUPER + CTRL + K", resize_pinned(0, -80), { description = "Resize Up", repeating = true })
-hl.bind("SUPER + CTRL + J", resize_pinned(0, 80), { description = "Resize Down", repeating = true })
+hl.bind("SUPER + CTRL + H", window_resize(-80, 0), { description = "Resize Left", repeating = true })
+hl.bind("SUPER + CTRL + L", window_resize(80, 0), { description = "Resize Right", repeating = true })
+hl.bind("SUPER + CTRL + K", window_resize(0, -80), { description = "Resize Up", repeating = true })
+hl.bind("SUPER + CTRL + J", window_resize(0, 80), { description = "Resize Down", repeating = true })
 
 hl.bind("SUPER + TAB", hl.dsp.focus({ workspace = "previous" }), { description = "Switch to last visited workspace" })
 hl.bind("SUPER + CTRL + TAB", hl.dsp.focus({ workspace = "e+1" }), { description = "Next workspace" })
@@ -496,20 +489,20 @@ bind("ALT + SHIFT + TAB", "Cycle previous window", hl.dsp.window.cycle_next({ ne
 bind("CTRL + ALT + TAB", "Focus on next monitor", hl.dsp.focus({ monitor = "+1" }))
 bind("CTRL + ALT + SHIFT + TAB", "Focus on previous monitor", hl.dsp.focus({ monitor = "-1" }))
 
-bind("SUPER + code:20", "Expand window left", resize_pinned(-100, 0))
-bind("SUPER + code:21", "Shrink window left", resize_pinned(100, 0))
-bind("SUPER + SHIFT + code:20", "Shrink window up", resize_pinned(0, -100))
-bind("SUPER + SHIFT + code:21", "Expand window down", resize_pinned(0, 100))
+bind("SUPER + code:20", "Expand window left", window_resize(-100, 0))
+bind("SUPER + code:21", "Shrink window left", window_resize(100, 0))
+bind("SUPER + SHIFT + code:20", "Shrink window up", window_resize(0, -100))
+bind("SUPER + SHIFT + code:21", "Expand window down", window_resize(0, 100))
 
-bind("SUPER + ALT + code:20", "Expand window left a little", resize_pinned(-25, 0))
-bind("SUPER + ALT + code:21", "Shrink window left a little", resize_pinned(25, 0))
-bind("SUPER + SHIFT + ALT + code:20", "Shrink window up a little", resize_pinned(0, -25))
-bind("SUPER + SHIFT + ALT + code:21", "Expand window down a little", resize_pinned(0, 25))
+bind("SUPER + ALT + code:20", "Expand window left a little", window_resize(-25, 0))
+bind("SUPER + ALT + code:21", "Shrink window left a little", window_resize(25, 0))
+bind("SUPER + SHIFT + ALT + code:20", "Shrink window up a little", window_resize(0, -25))
+bind("SUPER + SHIFT + ALT + code:21", "Expand window down a little", window_resize(0, 25))
 
-bind("SUPER + CTRL + code:20", "Expand window left a lot", resize_pinned(-300, 0))
-bind("SUPER + CTRL + code:21", "Shrink window left a lot", resize_pinned(300, 0))
-bind("SUPER + CTRL + SHIFT + code:20", "Shrink window up a lot", resize_pinned(0, -300))
-bind("SUPER + CTRL + SHIFT + code:21", "Expand window down a lot", resize_pinned(0, 300))
+bind("SUPER + CTRL + code:20", "Expand window left a lot", window_resize(-300, 0))
+bind("SUPER + CTRL + code:21", "Shrink window left a lot", window_resize(300, 0))
+bind("SUPER + CTRL + SHIFT + code:20", "Shrink window up a lot", window_resize(0, -300))
+bind("SUPER + CTRL + SHIFT + code:21", "Expand window down a lot", window_resize(0, 300))
 
 bind("SUPER + mouse_down", "Zoom in", function()
 	local zoom = hl.get_config("cursor.zoom_factor") or 1
