@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
+import Quickshell.Services.Mpris
 import Quickshell.Services.Pam
 import Quickshell.Wayland
 import qs.Core
@@ -20,8 +21,30 @@ Item {
     property int cursorBlink: 0
     property int spinnerIndex: 0
     readonly property var spinnerFrames: ["|", "/", "-", "\\"]
+    property var mainPwInput: null
     property bool windowReady: false
-    readonly property bool fullscreen: Hyprland.focusedWorkspace !== null && Hyprland.focusedWorkspace.hasFullscreen
+    readonly property string effectiveMain: {
+        for (let i = 0; i < Quickshell.screens.length; ++i)
+            if (Quickshell.screens[i].name === Config.mainMonitor)
+                return Config.mainMonitor;
+        return Quickshell.screens.length > 0 ? Quickshell.screens[0].name : "";
+    }
+    property bool cameraBusy: false
+    readonly property bool anyFullscreen: {
+        var values = Hyprland.workspaces.values;
+        for (var i = 0; i < values.length; ++i)
+            if (values[i].hasFullscreen)
+                return true;
+        return false;
+    }
+    readonly property bool mediaPlaying: {
+        var players = Mpris.players.values;
+        for (var i = 0; i < players.length; ++i)
+            if (players[i].isPlaying)
+                return true;
+        return false;
+    }
+    readonly property bool mediaActive: root.anyFullscreen || root.mediaPlaying || root.cameraBusy
 
     function lock() {
         if (locked)
@@ -33,7 +56,6 @@ Item {
         failureMessage = "";
         authenticating = false;
         locked = true;
-        lockWindow.visible = true;
         forcePasswordFocus();
         return true;
     }
@@ -41,12 +63,12 @@ Item {
     function unlock() {
         locked = false;
         authenticating = false;
-        lockWindow.visible = false;
     }
 
     function forcePasswordFocus() {
         Qt.callLater(function() {
-            pwInput.forceActiveFocus();
+            if (root.mainPwInput)
+                root.mainPwInput.forceActiveFocus();
         });
     }
 
@@ -87,139 +109,169 @@ Item {
         onTriggered: root.spinnerIndex = (root.spinnerIndex + 1) % root.spinnerFrames.length
     }
 
+    Process {
+        id: cameraProbe
+        command: ["bash", "-c", "fuser -s /dev/video* 2>/dev/null && echo busy || echo free"]
+        running: true
+        stdout: StdioCollector {
+            id: cameraOut
+            onStreamFinished: root.cameraBusy = String(text).trim() === "busy"
+        }
+    }
+
+    Timer {
+        interval: 15000
+        running: true
+        repeat: true
+        onTriggered: cameraProbe.running = true
+    }
+
     IdleMonitor {
         id: mon
 
-        enabled: root.idleEnabled
+        enabled: root.idleEnabled && !root.mediaActive
         timeout: Config.idleLockTimeout
         respectInhibitors: true
         onIsIdleChanged: {
-            if (mon.isIdle && root.idleEnabled && !root.fullscreen)
+            if (mon.isIdle && root.idleEnabled && !root.mediaActive)
                 root.lock();
 
         }
     }
 
-    PanelWindow {
-        id: lockWindow
+    Variants {
+        model: Quickshell.screens
 
-        visible: false
-        color: "transparent"
-        WlrLayershell.namespace: "quickshell-lock"
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-        exclusionMode: ExclusionMode.Ignore
+        PanelWindow {
+            required property var modelData
 
-        anchors {
-            top: true
-            bottom: true
-            left: true
-            right: true
-        }
+            readonly property bool isMain: modelData && modelData.name === root.effectiveMain
 
-        Component.onCompleted: Qt.callLater(function() { root.windowReady = true })
+            screen: modelData
+            visible: root.locked
+            color: "transparent"
+            WlrLayershell.namespace: "quickshell-lock"
+            WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.keyboardFocus: isMain ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+            exclusionMode: ExclusionMode.Ignore
 
-        Rectangle {
-            anchors.fill: parent
-            color: Config.backgroundColored
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
+            }
 
-            Item {
+            Component.onCompleted: Qt.callLater(function() { root.windowReady = true })
+
+            Rectangle {
                 anchors.fill: parent
-                opacity: root.windowReady ? 1 : 0
-
-                CenterBar {
-                    anchors.top: parent.top
-                    anchors.topMargin: Config.shellPadding + Math.round((Config.height - Config.buttonSize) / 2)
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+                color: Config.backgroundColored
 
                 Item {
-                    anchors.centerIn: parent
-                    width: 360
+                    anchors.fill: parent
+                    opacity: root.windowReady ? 1 : 0
 
-                    Rectangle {
-                        id: inputRect
+                    CenterBar {
+                        visible: isMain
+                        anchors.top: parent.top
+                        anchors.topMargin: Config.shellPadding + Math.round((Config.height - Config.buttonSize) / 2)
                         anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Item {
+                        anchors.centerIn: parent
                         width: 360
-                        height: 50
-                        color: Config.backgroundColored
-                        radius: Config.buttonBorderRadius
-                        border.color: root.authenticating ? Config.backgroundColored : (root.failureMessage ? "#e94560" : Config.foregroundSecondary)
-                        border.width: Config.borderSize
-                        clip: true
+                        visible: isMain
 
-                        TextInput {
-                            id: pwInput
+                        Rectangle {
+                            id: inputRect
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            width: 360
+                            height: 50
+                            color: Config.backgroundColored
+                            radius: Config.buttonBorderRadius
+                            border.color: root.authenticating ? Config.backgroundColored : (root.failureMessage ? "#e94560" : Config.foregroundSecondary)
+                            border.width: Config.borderSize
+                            clip: true
 
-                            anchors.fill: parent
-                            anchors.leftMargin: 16
-                            anchors.rightMargin: 16
-                            anchors.topMargin: 6
-                            anchors.bottomMargin: 6
-                            color: Config.foreground
-                            font.pixelSize: Config.fontSize
-                            font.family: Config.fontFamily
-                            font.letterSpacing: 4
-                            focus: true
-                            echoMode: TextInput.Password
-                            passwordCharacter: "\u25CF"
-                            horizontalAlignment: TextInput.AlignLeft
-                            verticalAlignment: TextInput.AlignVCenter
-                            readOnly: root.authenticating
-                            onAccepted: {
-                                var p = text;
-                                text = "";
-                                root.submitPassword(p);
-                            }
-                            onTextChanged: root.failureMessage = ""
-                            Keys.onEscapePressed: text = ""
-                            Keys.onPressed: function(event) {
-                                if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_U) {
+                            TextInput {
+                                id: pwInput
+
+                                anchors.fill: parent
+                                anchors.leftMargin: 16
+                                anchors.rightMargin: 16
+                                anchors.topMargin: 6
+                                anchors.bottomMargin: 6
+                                color: Config.foreground
+                                font.pixelSize: Config.fontSize
+                                font.family: Config.fontFamily
+                                font.letterSpacing: 4
+                                focus: isMain
+                                echoMode: TextInput.Password
+                                passwordCharacter: "\u25CF"
+                                horizontalAlignment: TextInput.AlignLeft
+                                verticalAlignment: TextInput.AlignVCenter
+                                readOnly: root.authenticating
+                                onAccepted: {
+                                    var p = text;
                                     text = "";
-                                    event.accepted = true;
+                                    root.submitPassword(p);
                                 }
-                            }
-
-                            cursorDelegate: Item {
-                                width: root.authenticating ? 16 : 10
-                                height: Config.fontSize + 4
-
-                                Rectangle {
-                                    anchors.fill: parent
-                                    color: Config.foreground
-                                    visible: !root.authenticating && pwInput.activeFocus && root.cursorBlink === 0
+                                onTextChanged: root.failureMessage = ""
+                                Keys.onEscapePressed: text = ""
+                                Keys.onPressed: function(event) {
+                                    if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_U) {
+                                        text = "";
+                                        event.accepted = true;
+                                    }
+                                }
+                                Component.onCompleted: {
+                                    if (isMain)
+                                        root.mainPwInput = pwInput;
                                 }
 
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: root.spinnerFrames[root.spinnerIndex]
-                                    color: Config.foreground
-                                    font.family: Config.fontFamily
-                                    font.pixelSize: Config.fontSize
-                                    font.letterSpacing: 0
-                                    visible: root.authenticating
+                                cursorDelegate: Item {
+                                    width: root.authenticating ? 16 : 10
+                                    height: Config.fontSize + 4
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        color: Config.foreground
+                                        visible: !root.authenticating && pwInput.activeFocus && root.cursorBlink === 0
+                                    }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: root.spinnerFrames[root.spinnerIndex]
+                                        color: Config.foreground
+                                        font.family: Config.fontFamily
+                                        font.pixelSize: Config.fontSize
+                                        font.letterSpacing: 0
+                                        visible: root.authenticating
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Text {
-                        anchors.top: inputRect.bottom
-                        anchors.topMargin: 10
-                        anchors.left: parent.left
-                        anchors.leftMargin: 16
-                        text: "UNAUTHORIZED"
-                        visible: root.failureMessage.length > 0
-                        color: "#e94560"
-                        font.pixelSize: Config.fontSize
-                        font.family: Config.fontFamily
-                        font.letterSpacing: 1
-                        font.bold: true
+                        Text {
+                            anchors.top: inputRect.bottom
+                            anchors.topMargin: 10
+                            anchors.left: parent.left
+                            anchors.leftMargin: 16
+                            text: "UNAUTHORIZED"
+                            visible: root.failureMessage.length > 0
+                            color: "#e94560"
+                            font.pixelSize: Config.fontSize
+                            font.family: Config.fontFamily
+                            font.letterSpacing: 1
+                            font.bold: true
+                        }
                     }
                 }
             }
-        }
 
+        }
     }
 
     PamContext {
@@ -235,7 +287,7 @@ Item {
                 root.unlock();
             } else {
                 failureMessage = "Wrong password";
-                pwInput.forceActiveFocus();
+                root.forcePasswordFocus();
             }
         }
         onError: function(e) {

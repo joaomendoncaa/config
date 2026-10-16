@@ -75,13 +75,22 @@ Item {
     PanelWindow {
         id: osdWindow
 
+        // Pinned to the main monitor — deliberately not monitor-aware.
+        screen: {
+            for (let i = 0; i < Quickshell.screens.length; ++i)
+                if (Quickshell.screens[i].name === Config.mainMonitor)
+                    return Quickshell.screens[i];
+            return null;
+        }
         visible: root.showOsd
         implicitWidth: 240
         implicitHeight: Config.fontSize * 3
         color: "transparent"
         anchors.bottom: true
         anchors.left: true
-        margins.left: Math.round((Screen.width - implicitWidth) / 2)
+        // Same portrait-monitor centering fix as DictationOSD: use this
+        // window's own screen width, not the primary output's.
+        margins.left: Math.round(((screen ? screen.width : Screen.width) - implicitWidth) / 2)
         margins.bottom: 240
         WlrLayershell.namespace: "volume-osd"
         WlrLayershell.layer: WlrLayer.Overlay

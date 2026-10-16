@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 import Quickshell.Wayland
@@ -114,13 +115,26 @@ Item {
     PanelWindow {
         id: osdWindow
 
+        // Monitor-aware: follow Hyprland focused monitor so the OSD
+        // spawns wherever you're working. Bar stays pinned (see Bar.qml).
+        screen: {
+            const m = Hyprland.focusedMonitor;
+            if (!m)
+                return null;
+            for (let i = 0; i < Quickshell.screens.length; ++i)
+                if (Quickshell.screens[i].name === m.name)
+                    return Quickshell.screens[i];
+            return null;
+        }
         visible: root.showOsd
         implicitWidth: 220
         implicitHeight: root.isRecording ? Config.fontSize * 3 : Config.fontSize * 3.4
         color: "transparent"
         anchors.bottom: true
         anchors.left: true
-        margins.left: Math.round((Screen.width - implicitWidth) / 2)
+        // Center on this window's own screen: QML Screen.width tracks the
+        // primary output, which overshoots on narrower (e.g. portrait) monitors.
+        margins.left: Math.round(((screen ? screen.width : Screen.width) - implicitWidth) / 2)
         margins.bottom: 200
         WlrLayershell.namespace: "dictation-osd"
         WlrLayershell.layer: WlrLayer.Overlay

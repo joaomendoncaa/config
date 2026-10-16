@@ -1,6 +1,7 @@
 import "Lib.js" as Lib
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Widgets
@@ -303,6 +304,19 @@ PanelWindow {
 
     property bool keyboardPrime: false
 
+    // Monitor-aware: snapshot the focused monitor once at open time.
+    // (A live screen binding re-resolves while open — e.g. across the
+    // Exclusive→OnDemand keyboard-focus remap — and visibly jumps monitors.)
+    function snapToFocusedMonitor() {
+        const m = Hyprland.focusedMonitor;
+        if (!m)
+            return;
+        for (let i = 0; i < Quickshell.screens.length; ++i)
+            if (Quickshell.screens[i].name === m.name) {
+                root.screen = Quickshell.screens[i];
+                return;
+            }
+    }
     color: "transparent"
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "superbar"
@@ -319,6 +333,7 @@ PanelWindow {
     }
 
     Component.onCompleted: {
+        snapToFocusedMonitor();
         if (initialMode !== "apps")
             setSearchMode(initialMode);
         rebuildDisplay();
@@ -329,6 +344,7 @@ PanelWindow {
     }
     onVisibleChanged: {
         if (visible) {
+            snapToFocusedMonitor();
             root.keyboardPrime = false
             keyboardPrimeTimer.restart()
         } else {

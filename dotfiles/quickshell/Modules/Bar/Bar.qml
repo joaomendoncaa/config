@@ -12,6 +12,14 @@ import qs.Core
 PanelWindow {
     id: bar
 
+    // Null-screen layer surfaces land on the focused monitor; pin the bar.
+    screen: {
+        for (let i = 0; i < Quickshell.screens.length; ++i)
+            if (Quickshell.screens[i].name === Config.mainMonitor)
+                return Quickshell.screens[i];
+        return null;
+    }
+
     property alias powerButtonItem: powerItem
     property real powerMenuX: 0
     property real powerMenuY: 0

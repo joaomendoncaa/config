@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import qs.Core
 
 QtObject {
     id: manager
@@ -7,6 +8,8 @@ QtObject {
     required property var modelData // screen object
     required property var popupService // NotificationService reference
     property int topMargin: 0
+    // Popups live on the main monitor only — deliberately not monitor-aware.
+    readonly property bool isMain: modelData && modelData.name === Config.mainMonitor
     property var popupWindows: []
     property var destroyingIds: ({})
 
@@ -23,14 +26,17 @@ QtObject {
     }
 
     function _sync(newPopups) {
-        if (!newPopups) return
+        if (!manager.isMain || !newPopups) return
         var needsReposition = false
 
         // Sweep destroyed/finalized windows out of popupWindows
-        for (var i = popupWindows.length - 1; i >= 0; i--) {
-            var win = popupWindows[i]
+        // (iterate a copy: forceExit() re-enters via exitFinished/releasePopup)
+        var snapshot = popupWindows.slice()
+        for (var i = snapshot.length - 1; i >= 0; i--) {
+            var win = snapshot[i]
             if (!win || win._finalized) {
-                popupWindows.splice(i, 1)
+                var deadIdx = popupWindows.indexOf(win)
+                if (deadIdx !== -1) popupWindows.splice(deadIdx, 1)
                 needsReposition = true
                 continue
             }
@@ -43,8 +49,8 @@ QtObject {
             }
         }
 
-        // Create windows for new popups
-        for (var j = 0; j < newPopups.length; j++) {
+        // Create windows for new popups (oldest-first so unshift preserves service order)
+        for (var j = newPopups.length - 1; j >= 0; j--) {
             var wrapper = newPopups[j]
             if (wrapper && wrapper.popup && !_hasWindowFor(wrapper)) {
                 needsReposition = _insertAtTop(wrapper, true) || needsReposition
@@ -85,17 +91,40 @@ QtObject {
         return true
     }
 
-    function _repositionAll() {
-        var currentY = topMargin
+    function _windowFor(wrapper) {
         for (var i = 0; i < popupWindows.length; i++) {
             var win = popupWindows[i]
-            if (!win || win._finalized || win.exiting) continue
+            if (win && win.wrapper === wrapper && !win._finalized)
+                return win
+        }
+        return null
+    }
+
+    function _repositionAll() {
+        // Follow service order (source of truth) so surviving popups
+        // always collapse into the freed slots, regardless of creation order
+        var ordered = []
+        var servicePopups = manager.popupService ? manager.popupService.visiblePopups : null
+        if (servicePopups) {
+            for (var k = 0; k < servicePopups.length; k++) {
+                var w = _windowFor(servicePopups[k])
+                if (w) ordered.push(w)
+            }
+        }
+        for (var m = 0; m < popupWindows.length; m++) {
+            var extra = popupWindows[m]
+            if (extra && ordered.indexOf(extra) === -1) ordered.push(extra)
+        }
+        var currentY = topMargin
+        for (var i = 0; i < ordered.length; i++) {
+            var win = ordered[i]
             try {
+                if (!win || win._finalized || win.exiting) continue
                 win.stackY = currentY
-                currentY += (win.implicitHeight || 0) + 8
+                currentY += (win.implicitHeight || win.height || 0) + 8
             } catch (e) {
-                popupWindows.splice(i, 1)
-                i--
+                var idx = popupWindows.indexOf(win)
+                if (idx !== -1) popupWindows.splice(idx, 1)
             }
         }
     }

@@ -84,6 +84,9 @@ Scope {
             return
         }
         root.launcherMode = mode
+        // Snap the (kept-alive) window to the focused monitor before showing
+        if (launcherLoader.item)
+            launcherLoader.item.snapToFocusedMonitor()
         root.launcherOpen = true
         root.closePanelsExcept('launcher')
     }
@@ -107,6 +110,8 @@ Scope {
 
         function open() {
             root.launcherMode = 'apps'
+            if (launcherLoader.item)
+                launcherLoader.item.snapToFocusedMonitor()
             root.launcherOpen = true
             root.closePanelsExcept('launcher')
         }

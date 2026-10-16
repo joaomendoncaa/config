@@ -5,6 +5,7 @@ pragma Singleton
 
 QtObject {
     readonly property string sinkHeadphones: "alsa_output.pci-0000_30_00.6.analog-stereo"
+    readonly property string mainMonitor: "DP-2"
     readonly property int height: 30
     readonly property int fontSize: 16
     readonly property int buttonSize: 26

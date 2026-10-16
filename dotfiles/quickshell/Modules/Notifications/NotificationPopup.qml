@@ -23,6 +23,13 @@ PanelWindow {
 
     property real stackY: 0
 
+    // Smooth refit: surviving popups slide into freed slots instead of jumping
+    Behavior on stackY {
+        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+    }
+
+    onImplicitHeightChanged: popupHeightChanged()
+
     anchors.right: true
     anchors.top: true
     margins.right: Config.shellPadding
