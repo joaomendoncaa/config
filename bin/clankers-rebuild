@@ -1,0 +1,133 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export PATH="$HOME/.config.jmmm.sh/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+FORK="${CLANKERS_FORK:-$HOME/lab/clankers}"
+APP="${CLANKERS_APP:-$HOME/.local/clankers.app}"
+LOG="${CLANKERS_LOG:-$HOME/.local/share/opencode/shell/clankers.log}"
+GROUP="clankers-rebuild"
+CLASS='com.joaomendoncaa.clankers'
+
+notif() {
+	timeout 10 fyi "$1" "" low "${3:-0}" "" "$GROUP" "" "${2:-0}" 2>/dev/null || true
+}
+
+stage() {
+	timeout 10 quickshell ipc -p "$HOME/.config/quickshell" call notifications dismiss "Clankers rebuild" >/dev/null 2>&1 || true
+	notif "$@"
+}
+
+fail() {
+	stage "Clankers rebuild failed: $1 (see $LOG)" 0 30
+	exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+	--branch)
+		git -C "$FORK" checkout "$2"
+		shift 2
+		;;
+	*) shift ;;
+	esac
+done
+
+if [[ -z "${CLANKERS_DETACHED:-}" ]]; then
+	# Escape into our own systemd scope: this script kills the app mid-run,
+	# and anything left in the birth scope (app terminal, agent session)
+	# gets SIGKILLed with it. Fall back to setsid when systemd is absent.
+	if command -v systemd-run >/dev/null 2>&1; then
+		systemd-run --user --scope --quiet --collect \
+			--setenv=CLANKERS_DETACHED=1 \
+			--setenv=HYPRLAND_INSTANCE_SIGNATURE="${HYPRLAND_INSTANCE_SIGNATURE:-}" \
+			--setenv=WAYLAND_DISPLAY="${WAYLAND_DISPLAY:-}" \
+			--setenv=XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-}" \
+			--setenv=DISPLAY="${DISPLAY:-}" \
+			-- "$0" "$@" >>"$LOG" 2>&1 </dev/null &
+		disown 2>/dev/null || true
+		echo "clankers-rebuild: detached (own scope), logging to $LOG — the app will quit, rebuild, and reopen."
+		exit 0
+	fi
+	CLANKERS_DETACHED=1 setsid nohup "$0" "$@" >>"$LOG" 2>&1 </dev/null &
+	disown 2>/dev/null || true
+	echo "clankers-rebuild: detached, logging to $LOG — the app will quit, rebuild, and reopen."
+	exit 0
+fi
+
+stage "Clankers rebuild started" 1
+
+prev_ws=""
+if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+	prev_ws="$(hyprctl clients -j 2>/dev/null | jq -r --arg c "$CLASS" '[.[] | select(.class == $c)][0].workspace.name // empty' 2>/dev/null || true)"
+fi
+echo "rebuild: previous workspace: '${prev_ws:-<none>}' (hyprctl: $(command -v hyprctl || echo MISSING), hyp_sig: ${HYPRLAND_INSTANCE_SIGNATURE:+set})" >>"$LOG"
+
+cd "$FORK" || fail "cannot cd to $FORK"
+FORK="$PWD"
+built_from=""
+if [[ -z "$(git status --porcelain 2>/dev/null)" ]]; then
+	built_from="$(git rev-parse HEAD 2>/dev/null || true)"
+fi
+if [[ -n "$built_from" && "$(cat "$APP/.clankers-built-from" 2>/dev/null || true)" == "$built_from" ]]; then
+	stage "Clankers rebuild: already current ($(git branch --show-current 2>/dev/null) @ $(git rev-parse --short HEAD 2>/dev/null))" 0 8
+	exit 0
+fi
+
+pkill -f "clankers[.]app/t3code" 2>/dev/null || true
+for _ in $(seq 1 30); do
+	pgrep -f "clankers[.]app/t3code" >/dev/null || break
+	sleep 1
+done
+pkill -9 -f "clankers[.]app/t3code" 2>/dev/null || true
+sleep 1
+
+stage "Clankers rebuild: building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
+PATH="$PWD/node_modules/.bin:$PATH" vp run dist:desktop:linux >>"$LOG" 2>&1 || fail "build failed"
+
+stage "Clankers rebuild: installing" 1
+img="$(ls -t release/T3-Code-*-x86_64.AppImage 2>/dev/null | head -n 1)" || fail "no AppImage found"
+[[ -n "$img" ]] || fail "no AppImage found"
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+(cd "$tmp" && "$FORK/$img" --appimage-extract >/dev/null) || fail "extract failed"
+rsync -a --delete "$tmp/squashfs-root/" "$APP/" || fail "install failed"
+echo "$built_from" >"$APP/.clankers-built-from" 2>/dev/null || true
+rm -f "$HOME/.local/share/applications/com.t3tools.T3Code.desktop" "$HOME/.local/share/icons/com.t3tools.T3Code.desktop.png"
+
+export T3CODE_HOME="${T3CODE_HOME:-$HOME/.clankers}"
+export T3CODE_CLI_PATH="${T3CODE_CLI_PATH:-$HOME/.clankers/bin/t3}"
+focus_addr=""
+if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+	focus_addr="$(hyprctl activewindow -j 2>/dev/null | jq -r '.address // empty' 2>/dev/null || true)"
+fi
+launch_rule=""
+if [[ -n "${prev_ws:-}" && "$prev_ws" != *'"'* ]] && command -v hyprctl >/dev/null 2>&1; then
+	launch_rule=", {workspace = \"$prev_ws silent\"}"
+fi
+if [[ -n "$launch_rule" ]]; then
+	echo "rebuild: launching on '$prev_ws' via exec rule" >>"$LOG"
+	hyprctl dispatch "hl.dsp.exec_cmd(\"/usr/bin/env T3CODE_HOME=$T3CODE_HOME T3CODE_CLI_PATH=$T3CODE_CLI_PATH $APP/AppRun --no-sandbox --class=$CLASS\"$launch_rule)" >>"$LOG" 2>&1 || echo "rebuild: exec launch failed" >>"$LOG"
+else
+	setsid nohup "$APP/AppRun" --no-sandbox --class="$CLASS" >/dev/null 2>&1 </dev/null &
+	disown 2>/dev/null || true
+fi
+new_addr=""
+if command -v hyprctl >/dev/null 2>&1 && command -v jq >/dev/null 2>&1; then
+	for _ in $(seq 1 60); do
+		new_addr="$(hyprctl clients -j 2>/dev/null | jq -r --arg c "$CLASS" '[.[] | select(.class == $c)][0].address // empty' 2>/dev/null || true)"
+		if [[ -n "$new_addr" ]]; then break; fi
+		sleep 1
+	done
+fi
+if [[ -n "$new_addr" ]]; then
+	cur="$(hyprctl activewindow -j 2>/dev/null | jq -r '.address // empty' 2>/dev/null || true)"
+	if [[ -n "$focus_addr" && "$cur" == "$new_addr" && "$focus_addr" != "$cur" ]]; then
+		hyprctl dispatch "hl.dsp.focus({window = \"address:$focus_addr\"})" >/dev/null 2>&1 || true
+	fi
+fi
+if [[ -n "$new_addr" ]]; then
+	stage "Clankers rebuild: done, relaunched${prev_ws:+ on $prev_ws}" 0 8
+else
+	echo "rebuild: no window found (ws='${prev_ws:-<none>}')" >>"$LOG"
+	stage "Clankers rebuild: done, app launching (no window yet)" 0 8
+fi
