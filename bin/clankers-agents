@@ -2,8 +2,8 @@
 set -euo pipefail
 
 HOME_DIR="${HOME:-/home/joao}"
-T3_HOME="${T3CODE_HOME:-$HOME_DIR/.t3-dev}"
-UDATA="$T3_HOME/userdata"
+CLANKERS_HOME="${T3CODE_HOME:-$HOME_DIR/.clankers}"
+UDATA="$CLANKERS_HOME/userdata"
 DB="$UDATA/statev2.sqlite"
 
 fail() {

@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Core
 
-// Agents come from bin/t3-agents (fork sqlite, exact T3 sidebar order),
+// Agents come from bin/clankers-agents (fork sqlite, exact Clankers sidebar order),
 // clicked rows open the thread URL. Usage meters still come from bin/opencode-usage.
 Item {
     id: root
@@ -28,14 +28,14 @@ Item {
     property real resetMonthlyAt: 0
     property real nowMs: Date.now()
 
-    readonly property string providerName: 'OpenCode'
+    readonly property string providerName: 'Clankers'
     readonly property url iconSource: Qt.resolvedUrl('../../../Assets/opencode-logo.svg')
     readonly property bool usageSupported: true
     readonly property string dashboardLabel: 'OPEN DASHBOARD ↗'
-    readonly property string settingsPath: `${Quickshell.env('HOME')}/.config/quickshell/opencode.json`
+    readonly property string settingsPath: `${Quickshell.env('HOME')}/.config/quickshell/clankers.json`
     readonly property string workspaceId: Config.env.QUICKSHELL_OPENCODE_WORKSPACE_ID || 'wrk_01KEYSE6SWHFGJ2DB8C2690QJ2'
     readonly property string dashboardTarget: `https://opencode.ai/workspace/${root.workspaceId}/go`
-    readonly property string agentsCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/t3-agents`
+    readonly property string agentsCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/clankers-agents`
     readonly property string usageCommand: `${Quickshell.env('HOME')}/.config.jmmm.sh/bin/opencode-usage`
 
     function clamp(value, minimum, maximum) {
@@ -213,7 +213,7 @@ Item {
         stderr: StdioCollector {
             onStreamFinished: {
                 if (text.trim().length > 0)
-                    console.warn('[OpenCode] collector:', text.trim())
+                    console.warn('[Clankers] collector:', text.trim())
             }
         }
 
@@ -249,7 +249,7 @@ Item {
         stderr: StdioCollector {
             onStreamFinished: {
                 if (text.trim().length > 0)
-                    console.warn('[OpenCode] focus:', text.trim())
+                    console.warn('[Clankers] focus:', text.trim())
             }
         }
     }

@@ -6,7 +6,7 @@ import "Adapters"
 Item {
     id: root
 
-    property var adapter: openCodeAdapter
+    property var adapter: clankersAdapter
     property var agents: []
     property bool pinsHidden: false
     property bool panelOpen: false
@@ -34,8 +34,8 @@ Item {
     readonly property real primaryUsageRemaining: root.usageAvailable && root.usageWindows.length > 0 ? Number(root.usageWindows[0].actual) || 0 : 0
     readonly property bool usageWarning: root.hasUsageWarning()
 
-    OpenCodeAgentAdapter {
-        id: openCodeAdapter
+    ClankersAgentAdapter {
+        id: clankersAdapter
     }
 
     function syncAgents() {

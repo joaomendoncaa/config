@@ -3,6 +3,7 @@ set -euo pipefail
 
 USAGE_URL='https://opencode.ai/zen/go/v1/usage'
 ACCOUNT_FILE="$HOME/.local/share/opencode/account.json"
+CRED_DB="${XDG_DATA_HOME:-$HOME/.local/share}/opencode/opencode.db"
 
 fail() {
     jq -cn --arg error "$1" '{ok: false, error: $error}'
@@ -11,8 +12,17 @@ fail() {
 
 command -v jq >/dev/null 2>&1 || { printf '{"ok":false,"error":"jq is required"}\n'; exit 1; }
 
-api_key=$(jq -r '[.accounts[] | select(.serviceID == "opencode-go" or .serviceID == "opencode") | .credential.key] | first // empty' "$ACCOUNT_FILE") || fail 'OpenCode account is not configured'
-[[ -n $api_key ]] || fail 'OpenCode API key not found in ~/.local/share/opencode/account.json'
+# Live credential store first (what `opencode auth login` maintains),
+# legacy account.json only as fallback.
+api_key=""
+if command -v sqlite3 >/dev/null 2>&1 && [[ -f "$CRED_DB" ]]; then
+    api_key=$(sqlite3 "$CRED_DB" "PRAGMA busy_timeout=3000; SELECT json_extract(value, '\$.key') FROM credential WHERE active = 1 AND integration_id IN ('opencode-go', 'opencode') ORDER BY CASE integration_id WHEN 'opencode-go' THEN 0 ELSE 1 END LIMIT 1;" 2>/dev/null | tail -n 1 || true)
+    [[ "$api_key" == "null" ]] && api_key=""
+fi
+if [[ -z "$api_key" ]]; then
+    api_key=$(jq -r '[.accounts[] | select(.serviceID == "opencode-go" or .serviceID == "opencode") | .credential.key] | first // empty' "$ACCOUNT_FILE") || fail 'OpenCode account is not configured'
+    [[ -n $api_key ]] || fail 'OpenCode API key not found in ~/.local/share/opencode/account.json'
+fi
 
 output=$(
     curl -fsS --max-time 20 --compressed -H "Authorization: Bearer $api_key" "$USAGE_URL" |
