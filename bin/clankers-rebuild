@@ -28,6 +28,10 @@ while [[ $# -gt 0 ]]; do
 		git -C "$FORK" checkout "$2"
 		shift 2
 		;;
+	--fast)
+		FAST=1
+		shift
+		;;
 	*) shift ;;
 	esac
 done
@@ -81,16 +85,41 @@ done
 pkill -9 -f "clankers[.]app/t3code" 2>/dev/null || true
 sleep 1
 
-stage "Clankers rebuild: building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
-PATH="$PWD/node_modules/.bin:$PATH" vp run dist:desktop:linux >>"$LOG" 2>&1 || fail "build failed"
+if [[ "${FAST:-0}" == 1 ]]; then
+	# Fast path: `dir` target skips squashfs/.deb compression and the
+	# AppImage extract roundtrip (~30s vs ~80s). No --delete so the
+	# AppRun loader from the last full build is preserved.
+	[[ -x "$APP/AppRun" ]] || fail "no $APP/AppRun — run a full rebuild first, then use --fast"
+	if [[ -z "$(git status --porcelain -- native/ 2>/dev/null)" ]]; then
+		native_ts="$(git log -1 --format=%ct -- native/ 2>/dev/null || echo 0)"
+		reuse=1
+		for b in native/resource-monitor/target/x86_64-unknown-linux-gnu/release/t3-resource-monitor native/hyprland-snap-shot/target/x86_64-unknown-linux-gnu/release/t3-hyprland-snap-shot native/kde-snap-shot/target/x86_64-unknown-linux-gnu/release/t3-kde-snap-shot; do
+			if [[ ! -x "$b" ]] || [[ "$(stat -c %Y "$b" 2>/dev/null || echo 0)" -lt "$native_ts" ]]; then
+				reuse=""
+				break
+			fi
+		done
+		if [[ -n "$reuse" ]]; then
+			export T3CODE_DESKTOP_REUSE_RESOURCE_MONITOR=1 T3CODE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS=1
+		fi
+	fi
+	stage "Clankers rebuild (fast): building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
+	PATH="$PWD/node_modules/.bin:$PATH" node scripts/build-desktop-artifact.ts --platform linux --target dir --arch x64 --output-dir release/fast >>"$LOG" 2>&1 || fail "build failed"
+	stage "Clankers rebuild: installing" 1
+	[[ -d release/fast/linux-unpacked ]] || fail "no linux-unpacked produced"
+	rsync -a release/fast/linux-unpacked/ "$APP/" || fail "install failed"
+else
+	stage "Clankers rebuild: building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
+	PATH="$PWD/node_modules/.bin:$PATH" vp run dist:desktop:linux >>"$LOG" 2>&1 || fail "build failed"
 
-stage "Clankers rebuild: installing" 1
-img="$(ls -t release/T3-Code-*-x86_64.AppImage 2>/dev/null | head -n 1)" || fail "no AppImage found"
-[[ -n "$img" ]] || fail "no AppImage found"
-tmp="$(mktemp -d)"
-trap 'rm -rf "$tmp"' EXIT
-(cd "$tmp" && "$FORK/$img" --appimage-extract >/dev/null) || fail "extract failed"
-rsync -a --delete "$tmp/squashfs-root/" "$APP/" || fail "install failed"
+	stage "Clankers rebuild: installing" 1
+	img="$(ls -t release/T3-Code-*-x86_64.AppImage 2>/dev/null | head -n 1)" || fail "no AppImage found"
+	[[ -n "$img" ]] || fail "no AppImage found"
+	tmp="$(mktemp -d)"
+	trap 'rm -rf "$tmp"' EXIT
+	(cd "$tmp" && "$FORK/$img" --appimage-extract >/dev/null) || fail "extract failed"
+	rsync -a --delete "$tmp/squashfs-root/" "$APP/" || fail "install failed"
+fi
 echo "$built_from" >"$APP/.clankers-built-from" 2>/dev/null || true
 rm -f "$HOME/.local/share/applications/com.t3tools.T3Code.desktop" "$HOME/.local/share/icons/com.t3tools.T3Code.desktop.png"
 
