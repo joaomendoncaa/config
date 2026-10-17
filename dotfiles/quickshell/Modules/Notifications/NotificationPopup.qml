@@ -8,7 +8,6 @@ PanelWindow {
     id: win
 
     required property var wrapper
-    required property var screen
     property bool exiting: false
     property bool _finalized: false
     readonly property bool hovered: hoverHandler.hovered

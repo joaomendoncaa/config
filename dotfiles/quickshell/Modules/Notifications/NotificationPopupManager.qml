@@ -5,11 +5,10 @@ import qs.Core
 QtObject {
     id: manager
 
-    required property var modelData // screen object
     required property var popupService // NotificationService reference
+    required property var modelData // resolved main-monitor screen (from NotificationService)
     property int topMargin: 0
-    // Popups live on the main monitor only — deliberately not monitor-aware.
-    readonly property bool isMain: modelData && modelData.name === Config.mainMonitor
+    // Single manager — popups live on the main monitor only, never workspace-aware.
     property var popupWindows: []
     property var destroyingIds: ({})
 
@@ -26,7 +25,7 @@ QtObject {
     }
 
     function _sync(newPopups) {
-        if (!manager.isMain || !newPopups) return
+        if (!manager.modelData || !newPopups) return
         var needsReposition = false
 
         // Sweep destroyed/finalized windows out of popupWindows

@@ -1122,14 +1122,16 @@ Item {
         }
     }
 
-    // Per-screen popup managers — individual popup windows
-    Variants {
-        model: Quickshell.screens
-
-        NotificationPopupManager {
-            modelData: modelData
-            popupService: service
-            topMargin: Config.height + Config.shellPadding + Config.gapsOut
+    // Single popup manager — floating cards always spawn on the main
+    // monitor, never on secondary monitors or per-workspace.
+    NotificationPopupManager {
+        modelData: {
+            for (var i = 0; i < Quickshell.screens.length; i++)
+                if (Quickshell.screens[i].name === Config.mainMonitor)
+                    return Quickshell.screens[i];
+            return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
         }
+        popupService: service
+        topMargin: Config.height + Config.shellPadding + Config.gapsOut
     }
 }
