@@ -6,7 +6,6 @@ local bind = utils.bind
 local function window_resize(dx, dy)
 	return function()
 		hl.dispatch(hl.dsp.window.resize({ x = dx, y = dy, relative = true }))
-		pin_quake()
 	end
 end
 
