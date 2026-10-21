@@ -46,9 +46,9 @@ needs the **`cf`** tag on the indexer. No indexers = no search results.
 qBittorrent is capped at **15 MB/s writes** on the root device and given a low IO weight, so a
 download can't freeze the desktop. Tune it in `docker-compose.yml` under `blkio_config`.
 
-One-time, needs sudo: `media-center tune` — lowers the kernel dirty-page limits
-(`vm.dirty_bytes=1G`, `vm.dirty_background_bytes=256M`). The defaults (20%/10% of 31 GB) let
-gigabytes of writes pile up before flushing, which is what made the whole system stall.
+System-wide dirty-page limits are not part of this stack; they live in
+`dotfiles/sysctl/99-io-latency.conf` (install with
+`sudo install -m644 dotfiles/sysctl/99-io-latency.conf /etc/sysctl.d/`).
 
 Media folders are marked `chattr +C` (no btrfs CoW/compression on video).
 

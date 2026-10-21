@@ -62,14 +62,10 @@ pull)
 	;;
 status) compose ps ;;
 urls) urls ;;
-tune)
-	sudo install -m644 "$ROOT/99-io-latency.conf" /etc/sysctl.d/99-io-latency.conf
-	sudo sysctl -p /etc/sysctl.d/99-io-latency.conf
-	;;
 logs) compose logs -f --tail=100 ;;
 *)
 	urls
 	echo
-	echo "usage: media-center {start|stop|open|status|logs|urls|pull|tune}"
+	echo "usage: media-center {start|stop|open|status|logs|urls|pull}"
 	;;
 esac
