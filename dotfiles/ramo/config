@@ -1,3 +1,4 @@
 path = ~/lab/*:~/.config.jmmm.sh
 
+agents-disabled = opencode
 opencode-agents-ignored = git-commit
