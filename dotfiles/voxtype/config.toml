@@ -8,7 +8,7 @@
 # a custom path, or "disabled" to turn off. The daemon writes state
 # ("idle", "recording", "transcribing") to this file whenever it changes.
 # Required for `voxtype record toggle` and `voxtype status` commands.
-engine = "whisper"
+engine = "cohere"
 
 state_file = "auto"
 
@@ -340,6 +340,10 @@ source = "mic"
 [osd]
 # Disabled — omarchy's Quickshell OSD handles dictation state display
 enabled = true
+
+[cohere]
+model = "cohere-transcribe-q4f16"
+language = "en"
 
 [status]
 icon_theme = "emoji"
