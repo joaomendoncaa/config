@@ -83,7 +83,24 @@ utils.window(
 utils.window("^(Bitwarden)$", { no_screen_share = true, tag = "+floating-window" })
 utils.window("chrome-nngceckbapebfimnlniiiahkandclblb-Default", { no_screen_share = true, tag = "+floating-window" })
 
+-- Android emulator, whoever launches it (terminal or ./dev): the phone
+-- window floats centered so it is always grabbable; the side toolbar
+-- keeps its docked spot next to it.
 utils.window("^(Emulator)$", { float = true })
+utils.window({ class = "^Emulator$", title = "^Android Emulator" }, { center = true })
+
+-- Self-heal for XWayland map races / later retiles: a title change floats
+-- and centers the phone window again. Title events are rare, so this never
+-- fights deliberate user tiling.
+local emulator_healed = {}
+hl.on("window.title", function(w)
+	if emulator_healed[w.address] or w.class ~= "Emulator" or not w.title:find("Android Emulator", 1, true) then
+		return
+	end
+	emulator_healed[w.address] = true
+	hl.dispatch(hl.dsp.window.float({ window = "address:" .. w.address, action = "on" }))
+	hl.dispatch(hl.dsp.window.center({ window = "address:" .. w.address }))
+end)
 
 -- Godot game windows launched from the editor (F5) map as "Godot" and only rename to " (DEBUG)" afterwards.
 -- Static rules are evaluated at map time only, so catch them via the title event instead.

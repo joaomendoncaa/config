@@ -137,6 +137,10 @@ function M.toggle()
 			return
 		end
 	end
+	-- A visible special workspace is stolen by workspace.move; capture that
+	-- before the stale respawn closes its window.
+	local cross_monitor = ws and monitor and ws.monitor and ws.monitor.name ~= monitor.name
+	local moved_shown = cross_monitor and ws.visible or false
 	-- Respawn when the baked padding doesn't fit this monitor (nil counts as
 	-- stale: reloads reset it). tmux session survives, so nothing is lost.
 	if s and (spawned_top == nil or spawned_top ~= needed_top(monitor)) then
@@ -147,8 +151,19 @@ function M.toggle()
 	if inflight and s then
 		inflight = false
 	end
+	-- Park the special workspace on the focused monitor. A replacement window
+	-- spawned while it lives elsewhere joins it there and drags focus back.
+	if cross_monitor then
+		hl.dispatch(hl.dsp.workspace.move({ workspace = QUAKE, monitor = monitor.name }))
+	end
 	if s then
-		show(s, monitor)
+		if moved_shown then
+			-- The move already brought it up here; toggling would hide it.
+			place(s, monitor)
+			hl.dispatch(hl.dsp.focus({ window = "address:" .. s.address }))
+		else
+			show(s, monitor)
+		end
 		return
 	end
 	if inflight then
@@ -159,23 +174,34 @@ function M.toggle()
 		inflight = false
 	end, { timeout = 5000, type = "oneshot" })
 	hl.dispatch(hl.dsp.exec_cmd(seed(monitor)))
-	hl.timer(function()
-		local early = spawned()
-		if early then
-			place(early, monitor)
-		end
-		if inflight then
+	-- A cold Ghostty + tmux attach can outlast any single delay, so retry
+	-- until focus sticks instead of one blind shot. Ticks are no-ops once
+	-- the move_to_workspace handler already focused (inflight false), and
+	-- success clears inflight so later ticks stay quiet too.
+	for _, t in ipairs({ 400, 900, 1600, 2600 }) do
+		hl.timer(function()
+			if not inflight then
+				return
+			end
+			local s = spawned()
+			if s then
+				place(s, monitor)
+			end
 			local late = hl.get_workspace(QUAKE)
 			if late and not late.visible then
 				hl.dispatch(hl.dsp.workspace.toggle_special("quake"))
 			end
-			local slow = spawned()
-			if slow then
-				place(slow, monitor)
-				hl.dispatch(hl.dsp.focus({ window = "address:" .. slow.address }))
+			s = spawned()
+			if s then
+				place(s, monitor)
+				hl.dispatch(hl.dsp.focus({ window = "address:" .. s.address }))
+				local a = hl.get_active_window()
+				if a and a.address == s.address then
+					inflight = false
+				end
 			end
-		end
-	end, { timeout = 800, type = "oneshot" })
+		end, { timeout = t, type = "oneshot" })
+	end
 end
 
 local function on_window_open(w)
@@ -190,16 +216,20 @@ end
 
 local function on_window_move_to_workspace(w, ws)
 	if inflight and w and w.class == QUAKE_CLASS and ws and ws.name == QUAKE then
-		inflight = false
 		local m = focused_monitor()
 		place(w, m)
 		-- The workspace move still pending overwrites pixel position, so
-		-- re-place once it settles. Lookup is deferred: the event object
-		-- may not stick, the settled window does.
+		-- re-place once it settles. Re-placing drops focus, so take it back
+		-- there; only then is Quake settled and the retry loop done.
 		hl.timer(function()
 			local s = spawned()
 			if s then
 				place(s, focused_monitor())
+				hl.dispatch(hl.dsp.focus({ window = "address:" .. s.address }))
+				local a = hl.get_active_window()
+				if a and a.address == s.address then
+					inflight = false
+				end
 			end
 		end, { timeout = 100, type = "oneshot" })
 		local cur = hl.get_workspace(QUAKE)
@@ -215,12 +245,14 @@ hl.on("window.move_to_workspace", on_window_move_to_workspace)
 
 -- The toggle moves the special workspace; the move lands a frame later, so
 -- re-place on arrival. This is what sizes Quake for the monitor it
--- opened on rather than the one it came from.
+-- opened on rather than the one it came from. Hidden specials move silently
+-- (e.g. parking across monitors before a respawn), so only act when shown.
 local function on_special_arrived(ws, mon)
-	if ws and ws.name == QUAKE and mon and mon.name then
+	if ws and ws.visible and ws.name == QUAKE and mon and mon.name then
 		local s = spawned()
 		if s then
 			place(s, mon)
+			hl.dispatch(hl.dsp.focus({ window = "address:" .. s.address }))
 		end
 	end
 end
