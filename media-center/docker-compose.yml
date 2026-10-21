@@ -1,0 +1,99 @@
+name: media-center
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    network_mode: host
+    restart: "no"
+    environment:
+      - TZ=Europe/Lisbon
+    volumes:
+      - jellyfin-config:/config
+      - jellyfin-cache:/cache
+      - ${MEDIA_DIR}:/media:ro
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    network_mode: host
+    restart: "no"
+    environment:
+      - TZ=Europe/Lisbon
+      - PORT=5055
+    volumes:
+      - ./config/seerr:/app/config
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    network_mode: host
+    restart: "no"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=Europe/Lisbon
+    volumes:
+      - prowlarr-config:/config
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    network_mode: host
+    restart: "no"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=Europe/Lisbon
+    volumes:
+      - radarr-config:/config
+      - ${MEDIA_DIR}:/media
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    network_mode: host
+    restart: "no"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=Europe/Lisbon
+    volumes:
+      - sonarr-config:/config
+      - ${MEDIA_DIR}:/media
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    network_mode: host
+    restart: "no"
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=Europe/Lisbon
+      - WEBUI_PORT=8080
+    volumes:
+      - qbittorrent-config:/config
+      - ${MEDIA_DIR}:/media
+    # keep torrent writes from starving the desktop (disk sits at 100% otherwise)
+    blkio_config:
+      weight: 50
+      device_write_bps:
+        - path: /dev/dm-0
+          rate: 15mb
+
+  byparr:
+    image: ghcr.io/thephaseless/byparr:latest
+    network_mode: host
+    restart: "no"
+    shm_size: "1gb"
+    environment:
+      - TZ=Europe/Lisbon
+      - PORT=8191
+      - LOG_LEVEL=info
+    volumes:
+      - byparr-cache:/app/cache
+
+volumes:
+  jellyfin-config:
+  jellyfin-cache:
+  qbittorrent-config:
+  prowlarr-config:
+  radarr-config:
+  sonarr-config:
+  byparr-cache:

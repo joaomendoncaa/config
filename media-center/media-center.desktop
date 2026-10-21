@@ -1,0 +1,22 @@
+[Desktop Entry]
+Type=Application
+Name=Media Center
+Comment=Search, download and watch, on demand
+Exec=/home/joao/.local/bin/media-center open
+Icon=media-playback-start
+Terminal=false
+Categories=AudioVideo;Video;
+Keywords=media;jellyfin;movies;tv;seerr;
+Actions=Stop;Jellyfin;WebUI;
+
+[Desktop Action Stop]
+Name=Stop Media Center
+Exec=/home/joao/.local/bin/media-center stop
+
+[Desktop Action Jellyfin]
+Name=Open Jellyfin
+Exec=xdg-open http://localhost:8096
+
+[Desktop Action WebUI]
+Name=Open qBittorrent
+Exec=xdg-open http://localhost:8080

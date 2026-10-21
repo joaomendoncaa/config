@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(dirname "$(readlink -f "$0")")/../media-center"
+cd "$ROOT"
+
+export PUID="$(id -u)" PGID="$(id -g)"
+[[ -f .env ]] || echo "MEDIA_DIR=$HOME/Media" > .env
+set -a; . ./.env; set +a
+mkdir -p "$MEDIA_DIR/movies" "$MEDIA_DIR/shows" "$MEDIA_DIR/downloads/.incomplete" config/seerr
+
+compose() { docker compose "$@"; }
+
+ensure_docker() {
+	docker info >/dev/null 2>&1 || {
+		echo "starting docker..."
+		sudo systemctl start docker
+	}
+}
+
+lan_ip() {
+	ip -4 -o addr show scope global |
+		awk '$2 !~ /^(proton|tun|wg|docker|br-|virbr|veth)/ { split($4, a, "/"); print a[1]; exit }'
+}
+
+is_up() { compose ps --status running --services 2>/dev/null | grep -qx jellyfin; }
+
+urls() {
+	echo "Seerr       http://$(lan_ip):5055   <- start here"
+	echo "Jellyfin    http://$(lan_ip):8096"
+	echo "Prowlarr    http://$(lan_ip):9696"
+	echo "qBittorrent http://$(lan_ip):8080"
+	echo "Library     $MEDIA_DIR"
+}
+
+case "${1:-}" in
+start)
+	ensure_docker
+	compose up -d
+	urls
+	;;
+stop)
+	compose down
+	echo "stopped"
+	;;
+open)
+	ensure_docker
+	is_up || compose up -d
+	for _ in {1..40}; do
+		curl -fsS -o /dev/null http://localhost:5055 && break
+		sleep 1
+	done
+	if command -v omarchy-launch-webapp >/dev/null; then
+		omarchy-launch-webapp http://localhost:5055
+	else
+		xdg-open http://localhost:5055
+	fi
+	;;
+pull)
+	compose pull
+	is_up && compose up -d
+	;;
+status) compose ps ;;
+urls) urls ;;
+tune)
+	sudo install -m644 "$ROOT/99-io-latency.conf" /etc/sysctl.d/99-io-latency.conf
+	sudo sysctl -p /etc/sysctl.d/99-io-latency.conf
+	;;
+logs) compose logs -f --tail=100 ;;
+*)
+	urls
+	echo
+	echo "usage: media-center {start|stop|open|status|logs|urls|pull|tune}"
+	;;
+esac
