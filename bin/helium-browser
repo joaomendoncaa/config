@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Open a URL in Helium's most recent normal browser window, wherever it is.
+# Without this, Chromium spawns an extra window on the workspace that asked
+# for the link when no normal browser window is focused there.
+
+unset XDG_ACTIVATION_TOKEN DESKTOP_STARTUP_ID
+
+# Only actual URL opens get the existing-window treatment; --app, --incognito
+# and plain browser launches must behave normally.
+is_url=false
+for arg in "$@"; do
+	case $arg in
+	http://* | https://*)
+		is_url=true
+		break
+		;;
+	esac
+done
+$is_url || exec /usr/bin/helium-browser "$@"
+
+addr=$(hyprctl clients -j 2>/dev/null | jq -r '
+  [.[]
+   | select(.class == "Helium")
+   | select((.initialTitle // "") | test("^_/|_/$") | not)
+   | select((.workspace.name // "") | test("^special") | not)
+   | select((.title // "") | test("Picture.?in.?[Pp]icture|DevTools") | not)]
+  | sort_by(.focusHistoryID) | .[0].address // empty')
+
+[[ -n $addr ]] && hyprctl dispatch "hl.dsp.focus({window=\"address:$addr\"})" >/dev/null 2>&1
+
+exec /usr/bin/helium-browser "$@"
