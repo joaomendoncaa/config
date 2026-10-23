@@ -205,12 +205,33 @@ function M.toggle()
 end
 
 local function on_window_open(w)
-	if w and w.class == QUAKE_CLASS then
+	if not w then
+		return
+	end
+
+	if w.class == QUAKE_CLASS then
 		if not w.workspace or w.workspace.name ~= QUAKE then
-			hl.dispatch(
-				hl.dsp.window.move({ workspace = QUAKE, follow = false, window = "address:" .. w.address })
-			)
+			hl.dispatch(hl.dsp.window.move({ workspace = QUAKE, follow = false, window = "address:" .. w.address }))
 		end
+		return
+	end
+	if not w.workspace or w.workspace.name ~= QUAKE then
+		return
+	end
+
+	-- send anything spawned from special:quake to the workspace underneath it
+	local mon = w.monitor or hl.get_active_monitor()
+	local bg = mon and mon.active_workspace
+	if not bg or bg.name == QUAKE then
+		bg = hl.get_active_workspace()
+	end
+
+	if bg and bg.name ~= QUAKE then
+		hl.dispatch(hl.dsp.window.move({
+			workspace = bg.name,
+			follow = false,
+			window = "address:" .. w.address,
+		}))
 	end
 end
 
