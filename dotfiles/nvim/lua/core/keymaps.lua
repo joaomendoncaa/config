@@ -7,13 +7,13 @@ local key = require('utils.misc').key
 local f = require('utils.misc').func
 
 key('x', '<leader>j', strings.par, '[J]ustify text with Par')
-key('n', '<Esc>', '<cmd>nohlsearch<CR>', '[E]scape from search highlights.')
+key('n', '<Esc>', misc.escape_cursors, '[Esc]ape from search highlights and multicursors.')
 key('n', '<leader>q', vim.diagnostic.open_float, '[Q]uickly show diagnostic error messages')
 key('n', '<leader>Q', vim.diagnostic.setloclist, 'Open diagnostic [Q]uickfix list')
 key('n', 'j', 'gj', '[J] Move down even in wrapped lines')
 key('n', 'k', 'gk', '[K] Move up even in wrapped lines')
-key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 key('n', 'YY', clipboard.yank_buffer, '[Y]ank whole buffer')
+key('x', 'p', [["_dP]], '[P]aste but preserve the clipboard buffer')
 key('n', 'YP', clipboard.replace_with_yanked_and_write, '[P]aste yanked over buffer')
 key({ 'n', 'i', 'v' }, '<C-s>', '<CMD>w<CR>', '[S]ave the current file')
 key({ 'n', 'i', 'v' }, '<C-q>', misc.handle_save_quit, 'Save file and [Q]uit')

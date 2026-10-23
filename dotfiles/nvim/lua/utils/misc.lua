@@ -155,4 +155,9 @@ function M.version(requirement, callback)
     return ok
 end
 
+function M.escape_cursors()
+    vim.cmd 'nohlsearch'
+    vim.api.nvim_buf_clear_namespace(0, vim.api.nvim_create_namespace 'nvim.multicursor', 0, -1)
+end
+
 return M
