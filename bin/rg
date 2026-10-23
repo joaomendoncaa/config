@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# shim for userspace abusers like opencode's --no-config
+exec /usr/bin/rg --threads=6 "$@"

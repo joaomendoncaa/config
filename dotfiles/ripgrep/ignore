@@ -1,0 +1,37 @@
+# Machine-wide ignore rules for ripgrep (and anything using its ignore crate).
+# Stops `rg` from crawling caches, toolchains and model blobs when the search
+# root is $HOME or $HOME/lab. Use `rg --no-ignore` to look inside these anyway.
+
+# Package/plugin/toolchain caches
+.cache/
+.npm/
+.bun/
+.rustup/
+.gradle/
+.stremio-server/
+Android/
+.local/share/Steam/
+.local/share/mise/
+.local/share/pnpm/
+.local/share/hyprwhspr/
+.local/share/voxtype/
+.local/share/cam-blur/
+.local/share/pywhispercpp/
+.local/share/godot/
+.local/share/vm-nixos/
+.local/share/nvim/mason/
+
+# Browser profiles
+.zen/
+.config/chromium/
+.config/chromium-headless/
+.config/net.imput.helium/
+.config/vivaldi/
+.config/vivaldi-headless/
+.config/BraveSoftware/
+
+# Build output, any depth
+target/
+node_modules/
+dist/
+.venv/

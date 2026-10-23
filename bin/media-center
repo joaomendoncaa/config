@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(dirname "$(readlink -f "$0")")/../media-center"
+ROOT="$(dirname "$(readlink -f "$0")")/../dotfiles/media-center"
 cd "$ROOT"
 
 export PUID="$(id -u)" PGID="$(id -g)"

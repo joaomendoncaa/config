@@ -5,5 +5,5 @@ node_modules
 .repro
 spec
 spec.*
-media-center/.env
-media-center/config/
+dotfiles/media-center/.env
+dotfiles/media-center/config/
