@@ -29,6 +29,7 @@ Item {
             return
         }
         popupOpen = true
+        root.service.refreshLatency()
         opening()
     }
 
@@ -283,8 +284,12 @@ Item {
                         - anchor.rect.y - Config.gapsOut))
 
             onVisibleChanged: {
-                if (!visible && root.popupOpen)
-                    root.popupOpen = false
+                if (!visible) {
+                    if (panel)
+                        panel.resetHover()
+                    if (root.popupOpen)
+                        root.popupOpen = false
+                }
             }
 
             Component.onCompleted: {

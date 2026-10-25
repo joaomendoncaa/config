@@ -8,7 +8,12 @@ CLI's free-plan guard, and connects to the best free (tier 0) server in the
 requested country.
 
 Usage:
-    qs-vpn-connect <country-code>   # e.g. qs-vpn-connect NL
+    qs-vpn-connect <country-code> [server-name]
+                                  # e.g. qs-vpn-connect NL
+                                  # or   qs-vpn-connect NL NL-FREE#124
+
+When a server name is given it wins over Proton's load-based pick, so the
+panel can connect to the exact server whose latency it measured.
 """
 import asyncio
 import sys
@@ -20,7 +25,7 @@ from proton.vpn.session import ServerList
 from proton.vpn.session.servers.types import ServerFeatureEnum
 
 
-async def connect_to_country(country_code: str) -> int:
+async def connect_to_country(country_code: str, server_name: str | None = None) -> int:
     ctx = click.Context(click.Command("qs-vpn-connect"))
     controller = await Controller.create(params=Params(), click_ctx=ctx)
 
@@ -35,12 +40,23 @@ async def connect_to_country(country_code: str) -> int:
         return 2
 
     server_list = await controller.get_updated_server_list()
-    servers = ServerList.get_servers_in_country_code(server_list.logicals, code)
-    servers = ServerList.get_servers_with_features(
-        servers, exclude_features=ServerFeatureEnum.SECURE_CORE | ServerFeatureEnum.TOR)
-    # user_tier == 0 on the free plan -> only tier-0 (free) servers are usable.
-    servers = ServerList.get_available_servers(servers, controller.user_tier)
-    server = ServerList.get_fastest_server(servers)
+    if server_name:
+        try:
+            server = server_list.get_by_name(server_name)
+        except Exception as exc:  # noqa: BLE001 - missing server is user-facing
+            print(f"error: unknown server '{server_name}': {exc}", file=sys.stderr)
+            return 2
+        if server.exit_country != code or not server.enabled \
+                or server.tier > controller.user_tier:
+            print(f"error: server '{server_name}' is not usable in {code}", file=sys.stderr)
+            return 2
+    else:
+        servers = ServerList.get_servers_in_country_code(server_list.logicals, code)
+        servers = ServerList.get_servers_with_features(
+            servers, exclude_features=ServerFeatureEnum.SECURE_CORE | ServerFeatureEnum.TOR)
+        # user_tier == 0 on the free plan -> only tier-0 (free) servers are usable.
+        servers = ServerList.get_available_servers(servers, controller.user_tier)
+        server = ServerList.get_fastest_server(servers)
 
     if not server:
         print(f"error: no free servers available in '{code}'", file=sys.stderr)
@@ -59,6 +75,7 @@ async def connect_to_country(country_code: str) -> int:
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("usage: qs-vpn-connect <country-code>", file=sys.stderr)
+        print("usage: qs-vpn-connect <country-code> [server-name]", file=sys.stderr)
         sys.exit(2)
-    sys.exit(asyncio.run(connect_to_country(sys.argv[1])))
+    server_arg = sys.argv[2] if len(sys.argv) > 2 else None
+    sys.exit(asyncio.run(connect_to_country(sys.argv[1], server_arg)))

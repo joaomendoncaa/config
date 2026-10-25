@@ -44,7 +44,10 @@ Item {
 
     // Code of the interactive country currently under the mouse ("" if none).
     property string hoveredCode: ""
-    readonly property bool hoveringAvailable: root.isAvailable(root.hoveredCode) || root.hoveredCode === root.connectedCode
+    // Hover coming from the country list rather than the map pointer. Kept
+    // separate so the map can highlight without faking pointer hover.
+    property string externalHoveredCode: ""
+    readonly property bool hoveringAvailable: root.hoveredCode.length === 2 && (root.isAvailable(root.hoveredCode) || root.hoveredCode === root.connectedCode)
 
     // Map aspect ratio comes from the SVG viewBox (x=30.767 y=241.591 w=784.077 h=458.627).
     // Path coordinates are NOT relative to (0, 0) - the viewBox min must be
@@ -134,6 +137,18 @@ Item {
         var i = 0
         while (i < tokens.length) {
             var t = tokens[i]
+            // Close the current subpath before the generic command handler
+            // consumes the z token. Handled here so multi-island countries
+            // (e.g. Japan) keep every subpath for hit-testing, not just the
+            // last one.
+            if (t === "z" || t === "Z") {
+                if (cur.length > 2)
+                    polys.push(cur)
+                cur = []
+                cmd = ""
+                i++
+                continue
+            }
             if (/[A-Za-z]/.test(t)) {
                 cmd = t
                 i++
@@ -169,11 +184,6 @@ Item {
             } else if (cmd === "v") {
                 y += parseFloat(tokens[i++])
                 cur.push([x, y])
-            } else if (cmd === "z" || cmd === "Z") {
-                if (cur.length > 2)
-                    polys.push(cur)
-                cur = []
-                cmd = ""
             } else {
                 i++
             }
@@ -299,7 +309,7 @@ Item {
                     readonly property bool isConnected: code === root.connectedCode
                     readonly property bool isPending: code === root.pendingCode && root.service.busy
                     readonly property bool isAvailable: root.isAvailable(code)
-                    readonly property bool isHovered: code === root.hoveredCode
+                    readonly property bool isHovered: code === root.hoveredCode || code === root.externalHoveredCode
                     // Interactive countries above the rest so their strokes are
                     // never covered by neighbors painted later.
                     readonly property real zOrder: root.isInteractive(code) ? 2 : 1
@@ -309,8 +319,8 @@ Item {
                         if (isConnected || isPending)
                             return isHovered ? Config.lighten(Config.accent, 0.15) : Config.accent
                         if (isAvailable)
-                            return isHovered ? Config.lighten(Config.backgroundColoredTertiary, 0.18) : Config.backgroundColoredTertiary
-                        return Config.backgroundColoredSecondary
+                            return isHovered ? Config.foreground : Config.lighten(Config.accent, 0.15)
+                        return Config.backgroundColoredTertiary
                     }
 
                     z: zOrder
@@ -344,11 +354,14 @@ Item {
 
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: root.hoveringAvailable ? Qt.PointingHandCursor : Qt.ArrowCursor
+        cursorShape: panning ? Qt.ClosedHandCursor : (root.hoveringAvailable ? Qt.PointingHandCursor : Qt.ArrowCursor)
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
 
         // Middle-button drag state for panning.
         property bool panning: false
+        // Left press that has not yet been classified as a click or drag.
+        property bool leftPressed: false
+        property bool dragging: false
         property point pressPos
         property point pressPan
 
@@ -379,47 +392,71 @@ Item {
             // Keep the map point currently under the cursor fixed while
             // zooming, so scrolling steers toward where you are pointing.
             var anchor = mapMouse.wheelAnchor(wheel.x, wheel.y)
-            // TEMP DEBUG: remove once first-zoom anchoring is confirmed fixed.
-            console.log("[map] WHEEL ev=" + wheel.x + "," + wheel.y + " valid=" + mapMouse.positionValid + " tracked=" + mapMouse.mousePos.x + "," + mapMouse.mousePos.y + " anchor=" + anchor.x + "," + anchor.y + " viewport=" + root.width + "x" + root.height + " zoom:" + root.zoom + "->" + newZoom)
             var ratio = newZoom / root.zoom
             root.panX = anchor.x - (anchor.x - root.panX) * ratio
             root.panY = anchor.y - (anchor.y - root.panY) * ratio
             root.zoom = newZoom
             root.clampPan()
-            // TEMP DEBUG: ask Qt where the pivot point actually rendered.
-            var lp = Qt.point((anchor.x - root.panX) / root.contentScale, (anchor.y - root.panY) / root.contentScale)
-            var sp = mapContent.mapToItem(root, lp.x, lp.y)
-            console.log("[map] RENDER anchor=" + anchor.x + "," + anchor.y + " qtReports=" + sp.x.toFixed(2) + "," + sp.y.toFixed(2) + " pan=" + root.panX.toFixed(2) + "," + root.panY.toFixed(2))
             var pt = root.screenToMap(anchor.x, anchor.y)
             root.hoveredCode = root.countryAt(pt.x, pt.y)
         }
 
         onPressed: function(mouse) {
-            if (mouse.button !== Qt.MiddleButton || root.zoom <= root.minZoom)
+            if (mouse.button === Qt.MiddleButton) {
+                if (root.zoom <= root.minZoom)
+                    return
+                mapMouse.panning = true
+            } else if (mouse.button === Qt.LeftButton) {
+                mapMouse.leftPressed = true
+                mapMouse.dragging = false
+            } else {
                 return
-            mapMouse.panning = true
+            }
             mapMouse.pressPos = Qt.point(mouse.x, mouse.y)
             mapMouse.pressPan = Qt.point(root.panX, root.panY)
-            mapMouse.cursorShape = Qt.ClosedHandCursor
         }
 
         onReleased: function(mouse) {
-            if (mouse.button !== Qt.MiddleButton)
+            if (mouse.button === Qt.MiddleButton) {
+                mapMouse.panning = false
                 return
+            }
+            if (mouse.button !== Qt.LeftButton)
+                return
+
+            var wasDragging = mapMouse.dragging
+            mapMouse.leftPressed = false
             mapMouse.panning = false
-            mapMouse.cursorShape = root.hoveringAvailable ? Qt.PointingHandCursor : Qt.ArrowCursor
+            mapMouse.dragging = false
+
+            // A left drag only pans the map; a left click connects.
+            if (wasDragging)
+                return
+            var pt = root.screenToMap(mouse.x, mouse.y)
+            var code = root.countryAt(pt.x, pt.y)
+            if (code.length === 2 && root.isAvailable(code) && !root.service.busy)
+                root.countryClicked(code)
         }
 
         onPositionChanged: function(mouse) {
             // Reject synthetic/out-of-view events so they can't poison the
             // zoom anchor; see the note on mousePos above.
             var inside = mouse.x > 0 && mouse.y > 0 && mouse.x < root.width && mouse.y < root.height
-            // TEMP DEBUG: remove once first-zoom anchoring is confirmed fixed.
-            console.log("[map] POS ev=" + mouse.x + "," + mouse.y + " inside=" + inside + " valid=" + mapMouse.positionValid)
             if (inside) {
                 mapMouse.mousePos = Qt.point(mouse.x, mouse.y)
                 mapMouse.positionValid = true
             }
+
+            // Left press becomes a drag only after the pointer moves; anything
+            // shorter stays a click-to-connect.
+            if (mapMouse.leftPressed && !mapMouse.panning && root.zoom > root.minZoom) {
+                if (Math.abs(mouse.x - mapMouse.pressPos.x) > 4
+                        || Math.abs(mouse.y - mapMouse.pressPos.y) > 4) {
+                    mapMouse.panning = true
+                    mapMouse.dragging = true
+                }
+            }
+
             if (mapMouse.panning) {
                 root.panX = mapMouse.pressPan.x + (mouse.x - mapMouse.pressPos.x)
                 root.panY = mapMouse.pressPan.y + (mouse.y - mapMouse.pressPos.y)
@@ -428,25 +465,16 @@ Item {
             }
             var pt = root.screenToMap(mouse.x, mouse.y)
             var code = root.countryAt(pt.x, pt.y)
-            // TEMP DEBUG: remove once zoom/hover alignment is confirmed fixed.
-            console.log("[map] HOVER mouse=" + mouse.x.toFixed(1) + "," + mouse.y.toFixed(1) + " zoom=" + root.zoom.toFixed(2) + " pan=" + root.panX.toFixed(1) + "," + root.panY.toFixed(1) + " -> path=" + pt.x.toFixed(1) + "," + pt.y.toFixed(1) + " code=" + (code || "none"))
             if (code !== root.hoveredCode)
                 root.hoveredCode = code
         }
 
         onExited: {
             mapMouse.panning = false
+            mapMouse.leftPressed = false
+            mapMouse.dragging = false
             mapMouse.positionValid = false
             root.hoveredCode = ""
-        }
-
-        onClicked: function(mouse) {
-            if (mouse.button !== Qt.LeftButton)
-                return
-            var pt = root.screenToMap(mouse.x, mouse.y)
-            var code = root.countryAt(pt.x, pt.y)
-            if (code.length === 2 && root.isAvailable(code) && !root.service.busy)
-                root.countryClicked(code)
         }
     }
 }

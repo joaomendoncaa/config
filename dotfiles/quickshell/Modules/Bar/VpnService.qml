@@ -63,6 +63,19 @@ Item {
     property bool serverListLoaded: false
     property var countries: []
 
+    // Measured ICMP latency per country, keyed by ISO code:
+    // {"NL": {"server": "NL-FREE#124", "load": 81, "latency": 38.3}, ...}
+    // Filled by qs-vpn-servers; used to order the panel table and pick the
+    // server the Connect button targets.
+    property var latencyByCountry: ({})
+    property bool latencyLoaded: false
+    property double latencyMeasuredAt: 0
+
+    // Country of the user's physical location, reverse-geocoded from the
+    // weather widget's stored coordinates. Empty when unavailable.
+    property string homeCountryCode: ""
+    property string homeCountryName: ""
+
     property bool _statusRunning: false
     property bool _gateRunning: false
     property string _gateState: ""
@@ -91,11 +104,15 @@ Item {
         statusProcess.running = true
     }
 
-    // Start connecting to the fastest available (free) server, e.g. from the
-    // bar toggle / connect button.
+    // Start connecting to the lowest-latency available server, e.g. from the
+    // bar toggle / connect button. Falls back to Proton's own pick until the
+    // first latency measurement has landed.
     function startConnect() {
         if (root.busy)
             return false
+        var best = root.bestCountry()
+        if (best && Date.now() - root.latencyMeasuredAt < 600000)
+            return root.startConnectCountry(best.code, best.server)
         root._pendingGoal = "connected"
         root.busy = true
         root._connectError = ""
@@ -107,14 +124,15 @@ Item {
 
     // Start connecting to the best free server in a given country. This goes
     // through qs-vpn-connect (Proton Python API) because the protonvpn CLI
-    // blocks location selection on the free plan.
-    function startConnectCountry(code) {
+    // blocks location selection on the free plan. When a measured server name
+    // is available, connect to that exact server instead of Proton's pick.
+    function startConnectCountry(code, server) {
         if (root.busy)
             return false
         root._pendingGoal = "connected"
         root.busy = true
         root._connectError = ""
-        connectProcess.command = ["qs-vpn-connect", code]
+        connectProcess.command = server ? ["qs-vpn-connect", code, server] : ["qs-vpn-connect", code]
         connectProcess.running = true
         opWatchdog.restart()
         return true
@@ -142,9 +160,34 @@ Item {
             root.startConnect()
     }
 
-    // Connect to a country selected from the panel list.
+    // Connect to a country selected from the panel list, using the measured
+    // lowest-latency server when there is one.
     function selectCountry(code) {
-        root.startConnectCountry(code)
+        var entry = root.latencyFor(code)
+        root.startConnectCountry(code, entry && entry.server ? entry.server : "")
+    }
+
+    function latencyFor(code) {
+        return root.latencyByCountry[String(code || "").toUpperCase()] || null
+    }
+
+    // Lowest measured RTT across all countries, or null before the first
+    // measurement lands. Load is displayed but not folded into the ranking:
+    // there is no principled way to trade ms against percent before connecting.
+    function bestCountry() {
+        var best = null
+        for (var code in root.latencyByCountry) {
+            var entry = root.latencyByCountry[code]
+            if (!entry || typeof entry.latency !== "number" || !entry.server)
+                continue
+            if (!best || entry.latency < best.latency)
+                best = {
+                    "code": code,
+                    "server": entry.server,
+                    "latency": entry.latency
+                }
+        }
+        return best
     }
 
     // Resolve the public IP via an echo service. Only runs while connected;
@@ -223,6 +266,11 @@ Item {
         root.countries = data.countries
         root.freePlan = !!data.freePlan
         root.serverListLoaded = true
+        if (data.latency && data.latency.loaded !== false && data.latency.countries) {
+            root.latencyByCountry = data.latency.countries
+            root.latencyMeasuredAt = Date.now()
+            root.latencyLoaded = true
+        }
         return true
     }
 
@@ -231,6 +279,26 @@ Item {
             root._serverListRunning = true
             listProcess.running = true
         }
+    }
+
+    // Re-measure at most once a minute unless forced (panel open / reconnect).
+    // The combined helper returns both the country list and its latency.
+    function refreshLatency(force) {
+        if (!force && root.latencyLoaded && Date.now() - root.latencyMeasuredAt < 60000)
+            return
+        root.refreshServers()
+    }
+
+    function resolveHomeCountry(lat, lon) {
+        if (homeCountryProcess.running)
+            return
+        homeCountryProcess.command = [
+            "curl", "-fsS", "--max-time", "6",
+            "-A", "quickshell-vpn/1.0",
+            "https://nominatim.openstreetmap.org/reverse?lat=" + lat
+                + "&lon=" + lon + "&format=json&zoom=3"
+        ]
+        homeCountryProcess.running = true
     }
 
     // --- Status polling ------------------------------------------------------
@@ -446,14 +514,56 @@ Item {
         onTriggered: root.refreshServers()
     }
 
-    // Periodic refresh so new/updated server data is picked up.
-    Timer {
-        id: serverListTimer
+    // --- Location --------------------------------------------------------------
 
-        interval: 30000
-        running: true
-        repeat: true
-        onTriggered: root.refreshServers()
+    // Weather stores {name, latitude, longitude}; the country is
+    // reverse-geocoded from its coordinates.
+    FileView {
+        id: homeLocationFile
+
+        path: Quickshell.env("HOME") + "/.local/state/quickshell/weather.json"
+        blockLoading: true
+        watchChanges: true
+        printErrors: false
+
+        onLoaded: {
+            try {
+                var data = JSON.parse(String(homeLocationFile.text() || "{}"))
+                var lat = parseFloat(String(data.latitude))
+                var lon = parseFloat(String(data.longitude))
+                if (!isNaN(lat) && !isNaN(lon)) {
+                    root.resolveHomeCountry(lat, lon)
+                } else {
+                    root.homeCountryCode = ""
+                    root.homeCountryName = ""
+                }
+            } catch (e) {
+                root.homeCountryCode = ""
+                root.homeCountryName = ""
+            }
+        }
+
+        onFileChanged: reload()
+    }
+
+    Process {
+        id: homeCountryProcess
+
+        running: false
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var data = JSON.parse(homeCountryProcess.stdout.text)
+                    var address = data && data.address ? data.address : null
+                    root.homeCountryCode = address && address.country_code ? String(address.country_code).toUpperCase() : ""
+                    root.homeCountryName = address && address.country ? String(address.country) : ""
+                } catch (e) {
+                    root.homeCountryCode = ""
+                    root.homeCountryName = ""
+                }
+            }
+        }
     }
 
     Component.onCompleted: {

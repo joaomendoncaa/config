@@ -1,120 +1,183 @@
-#!/usr/bin/env python3
-"""Emit the Proton VPN free-server list grouped by country, as compact JSON
-for the Quickshell VPN panel.
+#!/usr/bin/env bash
+# Emit the Proton VPN server list plus measured latency for the panel.
+#
+# Reads the server list cached by the `protonvpn` CLI and prints one JSON
+# document:
+#
+#   {"loaded":true,"freePlan":true,
+#    "countries":[{"code":"NL","name":"Netherlands","load":95,"count":35},...],
+#    "latency":{"loaded":true,"measuredAt":176...,
+#      "countries":{"NL":{"server":"NL-FREE#124","ip":"...","load":81,"latency":38.3}}}}
+#
+# Free-plan accounts only see free servers (Tier 0); paying accounts see all
+# countries with servers on their tier. The panel lists countries and clicking
+# one connects to the measured server (see qs-vpn-connect).
+#
+# Latency probes one low-load server per city, since same-city servers share
+# the network path. Pings bind to the physical NIC so they stay direct even
+# while the VPN is up. Only the VPN panel calls this helper, so the
+# measurement always runs; the panel controls when that happens.
+#
+# If the cache can't be read (missing or mid-write), {"loaded":false} is
+# printed so the shell can show a "loading" state and retry.
+set -euo pipefail
 
-Reads the server list cached by the `protonvpn` CLI and prints a small JSON
-document on stdout:
+CACHE_PATH="$HOME/.cache/Proton/VPN/serverlist.json"
+NAMES_JSON='{"NL":"Netherlands","US":"United States","CA":"Canada","JP":"Japan","SG":"Singapore","MX":"Mexico","RO":"Romania","NO":"Norway","CH":"Switzerland","PL":"Poland","GB":"United Kingdom","DE":"Germany","FR":"France","SE":"Sweden","IS":"Iceland","IE":"Ireland"}'
 
-    {"loaded": true, "freePlan": true,
-     "countries": [{"code": "NL", "name": "Netherlands", "city": "Amsterdam",
-                    "load": 95, "count": 35}, ...]}
+tmpdir=$(mktemp -d)
+trap 'rm -rf "$tmpdir"' EXIT
 
-Free-plan accounts only see free servers (Tier 0) grouped by country; paying
-accounts see all countries with servers any tier. The panel lists countries
-and clicking one connects to the best free server there (see qs-vpn-connect),
-instead of listing every individual server.
+# Snapshot once so both jq passes see the same complete file.
+snapshot="$tmpdir/serverlist.json"
+cache_ok=false
+for _ in {1..8}; do
+    if cp "$CACHE_PATH" "$snapshot" 2>/dev/null && jq -e . "$snapshot" >/dev/null 2>&1; then
+        cache_ok=true
+        break
+    fi
+    sleep 0.15
+done
+if [[ $cache_ok != true ]]; then
+    printf '{"loaded":false}\n'
+    exit 0
+fi
 
-If the cache can't be read (missing or mid-write), {"loaded": false, ...} is
-printed so the shell can show a "loading" state and retry instead of crashing.
-"""
-import json
-import os
-import sys
-import time
+max_tier=$(jq -r '.MaxTier // 0' "$snapshot")
+[[ $max_tier =~ ^[0-9]+$ ]] || max_tier=0
+if ((max_tier > 0)); then
+    include_all=true
+    free=false
+else
+    include_all=false
+    free=true
+fi
 
-CACHE_PATH = os.path.expanduser("~/.cache/Proton/VPN/serverlist.json")
+# Country menu. The panel only needs code/name/load/count.
+countries_json=$(jq -c \
+    --argjson include_all "$include_all" \
+    --argjson names "$NAMES_JSON" '
+    [.LogicalServers[]?
+     | select(type == "object")
+     | select($include_all or ((.Tier // 0) == 0))]
+    | group_by(.ExitCountry // "??")
+    | map(
+        (.[0].ExitCountry // "??" | ascii_upcase) as $code
+        | {
+            code: $code,
+            name: ($names[$code] // $code),
+            load: ((map(select((.Load // -1) >= 0) | .Load) | min) // -1),
+            count: length
+          }
+      )
+    | sort_by(.name | ascii_downcase)
+  ' "$snapshot")
 
-# Human-friendly names for the countries that commonly host free (Tier 0)
-# Proton VPN servers. Anything not listed falls back to its two-letter code.
-COUNTRY_NAMES = {
-    "NL": "Netherlands",
-    "US": "United States",
-    "CA": "Canada",
-    "JP": "Japan",
-    "SG": "Singapore",
-    "MX": "Mexico",
-    "RO": "Romania",
-    "NO": "Norway",
-    "CH": "Switzerland",
-    "PL": "Poland",
-    "GB": "United Kingdom",
-    "DE": "Germany",
-    "FR": "France",
-    "SE": "Sweden",
-    "IS": "Iceland",
-    "IE": "Ireland",
+# One low-load logical server per city, as TSV for the ping workers.
+reps_tsv=$(jq -r --argjson max_tier "$max_tier" '
+    [.LogicalServers[]?
+     | select(type == "object" and .Status == 1)
+     | select((.Tier // 0) <= $max_tier)
+     | select(((.Features // 0) % 4) == 0)
+     | ([.Servers[]? | select(type == "object" and .Status == 1)][0]) as $phys
+     | select($phys != null and $phys.EntryIP != null)
+     | {
+         code: ((.ExitCountry // "??") | ascii_upcase),
+         name: (.Name // ""),
+         ip: $phys.EntryIP,
+         city: (.City // ""),
+         load: (if (.Load | type) == "number" then .Load else -1 end),
+         score: (if (.Score | type) == "number" then .Score else 1e9 end)
+       }]
+    | group_by(.code, .city)
+    | map(sort_by(.score) | .[0])
+    | .[]
+    | [.code, .city, .name, .ip, (.load | tostring), (.score | tostring)]
+    | @tsv
+  ' "$snapshot")
+
+# Bind pings to the physical NIC even when the VPN owns the default route.
+iface=$(awk '$2 == "00000000" && $1 ~ /^(en|wl|ww|eth)/ { print $1; exit }' /proc/net/route 2>/dev/null || true)
+
+probe() {
+    local code=$1 city=$2 name=$3 ip=$4 load=$5 score=$6
+    local latency="null" output
+    local args=(-n -q -c 3 -i 0.2 -W 1)
+    if [[ -n ${iface:-} ]]; then
+        args+=(-I "$iface")
+    fi
+    if output=$(ping "${args[@]}" "$ip" 2>/dev/null); then
+        latency=$(sed -n 's/.*rtt min\/avg\/max\/mdev = [0-9.]*\/\([0-9.]*\)\/.*/\1/p' <<< "$output")
+        [[ -n $latency ]] || latency="null"
+    fi
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "$code" "$city" "$name" "$ip" "$load" "$score" "$latency"
 }
 
+results="$tmpdir/results.tsv"
+: > "$results"
+total=0
+if [[ -n $reps_tsv ]]; then
+    total=$(printf '%s\n' "$reps_tsv" | wc -l)
+fi
 
-def load_cache():
-    # The CLI may be rewriting the file; retry briefly before giving up.
-    for _ in range(8):
-        try:
-            with open(CACHE_PATH, "r", encoding="utf-8") as handle:
-                return json.load(handle)
-        except (OSError, ValueError):
-            time.sleep(0.15)
-    return None
+if ((total > 0)); then
+    mkdir -p "$tmpdir/probes"
+    running=0
+    index=0
+    while IFS=$'\t' read -r code city name ip load score; do
+        [[ -n $code ]] || continue
+        index=$((index + 1))
+        probe "$code" "$city" "$name" "$ip" "$load" "$score" > "$tmpdir/probes/$index.tsv" &
+        running=$((running + 1))
+        if ((running >= 24)); then
+            wait -n
+            running=$((running - 1))
+        fi
+    done <<< "$reps_tsv"
+    wait
+    cat "$tmpdir/probes"/*.tsv > "$results"
+fi
 
+answered=$(awk -F'\t' '$7 != "null" { n++ } END { print n + 0 }' "$results")
+measured_at=$(date +%s)
 
-def main():
-    data = load_cache()
-    if not isinstance(data, dict):
-        print(json.dumps({"loaded": False, "freePlan": True, "countries": []}))
-        return 0
+if ((total == 0)) || ((answered < 1)) || ((answered * 2 < total)); then
+    latency_json='{"loaded":false}'
+else
+    latency_countries=$(jq -c -Rn '
+        [inputs | split("\t") | {
+            code: .[0],
+            server: .[2],
+            ip: .[3],
+            load: (.[4] | tonumber),
+            score: (.[5] | tonumber),
+            latency: (if .[6] == "null" then null else (.[6] | tonumber) end)
+          }]
+        | group_by(.code)
+        | map(
+            (map(select(.latency != null)) | sort_by(.latency, .score) | .[0]) as $best
+            | (if $best != null then $best else (sort_by(.score) | .[0]) end)
+            | {
+                key: .code,
+                value: {
+                    server: .server,
+                    ip: .ip,
+                    load: .load,
+                    latency: .latency
+                }
+              }
+          )
+        | from_entries
+      ' < "$results")
+    latency_json=$(jq -cn \
+        --argjson measuredAt "$measured_at" \
+        --argjson countries "$latency_countries" \
+        '{loaded:true, measuredAt:$measuredAt, countries:$countries}')
+fi
 
-    logical_servers = data.get("LogicalServers") or []
-    max_tier = data.get("MaxTier", 0)
-    include_all = max_tier > 0
-
-    # Group usable servers by country, keeping per-country best load.
-    # On the free plan only tier-0 servers are usable, so paid servers are
-    # excluded entirely -> the panel never offers servers the user can't reach.
-    countries = {}
-    for entry in logical_servers:
-        if not isinstance(entry, dict):
-            continue
-        tier = entry.get("Tier", 0)
-        if not include_all and tier != 0:
-            continue
-
-        code = str(entry.get("ExitCountry") or "??").upper()
-        city = str(entry.get("City") or "")
-        load = entry.get("Load")
-        if not isinstance(load, (int, float)):
-            load = -1
-
-        group = countries.setdefault(code, {"count": 0, "city": None, "best_load": 1000, "has_load": False})
-        group["count"] += 1
-        # Prefer the city bearing the lowest (best) load for display.
-        if not group["city"] and city:
-            group["city"] = city
-        if isinstance(load, (int, float)) and load >= 0:
-            group["has_load"] = True
-            if load < group["best_load"]:
-                group["best_load"] = load
-                if city:
-                    group["city"] = city
-
-    countries_list = []
-    for code, group in countries.items():
-        countries_list.append({
-            "code": code,
-            "name": COUNTRY_NAMES.get(code, code),
-            "city": group["city"] or "",
-            "load": group["best_load"] if group["has_load"] else -1,
-            "count": group["count"],
-        })
-
-    # Sort by country name so the menu is stable and friendly.
-    countries_list.sort(key=lambda c: c["name"].lower())
-    print(json.dumps({
-        "loaded": True,
-        "freePlan": max_tier == 0,
-        "countries": countries_list,
-    }))
-    return 0
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+jq -cn \
+    --argjson free "$free" \
+    --argjson countries "$countries_json" \
+    --argjson latency "$latency_json" \
+    '{loaded:true, freePlan:$free, countries:$countries, latency:$latency}'
