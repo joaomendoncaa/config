@@ -11,6 +11,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("systemctl --user import-environment $(env | cut -d'=' -f 1)")
 	hl.exec_cmd("dbus-update-activation-environment --systemd --all")
 	hl.exec_cmd("uwsm app -- walker --gapplication-service")
+	hl.exec_cmd("agent-browser")
 	hl.exec_cmd("numlockx on")
 	-- Ensure mako is stopped so quickshell's NotificationServer gets the DBus name
 	hl.exec_cmd("systemctl --user stop mako.service 2>/dev/null")

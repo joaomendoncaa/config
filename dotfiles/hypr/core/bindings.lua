@@ -550,6 +550,12 @@ bind("SUPER + mouse:273", "Resize window", hl.dsp.window.resize(), { mouse = tru
 bind("SUPER + G", "Toggle window grouping", hl.dsp.group.toggle())
 bind("SUPER + ALT + G", "Move active window out of group", hl.dsp.window.move({ out_of_group = true }))
 
+-- Agents' detached browser lives on special:agents (see agent-browser).
+-- Peek at it without leaving the current workspace.
+bind("SUPER + ALT + A", "Peek agent workspace", function()
+	hl.dispatch(hl.dsp.workspace.toggle_special("agents"))
+end)
+
 bind("SUPER + ALT + LEFT", "Move window to group on left", hl.dsp.window.move({ into_group = "l" }))
 bind("SUPER + ALT + RIGHT", "Move window to group on right", hl.dsp.window.move({ into_group = "r" }))
 bind("SUPER + ALT + UP", "Move window to group on top", hl.dsp.window.move({ into_group = "u" }))

@@ -218,3 +218,9 @@ hl.window_rule({ match = { initial_class = "steam_app_230410" }, render_unfocuse
 hl.window_rule({ match = { initial_class = "Aether" }, float = true })
 hl.window_rule({ match = { initial_class = "Aether" }, size = { 1259, 1000 } })
 hl.window_rule({ match = { initial_class = "Aether" }, center = true })
+
+-- Agents' detached playground: windows mapped here by the agent-browser
+-- wrapper stay hidden and can never steal focus or yank the workspace.
+utils.window({ workspace = "special:agents" }, { focus_on_activate = false })
+utils.window({ workspace = "special:agents" }, { suppress_event = "activate activatefocus" })
+utils.window({ workspace = "special:agents" }, { no_initial_focus = true })
