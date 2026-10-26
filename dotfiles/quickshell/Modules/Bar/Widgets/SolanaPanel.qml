@@ -7,10 +7,10 @@ Rectangle {
 
     required property var service
     property string expandedMint: ""
-    readonly property int panelWidth: Math.round(Config.buttonSize * 18)
+    readonly property int panelWidth: Math.round(Config.buttonSize * 20)
     readonly property int searchHeight: Config.buttonSize + Config.shellPadding + Config.gapInner
     readonly property int maximumListHeight: Math.round(Config.buttonSize * 16)
-    readonly property int tokenRowHeight: Math.round(Config.buttonSize * 1.5)
+    readonly property int tokenRowHeight: Math.round(Config.buttonSize * 2)
     readonly property int tokenDetailsHeight: Math.round(Config.buttonSize * 6.5)
     readonly property bool searchMode: searchInput.text.trim().length >= 2
     readonly property int visibleTokenCount: searchMode ? service.searchResults.length : service.watchlist.length

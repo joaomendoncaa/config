@@ -24,10 +24,11 @@ Rectangle {
             return tokenInfo || {}
         return service && mint ? service.token(mint) || {} : {}
     }
-    readonly property int rowHeight: Math.round(Config.buttonSize * 1.5)
+    readonly property string shortMint: mint.length > 12 ? mint.substring(0, 4) + '…' + mint.substring(mint.length - 4) : mint
+    readonly property int rowHeight: Math.round(Config.buttonSize * 2)
     readonly property int detailsHeight: Math.round(Config.buttonSize * 6.5)
 
-    color: expanded && !searchResult ? Config.backgroundColoredSecondary : 'transparent'
+    color: root.deleteArmed ? Config.backgroundColoredSecondary : (expanded && !searchResult ? Config.backgroundColoredSecondary : 'transparent')
 
     implicitHeight: rowHeight + (expanded && !searchResult ? detailsHeight : 0)
 
@@ -38,6 +39,7 @@ Rectangle {
 
     Column {
         anchors.fill: parent
+        visible: !root.deleteArmed
         spacing: 0
 
         Item {
@@ -58,12 +60,20 @@ Rectangle {
                 }
 
                 Rectangle {
-                    visible: root.details.iconUrl && root.details.iconUrl.length > 0
-                    Layout.preferredWidth: Config.buttonSize * 0.7
-                    Layout.preferredHeight: Config.buttonSize * 0.7
+                    Layout.preferredWidth: Math.round(Config.buttonSize * 0.9)
+                    Layout.preferredHeight: Math.round(Config.buttonSize * 0.9)
                     radius: width / 2
                     color: Config.backgroundColoredTertiary
-                    clip: false
+                    clip: true
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: (root.details.symbol || root.mint).substring(0, 1)
+                        color: Config.foregroundSecondary
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize - 4
+                        font.weight: Font.Bold
+                    }
 
                     Image {
                         id: tokenIcon
@@ -87,75 +97,111 @@ Rectangle {
 
                     OpacityMask {
                         anchors.fill: parent
+                        visible: (root.details.iconUrl || '').length > 0
                         source: tokenIcon
                         maskSource: tokenIconMask
                         cached: true
                     }
                 }
 
-                Text {
+                Column {
                     Layout.fillWidth: true
                     Layout.minimumWidth: 0
-                    elide: Text.ElideRight
-                    text: root.details.symbol || root.details.name || root.mint.substring(0, 6)
-                    color: Config.foreground
-                    font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize
-                    font.weight: Font.Bold
+                    spacing: 0
+
+                    Text {
+                        width: parent.width
+                        elide: Text.ElideRight
+                        text: root.details.symbol || root.details.name || root.mint.substring(0, 6)
+                        color: Config.foreground
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize
+                        font.weight: Font.Bold
+                    }
+
+                    Text {
+                        width: parent.width
+                        elide: Text.ElideRight
+                        text: root.shortMint
+                        color: Config.foregroundSecondary
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize - 4
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Quickshell.clipboardText = root.mint
+                        }
+                    }
                 }
 
-                Text {
-                    visible: root.searchResult || !root.expanded
-                    Layout.preferredWidth: Math.round(Config.buttonSize * 4.4)
-                    Layout.rightMargin: Config.gapInner
-                    horizontalAlignment: Text.AlignRight
-                    text: '$' + (!root.searchResult && root.service.showsMarketCap(root.mint) ? root.service.compactNumber(root.details.marketCap) : root.service.prettyPrice(root.details.usdPrice))
-                    color: Config.foreground
-                    font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize
-                    font.weight: Font.Bold
+                Column {
+                    Layout.preferredWidth: Math.round(Config.buttonSize * 6.4)
+                    spacing: 0
 
-                    MouseArea {
-                        anchors.fill: parent
-                        enabled: !root.searchResult && !root.expanded
-                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: root.service.toggleMarketCap(root.mint)
+                    Text {
+                        width: parent.width
+                        visible: root.searchResult || !root.expanded
+                        horizontalAlignment: Text.AlignRight
+                        elide: Text.ElideRight
+                        text: '$' + (!root.searchResult && root.service.showsMarketCap(root.mint) ? root.service.compactNumber(root.details.marketCap) : root.service.prettyPrice(root.details.usdPrice))
+                        color: Config.foreground
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize
+                        font.weight: Font.Bold
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: !root.searchResult && !root.expanded
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: root.service.toggleMarketCap(root.mint)
+                        }
+                    }
+
+                    Text {
+                        width: parent.width
+                        horizontalAlignment: Text.AlignRight
+                        elide: Text.ElideRight
+                        text: 'Liq ' + root.service.compactUsd(root.details.liquidity) + '  Vol ' + root.service.compactUsd(root.details.volume24h)
+                        color: Config.foregroundSecondary
+                        font.family: Config.fontFamily
+                        font.pixelSize: Config.fontSize - 5
                     }
                 }
 
                 Row {
                     visible: root.searchResult
                     Layout.preferredWidth: implicitWidth
+                    spacing: Config.gapInner
 
                     ActionButton {
                         iconSource: '../../../Assets/solana-open.svg'
                         onClicked: root.openExternal()
                     }
-                }
 
-                Rectangle {
-                    visible: root.searchResult
-                    Layout.preferredWidth: Config.buttonSize
-                    Layout.preferredHeight: Config.buttonSize
-                    radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
-                    color: root.service.isWatchlisted(root.mint) ? Config.backgroundColoredTertiary : Config.foreground
+                    Rectangle {
+                        width: Math.round(Config.buttonSize * 1.8)
+                        height: Config.buttonSize
+                        radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
+                        color: root.service.isWatchlisted(root.mint) ? Config.backgroundColoredTertiary : Config.foreground
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: root.service.isWatchlisted(root.mint) ? '\uf00c' : 'ADD'
-                        color: root.service.isWatchlisted(root.mint) ? Config.foregroundSecondary : Config.foregroundSelected
-                        font.family: Config.fontFamily
-                        font.pixelSize: Config.fontSize
-                        font.weight: Font.Bold
-                    }
+                        Text {
+                            anchors.centerIn: parent
+                            text: root.service.isWatchlisted(root.mint) ? '\uf00c' : 'Add'
+                            color: root.service.isWatchlisted(root.mint) ? Config.foregroundSecondary : Config.foregroundSelected
+                            font.family: Config.fontFamily
+                            font.pixelSize: Config.fontSize - 2
+                            font.weight: Font.Bold
+                        }
 
-                    MouseArea {
-                        anchors.fill: parent
-                        enabled: !root.service.isWatchlisted(root.mint)
-                        cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
-                        onClicked: {
-                            root.service.addSearchResult(root.tokenInfo)
-                            root.tokenAdded()
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: !root.service.isWatchlisted(root.mint)
+                            cursorShape: enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                root.service.addSearchResult(root.tokenInfo)
+                                root.tokenAdded()
+                            }
                         }
                     }
                 }
@@ -172,15 +218,7 @@ Rectangle {
 
                     ActionButton {
                         iconSource: '../../../Assets/solana-delete.svg'
-                        foreground: root.deleteArmed ? Config.accent : Config.foreground
-                        onClicked: {
-                            if (root.deleteArmed) {
-                                root.service.removeToken(root.mint)
-                            } else {
-                                root.deleteArmed = true
-                                deleteTimer.restart()
-                            }
-                        }
+                        onClicked: root.deleteArmed = true
                     }
 
                     ActionButton {
@@ -223,22 +261,34 @@ Rectangle {
                     spacing: Config.gapInner
 
                     Metric {
-                        width: (metrics.width - metrics.spacing * 2) / 3
+                        width: (metrics.width - metrics.spacing * 4) / 5
                         label: 'PRICE'
                         value: '$' + root.service.prettyPrice(root.details.usdPrice)
                     }
 
                     Metric {
-                        width: (metrics.width - metrics.spacing * 2) / 3
-                        label: 'CHANGE'
+                        width: (metrics.width - metrics.spacing * 4) / 5
+                        label: '24H'
                         value: (Number(root.details.change24h) > 0 ? '+' : '') + Number(root.details.change24h || 0).toFixed(2) + '%'
                         valueColor: Number(root.details.change24h) < 0 ? Config.foregroundSecondary : Config.foreground
                     }
 
                     Metric {
-                        width: (metrics.width - metrics.spacing * 2) / 3
-                        label: 'MARKETCAP'
-                        value: root.service.compactNumber(root.details.marketCap)
+                        width: (metrics.width - metrics.spacing * 4) / 5
+                        label: 'MCAP'
+                        value: root.service.compactUsd(root.details.marketCap)
+                    }
+
+                    Metric {
+                        width: (metrics.width - metrics.spacing * 4) / 5
+                        label: 'LIQ'
+                        value: root.service.compactUsd(root.details.liquidity)
+                    }
+
+                    Metric {
+                        width: (metrics.width - metrics.spacing * 4) / 5
+                        label: 'VOL'
+                        value: root.service.compactUsd(root.details.volume24h)
                     }
                 }
             }
@@ -252,10 +302,78 @@ Rectangle {
         }
     }
 
-    Timer {
-        id: deleteTimer
-        interval: 2500
-        onTriggered: root.deleteArmed = false
+    Rectangle {
+        anchors.fill: parent
+        visible: root.deleteArmed
+        color: Config.backgroundColoredSecondary
+        z: 2
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: Config.shellPadding
+            anchors.rightMargin: Config.shellPadding
+            spacing: Config.gapInner
+
+            Text {
+                Layout.fillWidth: true
+                Layout.minimumWidth: 0
+                elide: Text.ElideRight
+                text: 'Are you sure you want to delete ' + (root.details.symbol || root.shortMint) + '?'
+                color: Config.foreground
+                font.family: Config.fontFamily
+                font.pixelSize: Config.fontSize - 2
+                font.weight: Font.Bold
+            }
+
+            Row {
+                Layout.preferredWidth: implicitWidth
+                spacing: Config.gapInner
+
+                ConfirmButton {
+                    text: 'Cancel'
+                    background: Config.backgroundColoredTertiary
+                    foreground: Config.foreground
+                    onClicked: root.deleteArmed = false
+                }
+
+                ConfirmButton {
+                    text: 'Delete'
+                    background: Config.accent
+                    foreground: Config.foregroundSelected
+                    onClicked: root.service.removeToken(root.mint)
+                }
+            }
+        }
+    }
+
+    component ConfirmButton: Rectangle {
+        id: confirmButton
+        property string text: ''
+        property color background: Config.backgroundColoredTertiary
+        property color foreground: Config.foreground
+        signal clicked()
+
+        width: Math.round(Config.buttonSize * 2.4)
+        height: Config.buttonSize
+        radius: Math.max(1, Math.round(Config.buttonBorderRadius / 2))
+        color: confirmMouse.containsMouse ? Qt.lighter(confirmButton.background, 1.15) : confirmButton.background
+
+        Text {
+            anchors.centerIn: parent
+            text: confirmButton.text
+            color: confirmButton.foreground
+            font.family: Config.fontFamily
+            font.pixelSize: Config.fontSize - 2
+            font.weight: Font.Bold
+        }
+
+        MouseArea {
+            id: confirmMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: confirmButton.clicked()
+        }
     }
 
     component ActionButton: Rectangle {
@@ -324,7 +442,7 @@ Rectangle {
             text: parent.label
             color: Config.foregroundSecondary
             font.family: Config.fontFamily
-            font.pixelSize: Config.fontSize
+            font.pixelSize: Config.fontSize - 4
             font.weight: Font.Bold
         }
 
@@ -335,7 +453,7 @@ Rectangle {
             text: parent.value
             color: parent.valueColor
             font.family: Config.fontFamily
-            font.pixelSize: Config.fontSize
+            font.pixelSize: Config.fontSize - 3
             font.weight: Font.Bold
         }
     }

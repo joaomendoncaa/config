@@ -251,31 +251,6 @@ Rectangle {
                     anchors.centerIn: parent
                     spacing: Config.gapInner
 
-                    Item {
-                        id: diceIcon
-
-                        visible: !root.service.busy && !root.connected
-                        Layout.preferredWidth: visible ? Config.fontSize : 0
-                        Layout.preferredHeight: visible ? Config.fontSize : 0
-                        Layout.alignment: Qt.AlignVCenter
-
-                        Image {
-                            id: diceImage
-
-                            anchors.fill: parent
-                            source: "../../../Assets/dices.svg"
-                            sourceSize.width: Config.fontSize
-                            sourceSize.height: Config.fontSize
-                            visible: false
-                        }
-
-                        ColorOverlay {
-                            anchors.fill: parent
-                            source: diceImage
-                            color: buttonLabel.color
-                        }
-                    }
-
                     Text {
                         id: buttonLabel
 

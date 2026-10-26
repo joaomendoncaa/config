@@ -214,13 +214,9 @@ Item {
             radius: Config.buttonBorderRadius
             color: arrowLeftMouse.containsMouse ? Config.backgroundHovered : 'transparent'
 
-            Text {
+            ChevronIcon {
                 anchors.centerIn: parent
-                text: '<'
-                color: Config.foreground
-                font.family: Config.fontFamily
-                font.pixelSize: Config.fontSize
-                font.weight: Font.Bold
+                iconSource: '../../../Assets/chevrons-left.svg'
             }
 
             MouseArea {
@@ -238,7 +234,6 @@ Item {
             Layout.fillWidth: true
             Layout.minimumWidth: 0
             Layout.preferredHeight: Config.buttonSize
-            visible: root.listVisible
             clip: true
 
             MouseArea {
@@ -370,13 +365,9 @@ Item {
             radius: Config.buttonBorderRadius
             color: arrowRightMouse.containsMouse ? Config.backgroundHovered : 'transparent'
 
-            Text {
+            ChevronIcon {
                 anchors.centerIn: parent
-                text: '>'
-                color: Config.foreground
-                font.family: Config.fontFamily
-                font.pixelSize: Config.fontSize
-                font.weight: Font.Bold
+                iconSource: '../../../Assets/chevrons-right.svg'
             }
 
             MouseArea {
@@ -436,5 +427,34 @@ Item {
         active: root.popupVisible && popupLoader.item !== null
         windows: popupLoader.item ? (root.barWindow ? [popupLoader.item, root.barWindow] : [popupLoader.item]) : []
         onCleared: root.popupVisible = false
+    }
+
+    component ChevronIcon: Item {
+        id: chevron
+        property string iconSource: ''
+        implicitWidth: Config.buttonSize * 0.7
+        implicitHeight: implicitWidth
+
+        Image {
+            id: chevronMask
+            anchors.fill: parent
+            source: chevron.iconSource
+            sourceSize.width: width
+            sourceSize.height: height
+            visible: false
+        }
+
+        Rectangle {
+            id: chevronColor
+            anchors.fill: parent
+            color: Config.foreground
+            visible: false
+        }
+
+        OpacityMask {
+            anchors.fill: parent
+            source: chevronColor
+            maskSource: chevronMask
+        }
     }
 }

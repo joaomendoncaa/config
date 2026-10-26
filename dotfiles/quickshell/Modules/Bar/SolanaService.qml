@@ -25,6 +25,8 @@ Item {
     property var _metadataQueue: []
     property string _historyMint: ""
     property string _searchRequest: ""
+    property string _iconRequest: ""
+    property string _iconCheckedQuery: ""
 
     function clone(value) {
         return JSON.parse(JSON.stringify(value))
@@ -86,6 +88,13 @@ Item {
         return number.toFixed(number >= 100 ? 0 : number >= 10 ? 1 : 2).replace(/\.0+$/, '') + units[unit]
     }
 
+    function compactUsd(value) {
+        var number = Number(value)
+        if (!isFinite(number) || number <= 0)
+            return '--'
+        return '$' + root.compactNumber(number)
+    }
+
     function addToken(mint, initialData) {
         if (!mint || root.isWatchlisted(mint))
             return
@@ -116,7 +125,9 @@ Item {
             pairAddress: result.pairAddress || "",
             dexUrl: result.dexUrl || "",
             marketCap: result.marketCap,
-            change24h: result.change24h
+            change24h: result.change24h,
+            liquidity: result.liquidity,
+            volume24h: result.volume24h
         })
     }
 
@@ -285,6 +296,25 @@ Item {
         searchFetcher.running = true
     }
 
+    function _fillSearchIcons() {
+        if (iconFetcher.running || root._iconCheckedQuery === root.searchQuery)
+            return
+
+        var missing = []
+        for (var i = 0; i < root.searchResults.length; i++) {
+            if (!root.searchResults[i].iconUrl)
+                missing.push(root.searchResults[i].mint)
+        }
+
+        root._iconCheckedQuery = root.searchQuery
+        if (missing.length === 0)
+            return
+
+        root._iconRequest = root.searchQuery
+        iconFetcher.command = ["curl", "-fsS", "--max-time", "10", "https://api.jup.ag/tokens/v2/search?query=" + missing.join(',')]
+        iconFetcher.running = true
+    }
+
     function requestHistory(mint) {
         var item = root.tokenData[mint]
         if (!item || !item.pairAddress || (item.history && item.history.length > 1) || root._historyQueued[mint])
@@ -354,7 +384,9 @@ Item {
                     pairAddress: item.pairAddress || '',
                     dexUrl: item.dexUrl || '',
                     marketCap: item.marketCap,
-                    change24h: item.change24h
+                    change24h: item.change24h,
+                    liquidity: item.liquidity,
+                    volume24h: item.volume24h
                 }
             }
         }
@@ -515,7 +547,9 @@ Item {
                             pairAddress: pair.pairAddress || '',
                             dexUrl: pair.url || '',
                             marketCap: pair.marketCap !== null && pair.marketCap !== undefined ? Number(pair.marketCap) : Number(pair.fdv || 0),
-                            change24h: pair.priceChange ? Number(pair.priceChange.h24 || 0) : 0
+                            change24h: pair.priceChange ? Number(pair.priceChange.h24 || 0) : 0,
+                            liquidity: pair.liquidity ? Number(pair.liquidity.usd || 0) : 0,
+                            volume24h: pair.volume ? Number(pair.volume.h24 || 0) : 0
                         })
                     }
                     root.tokenData = data
@@ -626,12 +660,15 @@ Item {
                             dexUrl: pair.url || '',
                             marketCap: pair.marketCap !== null && pair.marketCap !== undefined ? Number(pair.marketCap) : Number(pair.fdv || 0),
                             change24h: pair.priceChange ? Number(pair.priceChange.h24 || 0) : 0,
-                            liquidity: best[mint].liquidity
+                            liquidity: best[mint].liquidity,
+                            volume24h: pair.volume ? Number(pair.volume.h24 || 0) : 0
                         })
                     }
                     results.sort(function(a, b) { return b.liquidity - a.liquidity })
                     root.searchResults = results.slice(0, 8)
                     root.searchError = results.length === 0 ? 'No Solana tokens found' : ''
+                    root._iconCheckedQuery = ''
+                    root._fillSearchIcons()
                 } catch (error) {
                     root.searchResults = []
                     root.searchError = 'Search failed - retry in a moment'
@@ -650,6 +687,40 @@ Item {
         id: searchRestartTimer
         interval: 0
         onTriggered: root._startSearch(root.searchQuery)
+    }
+
+    Process {
+        id: iconFetcher
+        command: ["true"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (root._iconRequest !== root.searchQuery)
+                    return
+                try {
+                    var tokens = JSON.parse(text.trim() || '[]')
+                    var icons = {}
+                    for (var i = 0; i < tokens.length; i++) {
+                        if (tokens[i] && tokens[i].id && tokens[i].icon)
+                            icons[tokens[i].id] = tokens[i].icon
+                    }
+                    var results = root.searchResults.slice()
+                    var changed = false
+                    for (var i = 0; i < results.length; i++) {
+                        if (!results[i].iconUrl && icons[results[i].mint]) {
+                            results[i] = Object.assign({}, results[i], { iconUrl: icons[results[i].mint] })
+                            changed = true
+                        }
+                    }
+                    if (changed)
+                        root.searchResults = results
+                } catch (error) {
+                    console.warn('[solana] icon fetch:', error)
+                }
+            }
+        }
+
+        onExited: root._fillSearchIcons()
     }
 
     Timer {

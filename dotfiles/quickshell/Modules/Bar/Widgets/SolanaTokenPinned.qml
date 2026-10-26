@@ -136,7 +136,7 @@ Item {
 
         CarouselButton {
             visible: !root.service.pinsHidden && root.service.pinnedTokens.length > 2
-            text: '>'
+            iconSource: '../../../Assets/chevrons-right.svg'
             onClicked: root.shiftPins(1)
         }
 
@@ -271,20 +271,35 @@ Item {
 
     component CarouselButton: Rectangle {
         id: carouselButton
-        property string text: ''
+        property string iconSource: ''
         signal clicked()
         width: Config.buttonSize * 0.7
         height: Config.buttonSize
         radius: Config.buttonBorderRadius
         color: carouselMouse.containsMouse ? Config.backgroundHovered : 'transparent'
 
-        Text {
+        Image {
+            id: carouselIconMask
             anchors.centerIn: parent
-            text: carouselButton.text
+            width: Config.buttonSize * 0.7
+            height: width
+            source: carouselButton.iconSource
+            sourceSize.width: width
+            sourceSize.height: height
+            visible: false
+        }
+
+        Rectangle {
+            id: carouselIconColor
+            anchors.fill: carouselIconMask
             color: Config.foreground
-            font.family: Config.fontFamily
-            font.pixelSize: Config.fontSize
-            font.weight: Font.Bold
+            visible: false
+        }
+
+        OpacityMask {
+            anchors.fill: carouselIconMask
+            source: carouselIconColor
+            maskSource: carouselIconMask
         }
 
         MouseArea {
