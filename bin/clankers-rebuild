@@ -2,6 +2,13 @@
 set -euo pipefail
 export PATH="$HOME/.config.jmmm.sh/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
 
+# Keep build temp dirs on the same filesystem as the pnpm store so staged
+# installs hardlink instead of re-fetching into a tmpfs store after reboot.
+export TMPDIR="${CLANKERS_TMPDIR:-$HOME/.cache/clankers-build}"
+mkdir -p "$TMPDIR"
+# Source maps never ship in the package; generating them only slows builds.
+export T3CODE_WEB_SOURCEMAP="${T3CODE_WEB_SOURCEMAP:-0}"
+
 FORK="${CLANKERS_FORK:-$HOME/lab/clankers}"
 APP="${CLANKERS_APP:-$HOME/.local/clankers.app}"
 LOG="${CLANKERS_LOG:-$HOME/.local/share/opencode/shell/clankers.log}"
@@ -22,6 +29,17 @@ fail() {
 	exit 1
 }
 
+quit_app() {
+	pkill -f "clankers[.]app/t3code" 2>/dev/null || true
+	for _ in $(seq 1 30); do
+		pgrep -f "clankers[.]app/t3code" >/dev/null || return 0
+		sleep 1
+	done
+	pkill -9 -f "clankers[.]app/t3code" 2>/dev/null || true
+	sleep 1
+}
+
+FAST=1
 while [[ $# -gt 0 ]]; do
 	case "$1" in
 	--branch)
@@ -32,12 +50,16 @@ while [[ $# -gt 0 ]]; do
 		FAST=1
 		shift
 		;;
+	--full)
+		FAST=0
+		shift
+		;;
 	*) shift ;;
 	esac
 done
 
 if [[ -z "${CLANKERS_DETACHED:-}" ]]; then
-	# Escape into our own systemd scope: this script kills the app mid-run,
+	# Escape into our own systemd scope: this script kills the app at the end,
 	# and anything left in the birth scope (app terminal, agent session)
 	# gets SIGKILLed with it. Fall back to setsid when systemd is absent.
 	if command -v systemd-run >/dev/null 2>&1; then
@@ -49,12 +71,12 @@ if [[ -z "${CLANKERS_DETACHED:-}" ]]; then
 			--setenv=DISPLAY="${DISPLAY:-}" \
 			-- "$0" "$@" >>"$LOG" 2>&1 </dev/null &
 		disown 2>/dev/null || true
-		echo "clankers-rebuild: detached (own scope), logging to $LOG — the app will quit, rebuild, and reopen."
+		echo "clankers-rebuild: detached (own scope), logging to $LOG — it will rebuild, then quit and reopen the app."
 		exit 0
 	fi
 	CLANKERS_DETACHED=1 setsid nohup "$0" "$@" >>"$LOG" 2>&1 </dev/null &
 	disown 2>/dev/null || true
-	echo "clankers-rebuild: detached, logging to $LOG — the app will quit, rebuild, and reopen."
+	echo "clankers-rebuild: detached, logging to $LOG — it will rebuild, then quit and reopen the app."
 	exit 0
 fi
 
@@ -77,47 +99,44 @@ if [[ -n "$built_from" && "$(cat "$APP/.clankers-built-from" 2>/dev/null || true
 	exit 0
 fi
 
-pkill -f "clankers[.]app/t3code" 2>/dev/null || true
-for _ in $(seq 1 30); do
-	pgrep -f "clankers[.]app/t3code" >/dev/null || break
-	sleep 1
-done
-pkill -9 -f "clankers[.]app/t3code" 2>/dev/null || true
-sleep 1
+# Reuse native helpers only when native/ is clean and the binaries are newer
+# than its last commit; otherwise cargo rebuilds them in the build below.
+if [[ -z "$(git status --porcelain -- native/ 2>/dev/null)" ]]; then
+	native_ts="$(git log -1 --format=%ct -- native/ 2>/dev/null || echo 0)"
+	reuse=1
+	for b in native/resource-monitor/target/x86_64-unknown-linux-gnu/release/t3-resource-monitor native/hyprland-snap-shot/target/x86_64-unknown-linux-gnu/release/t3-hyprland-snap-shot native/kde-snap-shot/target/x86_64-unknown-linux-gnu/release/t3-kde-snap-shot; do
+		if [[ ! -x "$b" ]] || [[ "$(stat -c %Y "$b" 2>/dev/null || echo 0)" -lt "$native_ts" ]]; then
+			reuse=""
+			break
+		fi
+	done
+	if [[ -n "$reuse" ]]; then
+		export T3CODE_DESKTOP_REUSE_RESOURCE_MONITOR=1 T3CODE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS=1
+	fi
+fi
 
 if [[ "${FAST:-0}" == 1 ]]; then
-	# Fast path: `dir` target skips squashfs/.deb compression and the
-	# AppImage extract roundtrip (~30s vs ~80s). No --delete so the
-	# AppRun loader from the last full build is preserved.
-	[[ -x "$APP/AppRun" ]] || fail "no $APP/AppRun — run a full rebuild first, then use --fast"
-	if [[ -z "$(git status --porcelain -- native/ 2>/dev/null)" ]]; then
-		native_ts="$(git log -1 --format=%ct -- native/ 2>/dev/null || echo 0)"
-		reuse=1
-		for b in native/resource-monitor/target/x86_64-unknown-linux-gnu/release/t3-resource-monitor native/hyprland-snap-shot/target/x86_64-unknown-linux-gnu/release/t3-hyprland-snap-shot native/kde-snap-shot/target/x86_64-unknown-linux-gnu/release/t3-kde-snap-shot; do
-			if [[ ! -x "$b" ]] || [[ "$(stat -c %Y "$b" 2>/dev/null || echo 0)" -lt "$native_ts" ]]; then
-				reuse=""
-				break
-			fi
-		done
-		if [[ -n "$reuse" ]]; then
-			export T3CODE_DESKTOP_REUSE_RESOURCE_MONITOR=1 T3CODE_DESKTOP_REUSE_LINUX_CAPTURE_HELPERS=1
-		fi
-	fi
+	# Fast path (default): `dir` target skips squashfs/.deb compression and the
+	# AppImage extract roundtrip. No --delete so the AppRun loader from the last
+	# full build is preserved. `--full` restores the AppImage/deb artifact build.
+	[[ -x "$APP/AppRun" ]] || fail "no $APP/AppRun — run a full rebuild first (clankers-rebuild --full)"
 	stage "Clankers rebuild (fast): building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
 	PATH="$PWD/node_modules/.bin:$PATH" node scripts/build-desktop-artifact.ts --platform linux --target dir --arch x64 --output-dir release/fast >>"$LOG" 2>&1 || fail "build failed"
-	stage "Clankers rebuild: installing" 1
 	[[ -d release/fast/linux-unpacked ]] || fail "no linux-unpacked produced"
+	stage "Clankers rebuild: installing" 1
+	quit_app
 	rsync -a release/fast/linux-unpacked/ "$APP/" || fail "install failed"
 else
 	stage "Clankers rebuild: building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
 	PATH="$PWD/node_modules/.bin:$PATH" vp run dist:desktop:linux >>"$LOG" 2>&1 || fail "build failed"
 
-	stage "Clankers rebuild: installing" 1
 	img="$(ls -t release/T3-Code-*-x86_64.AppImage 2>/dev/null | head -n 1)" || fail "no AppImage found"
 	[[ -n "$img" ]] || fail "no AppImage found"
 	tmp="$(mktemp -d)"
 	trap 'rm -rf "$tmp"' EXIT
 	(cd "$tmp" && "$FORK/$img" --appimage-extract >/dev/null) || fail "extract failed"
+	stage "Clankers rebuild: installing" 1
+	quit_app
 	rsync -a --delete "$tmp/squashfs-root/" "$APP/" || fail "install failed"
 fi
 echo "$built_from" >"$APP/.clankers-built-from" 2>/dev/null || true
