@@ -29,6 +29,8 @@ bind("SUPER + CTRL + ALT + Z", "Reset zoom", function()
 	hl.config({ cursor = { zoom_factor = 1 } })
 end)
 
+bind("SUPER + SHIFT + Z", "Toggle zen mode", utils.quickshell_ipc("zen", "toggle"))
+
 -- SUPER+D: tap toggles voxtype, hold (>=400ms) push-to-talk
 -- (start on hold, transcribe+paste+submit on release).
 -- ESC while the gesture is active cancels: discards the recording and

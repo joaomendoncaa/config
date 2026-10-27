@@ -100,6 +100,7 @@ PanelWindow {
             spacing: Config.gapInner
 
             Workspaces {
+                visible: !Config.zenMode
                 Layout.fillWidth: false
                 Layout.minimumWidth: implicitWidth
                 Layout.preferredWidth: implicitWidth
@@ -110,12 +111,14 @@ PanelWindow {
             AgentWidget {
                 id: agentWidget
 
+                visible: !Config.zenMode
                 barWindow: bar
                 service: bar.agentService
                 onOpening: bar.agentPanelOpening()
             }
 
             Submap {
+                visible: !Config.zenMode
                 submapName: bar.submapName
             }
 
@@ -130,12 +133,14 @@ PanelWindow {
             spacing: Config.gapInner
 
             Recording {
+                visible: !Config.zenMode
                 isRecording: bar.isRecording
             }
 
             SolanaTokenPinned {
                 id: solanaWidget
 
+                visible: !Config.zenMode
                 service: bar.priceLabels
                 barWindow: bar
                 onOpening: bar.solanaPanelOpening()
@@ -144,28 +149,33 @@ PanelWindow {
             Weather {
                 id: weatherWidget
 
+                visible: !Config.zenMode
                 barWindow: bar
                 notificationService: bar.notificationService
                 onOpening: bar.weatherPanelOpening()
             }
 
             Monitor {
+                visible: !Config.zenMode
             }
 
             VpnButton {
                 id: vpnButton
 
+                visible: !Config.zenMode
                 service: bar.vpnService
                 barWindow: bar
                 onOpening: bar.vpnPanelOpening()
             }
 
             Sink {
+                visible: !Config.zenMode
             }
 
             NotificationButton {
                 id: notifButton
 
+                visible: !Config.zenMode
                 barWindow: bar
                 notificationService: bar.notificationService
                 updatesItem: barUpdates
@@ -184,6 +194,9 @@ PanelWindow {
                     bar.updatePowerMenuPosition();
                     bar.togglePowerMenu();
                 }
+            }
+
+            Zen {
             }
 
         }

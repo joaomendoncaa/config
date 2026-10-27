@@ -43,7 +43,7 @@ PanelWindow {
     exclusionMode: ExclusionMode.Ignore
     color: "transparent"
 
-    visible: !_finalized
+    visible: !_finalized && !Config.zenMode
 
     HoverHandler { id: hoverHandler }
 

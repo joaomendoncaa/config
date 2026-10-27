@@ -126,7 +126,7 @@ Item {
                     return Quickshell.screens[i];
             return null;
         }
-        visible: root.showOsd
+        visible: root.showOsd && !Config.zenMode
         implicitWidth: 220
         implicitHeight: root.isRecording ? Config.fontSize * 3 : Config.fontSize * 3.4
         color: "transparent"

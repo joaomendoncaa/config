@@ -14,6 +14,7 @@ import "Modules/Lock"
 import "Modules/PowerMenu"
 import "Modules/Superbar"
 import "Modules/Notifications"
+import "Modules/ZenMode"
 
 Scope {
     id: root
@@ -142,6 +143,14 @@ Scope {
     }
 
     IpcHandler {
+        target: "zen"
+
+        function toggle() {
+            Config.zenMode = !Config.zenMode
+        }
+    }
+
+    IpcHandler {
         target: "power-menu"
 
         function toggle() {
@@ -224,6 +233,15 @@ Scope {
         }
     }
 
+    // Entering zen mode dismisses everything else the bar may have open.
+    Connections {
+        target: Config
+        function onZenModeChanged() {
+            if (Config.zenMode)
+                root.closePanelsExcept('')
+        }
+    }
+
     // On quickshell startup, query current submap (in case hyprland is already in a submap)
     Process {
         id: submapInitProcess
@@ -246,6 +264,8 @@ Scope {
     BlurMask {
         visible: root.launcherOpen || root.powerMenuOpen || barComponent.notificationCenterOpen || barComponent.solanaPanelOpen || barComponent.agentPanelOpen || barComponent.vpnPanelOpen || barComponent.weatherPanelOpen
     }
+
+    ZenMode { }
 
     Bar {
         id: barComponent

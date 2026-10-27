@@ -23,6 +23,7 @@ QtObject {
     property int borderSize: 2
     property int borderRadius: 5
     property int gapsOut: 10
+    property bool zenMode: false
     property string foregroundSelected: "#000000"
     property string foregroundSecondary: "#60FFFFFF"
     property string background: "transparent"
