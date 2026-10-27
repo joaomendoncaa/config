@@ -59,6 +59,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "${CLANKERS_DETACHED:-}" ]]; then
+	: >"$LOG"
 	# Escape into our own systemd scope: this script kills the app at the end,
 	# and anything left in the birth scope (app terminal, agent session)
 	# gets SIGKILLed with it. Fall back to setsid when systemd is absent.
@@ -90,14 +91,6 @@ echo "rebuild: previous workspace: '${prev_ws:-<none>}' (hyprctl: $(command -v h
 
 cd "$FORK" || fail "cannot cd to $FORK"
 FORK="$PWD"
-built_from=""
-if [[ -z "$(git status --porcelain 2>/dev/null)" ]]; then
-	built_from="$(git rev-parse HEAD 2>/dev/null || true)"
-fi
-if [[ -n "$built_from" && "$(cat "$APP/.clankers-built-from" 2>/dev/null || true)" == "$built_from" ]]; then
-	stage "Clankers rebuild: already current ($(git branch --show-current 2>/dev/null) @ $(git rev-parse --short HEAD 2>/dev/null))" 0 8
-	exit 0
-fi
 
 # Reuse native helpers only when native/ is clean and the binaries are newer
 # than its last commit; otherwise cargo rebuilds them in the build below.
@@ -115,17 +108,15 @@ if [[ -z "$(git status --porcelain -- native/ 2>/dev/null)" ]]; then
 	fi
 fi
 
+rsync_args=(-a)
 if [[ "${FAST:-0}" == 1 ]]; then
 	# Fast path (default): `dir` target skips squashfs/.deb compression and the
-	# AppImage extract roundtrip. No --delete so the AppRun loader from the last
-	# full build is preserved. `--full` restores the AppImage/deb artifact build.
+	# AppImage extract roundtrip. `--full` restores the AppImage/deb artifact build.
 	[[ -x "$APP/AppRun" ]] || fail "no $APP/AppRun — run a full rebuild first (clankers-rebuild --full)"
 	stage "Clankers rebuild (fast): building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
 	PATH="$PWD/node_modules/.bin:$PATH" node scripts/build-desktop-artifact.ts --platform linux --target dir --arch x64 --output-dir release/fast >>"$LOG" 2>&1 || fail "build failed"
 	[[ -d release/fast/linux-unpacked ]] || fail "no linux-unpacked produced"
-	stage "Clankers rebuild: installing" 1
-	quit_app
-	rsync -a release/fast/linux-unpacked/ "$APP/" || fail "install failed"
+	src="release/fast/linux-unpacked"
 else
 	stage "Clankers rebuild: building $(git branch --show-current) @ $(git rev-parse --short HEAD)" 1
 	PATH="$PWD/node_modules/.bin:$PATH" vp run dist:desktop:linux >>"$LOG" 2>&1 || fail "build failed"
@@ -135,11 +126,28 @@ else
 	tmp="$(mktemp -d)"
 	trap 'rm -rf "$tmp"' EXIT
 	(cd "$tmp" && "$FORK/$img" --appimage-extract >/dev/null) || fail "extract failed"
-	stage "Clankers rebuild: installing" 1
-	quit_app
-	rsync -a --delete "$tmp/squashfs-root/" "$APP/" || fail "install failed"
+	src="$tmp/squashfs-root"
+	rsync_args=(-a --delete)
 fi
-echo "$built_from" >"$APP/.clankers-built-from" 2>/dev/null || true
+
+# Install by staging the full tree next to $APP, then swapping directories by
+# rename. A failed build or install never touches the running app; a failed swap
+# puts the old tree back. The staging copy is cheap (reflink on btrfs) and it
+# keeps the AppRun/usr wrapper the fast path's dir output does not carry.
+new="$APP.new"
+old="$APP.old"
+rm -rf "$new" "$old"
+stage "Clankers rebuild: installing" 1
+cp -a --reflink=auto "$APP" "$new" || fail "install failed: cannot stage $new"
+rsync "${rsync_args[@]}" "$src"/ "$new"/ || fail "install failed: $APP untouched"
+[[ -x "$new/AppRun" && -x "$new/t3code" ]] || fail "install failed: staged app incomplete"
+quit_app
+mv "$APP" "$old" || fail "install failed: cannot move $APP aside"
+mv "$new" "$APP" || {
+	mv "$old" "$APP" 2>/dev/null
+	fail "install failed: old app restored"
+}
+rm -rf "$old"
 rm -f "$HOME/.local/share/applications/com.t3tools.T3Code.desktop" "$HOME/.local/share/icons/com.t3tools.T3Code.desktop.png"
 
 export T3CODE_HOME="${T3CODE_HOME:-$HOME/.clankers}"
