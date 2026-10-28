@@ -9,7 +9,7 @@ Rectangle {
     property bool hasRAM: true
     property bool hasGPU: true
 
-    width: Config.buttonSize * 2
+    width: Config.buttonSize * 2 + 8
     height: Config.buttonSize
     radius: Config.buttonBorderRadius
     color: mouseArea.containsMouse ? Config.backgroundHovered : "transparent"
@@ -48,6 +48,10 @@ Rectangle {
         property var upHistory: new Array(historySize).fill(0)
         property real currentDown: 0
         property real currentUp: 0
+        property real diskUsage: 0
+        property real diskBusy: 0
+        property var prevDiskBusy: ({})
+        property var prevDiskTime: null
 
         function scaleForBar(value) {
             if (value <= 0)
@@ -190,6 +194,45 @@ Rectangle {
             pendingNetUp = 0;
         }
 
+        function parseDiskBusy(text) {
+            var now = Date.now();
+            var lines = text.split('\n');
+            var current = {
+            };
+            for (var i = 0; i < lines.length; i++) {
+                var parts = lines[i].trim().split(/\s+/);
+                if (parts.length < 14)
+                    continue;
+
+                var name = parts[2];
+                if (name.startsWith("loop") || name.startsWith("ram") || name.startsWith("zram") || name.startsWith("sr") || name.startsWith("fd"))
+                    continue;
+
+                current[name] = parseInt(parts[12], 10) || 0;
+            }
+            if (prevDiskTime === null) {
+                prevDiskBusy = current;
+                prevDiskTime = now;
+                return ;
+            }
+            var elapsed = now - prevDiskTime;
+            if (elapsed <= 0)
+                return ;
+
+            var maxDelta = 0;
+            for (var dev in current) {
+                if (prevDiskBusy[dev] === undefined)
+                    continue;
+
+                var delta = current[dev] - prevDiskBusy[dev];
+                if (delta > maxDelta)
+                    maxDelta = delta;
+            }
+            prevDiskBusy = current;
+            prevDiskTime = now;
+            diskBusy = Math.min(1, maxDelta / elapsed);
+        }
+
         function pushSample(cpu, ram, gpu, netDown, netUp) {
             cpuHistory[writeIndex] = Math.round(cpu * 10) / 10;
             ramHistory[writeIndex] = Math.round(ram * 10) / 10;
@@ -231,6 +274,59 @@ Rectangle {
 
         blockLoading: true
         path: "file:///proc/net/dev"
+    }
+
+    FileView {
+        id: diskstatsFile
+
+        blockLoading: true
+        path: "file:///proc/diskstats"
+    }
+
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: diskstatsFile.reload()
+    }
+
+    Connections {
+        function onTextChanged() {
+            if (diskstatsFile.loaded)
+                internal.parseDiskBusy(diskstatsFile.text());
+        }
+
+        target: diskstatsFile
+    }
+
+    Process {
+        id: diskProc
+
+        command: ["df", "-B1", "--output=used,size", "/"]
+        running: false
+        stdout: StdioCollector {
+            waitForEnd: true
+            onStreamFinished: {
+                var lines = String(text || "").trim().split("\n");
+                if (lines.length < 2)
+                    return ;
+                var parts = lines[lines.length - 1].trim().split(/\s+/);
+                if (parts.length < 2)
+                    return ;
+                var used = parseInt(parts[0], 10);
+                var total = parseInt(parts[1], 10);
+                if (total > 0)
+                    internal.diskUsage = Math.max(0, Math.min(1, used / total));
+            }
+        }
+    }
+
+    Timer {
+        interval: 30000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: if (!diskProc.running) diskProc.running = true
     }
 
     Process {
@@ -300,8 +396,10 @@ Rectangle {
         target: statFile
     }
 
-    Rectangle {
-        id: canvasBg
+    Item {
+        id: diskBar
+
+        property bool blinkOn: false
 
         anchors.left: parent.left
         anchors.leftMargin: internal.hPadding
@@ -309,7 +407,72 @@ Rectangle {
         anchors.topMargin: internal.padding
         anchors.bottom: parent.bottom
         anchors.bottomMargin: internal.padding
-        width: root.width - netBars.width - internal.hPadding * 2 - 2
+        width: 5
+
+        readonly property real gap: 1
+        readonly property real segmentHeight: (height - gap * 3) / 4
+
+        Timer {
+            interval: internal.diskBusy >= 0.90 ? 180 : 800
+            running: internal.diskBusy >= 0.75
+            repeat: true
+            onTriggered: diskBar.blinkOn = !diskBar.blinkOn
+            onRunningChanged: diskBar.blinkOn = running
+        }
+
+        Repeater {
+            model: 4
+
+            Rectangle {
+                id: diskSegment
+
+                readonly property real fillRatio: Math.max(0, Math.min(1, internal.diskUsage * 4 - index))
+
+                x: 0
+                y: diskBar.height - (index + 1) * diskBar.segmentHeight - index * diskBar.gap
+                width: diskBar.width
+                height: diskBar.segmentHeight
+                radius: 1
+                color: Config.foregroundSecondary
+                clip: true
+
+                Rectangle {
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    height: parent.height * diskSegment.fillRatio
+                    radius: 1
+                    color: Config.foreground
+                }
+            }
+        }
+
+        // HDD activity light: only the three gaps show it, so the gaps
+        // slow/fast blink under load while the bar itself stays unchanged.
+        Repeater {
+            model: 3
+
+            Rectangle {
+                x: 0
+                y: diskBar.height - (index + 1) * diskBar.segmentHeight - (index + 1) * diskBar.gap
+                width: diskBar.width
+                height: diskBar.gap
+                color: Config.foreground
+                opacity: internal.diskBusy >= 0.75 ? (diskBar.blinkOn ? 1 : 0) : 0
+            }
+        }
+    }
+
+    Rectangle {
+        id: canvasBg
+
+        anchors.left: diskBar.right
+        anchors.leftMargin: 3
+        anchors.right: netBars.left
+        anchors.rightMargin: 2
+        anchors.top: parent.top
+        anchors.topMargin: internal.padding
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: internal.padding
         radius: 2
         clip: true
         color: Config.foregroundSecondary
