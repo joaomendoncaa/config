@@ -1,7 +1,8 @@
 gui:
   nerdFontsVersion: "3"
-  authorColors:
-    'joaomendoncaa': '#ff0000'
+  theme:
+    authorColors:
+      'joaomendoncaa': '#ff0000'
 disableStartupPopups: true
 keybinding:
   universal:
