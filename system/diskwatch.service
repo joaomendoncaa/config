@@ -1,0 +1,26 @@
+[Unit]
+Description=Disk IO sampler for stall triage (writes to tmpfs)
+After=local-fs.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/diskwatch
+ExecStopPost=-/usr/local/bin/diskwatch flush
+Restart=always
+RestartSec=5
+TimeoutStopSec=10
+Nice=-2
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+OOMScoreAdjust=-500
+MemoryMax=512M
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=yes
+LogsDirectory=diskwatch
+LogsDirectoryMode=0755
+Environment=DISKWATCH_INTERVAL=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Install the diskwatch sampler (root service) and its flush timer.
+set -euo pipefail
+
+root=$(cd -- "$(dirname -- "$(readlink -f -- "$0")")/.." && pwd)
+
+sudo install -Dm755 "$root/bin/diskwatch" /usr/local/bin/diskwatch
+for unit in diskwatch.service diskwatch-flush.service diskwatch-flush.timer; do
+	sudo install -Dm644 "$root/system/$unit" "/etc/systemd/system/$unit"
+done
+
+# Per-process IO wait (field 42 of /proc/PID/stat). Cheap, and lets the log
+# show which processes were blocked waiting, not just which moved bytes.
+sudo tee /etc/sysctl.d/90-diskwatch.conf >/dev/null <<'EOF'
+# Per-process IO wait accounting for diskwatch.
+kernel.task_delayacct = 1
+EOF
+sudo sysctl -q -p /etc/sysctl.d/90-diskwatch.conf
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now diskwatch-flush.timer
+sudo systemctl enable --now diskwatch.service
+sudo systemctl restart diskwatch.service
+sudo systemctl --no-pager --lines=5 status diskwatch.service

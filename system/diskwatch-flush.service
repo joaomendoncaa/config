@@ -1,0 +1,16 @@
+[Unit]
+Description=Compress finished diskwatch hours into /var/log/diskwatch
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/diskwatch flush
+TimeoutStartSec=120
+Nice=19
+IOSchedulingClass=idle
+NoNewPrivileges=yes
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=yes
+LogsDirectory=diskwatch
+LogsDirectoryMode=0755

@@ -1,0 +1,503 @@
+#!/usr/bin/env python3
+"""diskwatch - find what bogged the disk at a given time.
+
+  diskwatch                 run the sampler (systemd does this)
+  diskwatch at [TIME] [MIN] top IO users around TIME (default now, +/-5 min)
+                            TIME: 14:32, 2026-10-28T14:32, or an epoch
+  diskwatch flush           gzip completed hour files to /var/log/diskwatch
+  diskwatch selftest        exercise sampling + flush + summary
+
+Samples every DISKWATCH_INTERVAL seconds (default 5):
+  /proc/PID/task/*/io  bytes a process asked to write (wchar, includes
+                     buffered), bytes that hit the block layer, IO wait ticks
+  /proc/PID/stat     state (D = blocked) + delayacct IO wait
+  /proc/pressure/io  was the system stalled, and for how long
+  /proc/diskstats    per-device throughput and busy time
+
+Data is appended to /run/diskwatch/YYYYMMDDTHH-<boot>.tsv (tmpfs). Writes
+there never touch the disk, so the sampler keeps recording while the disk is
+wedged. Every 5 min a timer snapshots the current hour into /var/log/diskwatch
+and gzips completed hours (7 day retention); a hard reboot loses at most the
+last few minutes.
+
+Caveat: wchar counts every write (pipes and ttys too). Depending on the
+filesystem, buffered writeback is submitted by the writer or by kworker*
+threads, so the write-intent and block-IO tables can disagree; that
+disagreement is the useful part. Accounting is per live thread, so a
+long-lived shell or systemd never inherits its children's bytes; the flip
+side is that commands shorter than the sample interval can be missed.
+"""
+
+import datetime as dt
+import gzip
+import os
+import shutil
+import sys
+import time
+
+INTERVAL = float(os.environ.get("DISKWATCH_INTERVAL", "5"))
+RUN_DIR = os.environ.get("DISKWATCH_RUN_DIR", "/run/diskwatch")
+LOG_DIR = os.environ.get("DISKWATCH_LOG_DIR", "/var/log/diskwatch")
+KEEP_DAYS = 7
+MIN_WRITE = 256 * 1024  # ignore procs moving less than this per sample
+
+CLK_TCK = os.sysconf("SC_CLK_TCK")
+BLOCK_EXCLUDE = ("loop", "ram", "zram", "sr", "fd")
+_whole_dev = {}
+
+
+def _read(path, binary=False):
+    try:
+        with open(path, "rb" if binary else "r") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
+def _boot_id():
+    raw = _read("/proc/sys/kernel/random/boot_id") or ""
+    return raw.strip().replace("-", "")[:8] or "boot"
+
+
+BOOT = _boot_id()
+
+
+def read_psi():
+    out = {}
+    raw = _read("/proc/pressure/io")
+    if not raw:
+        return out
+    for line in raw.splitlines():
+        parts = line.split()
+        try:
+            vals = dict(p.split("=") for p in parts[1:])
+            out[parts[0]] = (float(vals["avg10"]), int(vals["total"]))
+        except (KeyError, ValueError):
+            continue
+    return out
+
+
+def is_whole_disk(dev):
+    v = _whole_dev.get(dev)
+    if v is None:
+        v = _whole_dev[dev] = os.path.isdir("/sys/block/" + dev)
+    return v
+
+
+def read_diskstats():
+    out = {}
+    raw = _read("/proc/diskstats")
+    if not raw:
+        return out
+    for line in raw.splitlines():
+        f = line.split()
+        if len(f) < 14 or f[2].startswith(BLOCK_EXCLUDE) or not is_whole_disk(f[2]):
+            continue
+        out[f[2]] = (int(f[5]) * 512, int(f[9]) * 512, int(f[12]))
+    return out
+
+
+def read_proc(pid):
+    stat = _read(f"/proc/{pid}/stat")
+    if not stat:
+        return None
+    close = stat.rfind(")")
+    if close < 0:
+        return None
+    rest = stat[close + 1:].split()
+    if len(rest) < 40:
+        return None
+    try:
+        tids = os.listdir(f"/proc/{pid}/task")
+    except OSError:
+        return None
+
+    # Sum live threads. /proc/PID/io (process-wide) also re-adds bytes from
+    # reaped children onto the parent; read the per-thread files instead so a
+    # long-lived shell or systemd does not look like the disk hog.
+    wchar = rb = wb = 0
+    for tid in tids:
+        raw = _read(f"/proc/{pid}/task/{tid}/io")
+        if not raw:
+            continue
+        for line in raw.splitlines():
+            k, _, v = line.partition(":")
+            if k == "wchar":
+                wchar += int(v)
+            elif k == "read_bytes":
+                rb += int(v)
+            elif k == "write_bytes":
+                wb += int(v)
+    return (
+        wchar,
+        rb,
+        wb,
+        int(rest[39]) * 1000 // CLK_TCK,  # field 42: delayacct_blkio_ticks
+        stat[stat.find("(") + 1:close].replace("\t", " ").replace("\n", " "),
+        rest[0],
+    )
+
+
+def read_cmdline(pid):
+    raw = _read(f"/proc/{pid}/cmdline", binary=True) or b""
+    s = raw.replace(b"\0", b" ").decode("utf-8", "replace").strip()
+    return s.replace("\t", " ").replace("\n", " ")[:160]
+
+
+def sample_rows(prev, first=False):
+    """Return (rows, current) where rows are deltas worth logging."""
+    current = {}
+    rows = []
+    for entry in os.scandir("/proc"):
+        if not entry.name.isdigit():
+            continue
+        pid = int(entry.name)
+        cur = read_proc(pid)
+        if cur is None:
+            continue
+        current[pid] = cur
+        old = prev.get(pid)
+        if old is None:
+            if first:
+                continue
+            # The PID was not here last sample, so its counters all accrued
+            # inside this interval. Log the totals to catch short-lived work.
+            delta = list(cur[:4])
+        else:
+            delta = [max(0, cur[i] - old[i]) for i in range(4)]
+        wchar, rb, wb, blkio = delta
+        if wchar < MIN_WRITE and not rb and not wb and blkio < 50 and cur[5] != "D":
+            continue
+        rows.append((pid, cur[4], cur[5], wchar, rb, wb, blkio, read_cmdline(pid)))
+    return rows, current
+
+
+def open_log(t, fh, hour):
+    h = dt.datetime.fromtimestamp(t).strftime("%Y%m%dT%H")
+    if fh is not None and h == hour:
+        return fh, hour
+    if fh is not None:
+        fh.close()
+    return open(os.path.join(RUN_DIR, f"{h}-{BOOT}.tsv"), "a", buffering=1), h
+
+
+def run():
+    os.umask(0o022)
+    os.makedirs(RUN_DIR, mode=0o755, exist_ok=True)
+    try:
+        import ctypes
+        ctypes.CDLL(None, use_errno=True).mlockall(1)  # MCL_CURRENT: never page in from disk
+    except Exception:
+        pass
+
+    prev_procs, prev_disks, prev_psi = {}, {}, None
+    fh, hour, last_wall = None, None, None
+    first = True
+    try:
+        while True:
+            started = time.monotonic()
+            t = time.time()
+            gap = 0.0 if last_wall is None else max(0.0, t - last_wall)
+            last_wall = t
+
+            psi = read_psi()
+            disks = read_diskstats()
+            rows, prev_procs = sample_rows(prev_procs, first)
+            first = False
+
+            some = psi.get("some", (0.0, 0))
+            full = psi.get("full", (0.0, 0))
+            if prev_psi is None:
+                dsome = dfull = 0
+            else:
+                dsome = max(0, some[1] - prev_psi[0])
+                dfull = max(0, full[1] - prev_psi[1])
+            prev_psi = (some[1], full[1])
+
+            lines = [
+                f"G\t{t:.3f}\t{dt.datetime.fromtimestamp(t).astimezone().isoformat(timespec='seconds')}"
+                f"\t{gap:.3f}\t{some[0]:.2f}\t{full[0]:.2f}\t{dsome}\t{dfull}\n"
+            ]
+            for dev, (rb, wb, busy) in disks.items():
+                old = prev_disks.get(dev)
+                if old is None:
+                    continue
+                d = (max(0, rb - old[0]), max(0, wb - old[1]), max(0, busy - old[2]))
+                if any(d):
+                    lines.append(f"D\t{dev}\t{d[0]}\t{d[1]}\t{d[2]}\n")
+            prev_disks = disks
+            for pid, comm, state, wchar, rb, wb, blkio, cmd in rows:
+                lines.append(f"P\t{pid}\t{comm}\t{state}\t{wchar}\t{rb}\t{wb}\t{blkio}\t{cmd}\n")
+
+            try:
+                fh, hour = open_log(t, fh, hour)
+                fh.write("".join(lines))
+            except OSError as e:
+                print(f"diskwatch: write: {e}", file=sys.stderr)
+                fh = None
+
+            time.sleep(max(0.5, INTERVAL - (time.monotonic() - started)))
+    finally:
+        if fh is not None:
+            fh.close()
+
+
+def log_files(start, end):
+    lo = start.astimezone().replace(tzinfo=None) - dt.timedelta(hours=2)
+    hi = end.astimezone().replace(tzinfo=None) + dt.timedelta(hours=2)
+    try:
+        live = {n for n in os.listdir(RUN_DIR) if n.endswith(".tsv")}
+    except OSError:
+        live = set()
+    found = []
+    for d, ext in ((RUN_DIR, ".tsv"), (LOG_DIR, ".tsv.gz")):
+        try:
+            names = os.listdir(d)
+        except OSError:
+            continue
+        for n in names:
+            if not n.endswith(ext):
+                continue
+            if d == LOG_DIR and n[:-3] in live:
+                continue  # tmpfs copy is complete up to now
+            try:
+                hr = dt.datetime.strptime(n[:11], "%Y%m%dT%H")
+            except ValueError:
+                continue
+            if lo <= hr <= hi:
+                found.append(os.path.join(d, n))
+    return sorted(found)
+
+
+def read_lines(path):
+    opener = gzip.open if path.endswith(".gz") else open
+    try:
+        with opener(path, "rt", errors="replace") as f:
+            yield from f
+    except OSError as e:
+        print(f"diskwatch: cannot read {path}: {e}", file=sys.stderr)
+
+
+def collect(start, end):
+    st = {"gap": 0.0, "some": 0, "full": 0, "peak": 0.0, "n": 0,
+          "procs": {}, "devs": {}, "t0": None, "t1": None}
+    lo, hi = start.timestamp(), end.timestamp()
+    in_window = False
+    for path in log_files(start, end):
+        for line in read_lines(path):
+            if line.startswith("G\t"):
+                f = line.rstrip("\n").split("\t")
+                if len(f) < 8:
+                    continue
+                in_window = lo <= float(f[1]) <= hi
+                if not in_window:
+                    continue
+                ts = float(f[1])
+                st["n"] += 1
+                st["gap"] += float(f[3])
+                st["some"] += int(f[6])
+                st["full"] += int(f[7])
+                st["peak"] = max(st["peak"], float(f[4]))
+                st["t0"] = ts if st["t0"] is None else min(st["t0"], ts)
+                st["t1"] = ts if st["t1"] is None else max(st["t1"], ts)
+            elif in_window and line.startswith("P\t"):
+                f = line.rstrip("\n").split("\t")
+                if len(f) < 9:
+                    continue
+                a = st["procs"].setdefault((f[1], f[2]), [0, 0, 0, 0, "", 0])
+                a[0] += int(f[4])
+                a[1] += int(f[5])
+                a[2] += int(f[6])
+                a[3] += int(f[7])
+                cmd = "\t".join(f[8:])
+                if cmd:
+                    a[4] = cmd
+                a[5] += 1 if f[3] == "D" else 0
+            elif in_window and line.startswith("D\t"):
+                f = line.rstrip("\n").split("\t")
+                if len(f) < 5:
+                    continue
+                a = st["devs"].setdefault(f[1], [0, 0, 0])
+                a[0] += int(f[2])
+                a[1] += int(f[3])
+                a[2] += int(f[4])
+    return st
+
+
+def _size(n):
+    if n >= 1 << 30:
+        return f"{n / (1 << 30):.1f} GiB"
+    if n >= 1 << 20:
+        return f"{n / (1 << 20):.1f} MiB"
+    if n >= 1 << 10:
+        return f"{n / (1 << 10):.0f} KiB"
+    return f"{n} B"
+
+
+def _dur(sec):
+    if sec >= 3600:
+        return f"{sec / 3600:.1f}h"
+    if sec >= 60:
+        return f"{sec / 60:.1f}m"
+    return f"{sec:.1f}s"
+
+
+def parse_when(s):
+    now = dt.datetime.now().astimezone()
+    if s.isdigit():
+        return dt.datetime.fromtimestamp(int(s)).astimezone()
+    try:
+        t = dt.datetime.fromisoformat(s)
+    except ValueError:
+        try:
+            t = dt.datetime.combine(now.date(), dt.time.fromisoformat(s))
+        except ValueError:
+            sys.exit(f"bad time {s!r}: use HH:MM, ISO, or an epoch")
+    return t.replace(tzinfo=now.tzinfo) if t.tzinfo is None else t
+
+
+def show_at(when_s, window_min):
+    when = dt.datetime.now().astimezone() if when_s == "now" else parse_when(when_s)
+    half = dt.timedelta(minutes=window_min / 2)
+    st = collect(when - half, when + half)
+    if not st["n"]:
+        sys.exit("no samples in that window (sampler running? hour not flushed yet?)")
+
+    gap = st["gap"] or 1.0
+    t0 = dt.datetime.fromtimestamp(st["t0"]).astimezone()
+    t1 = dt.datetime.fromtimestamp(st["t1"]).astimezone()
+    print(f"window    {t0:%Y-%m-%d %H:%M:%S} -> {t1:%H:%M:%S}  ({_dur(gap)}, {st['n']} samples)")
+    print(f"pressure  some {st['some'] / 1e6:.1f}s ({st['some'] / 1e6 / gap * 100:.1f}%)   "
+          f"full {st['full'] / 1e6:.1f}s ({st['full'] / 1e6 / gap * 100:.1f}%)   "
+          f"peak some avg10 {st['peak']:.1f}")
+    print("          some = at least one task stalled on IO; full = all tasks stalled")
+    if st["devs"]:
+        print(f"\n{'device':<12} {'read':>10} {'write':>10} {'busy':>7}")
+        for dev, (rb, wb, busy) in sorted(
+                st["devs"].items(), key=lambda kv: kv[1][0] + kv[1][1], reverse=True)[:6]:
+            print(f"{dev:<12} {_size(rb):>10} {_size(wb):>10} {busy / 1000 / gap * 100:>6.1f}%")
+
+    procs = st["procs"]
+
+    def top(score):
+        items = [((pid, comm), a, score(a)) for (pid, comm), a in procs.items()]
+        items = [x for x in items if x[2] > 0]
+        return sorted(items, key=lambda x: x[2], reverse=True)[:8]
+
+    print("\ntop by write intent (wchar; buffered writes included, pipes too)")
+    print(f"{'written':>10}  {'pid':>7}  {'blocked':>8}  comm / cmd")
+    for (pid, comm), a, _ in top(lambda a: a[0]):
+        print(f"{_size(a[0]):>10}  {pid:>7}  {_dur(a[3] / 1000):>8}  {comm} {a[4][:80]}")
+
+    print("\ntop by block-layer IO (bytes actually sent to the disk)")
+    print(f"{'io':>10}  {'pid':>7}  {'blocked':>8}  comm / cmd")
+    for (pid, comm), a, _ in top(lambda a: a[1] + a[2]):
+        print(f"{_size(a[1] + a[2]):>10}  {pid:>7}  {_dur(a[3] / 1000):>8}  {comm} {a[4][:80]}")
+    print("\n# block IO is physical; on some filesystems writeback is charged to kworker*")
+    print("# per-thread accounting: commands shorter than the sample interval can be missed")
+
+
+def flush():
+    os.makedirs(LOG_DIR, mode=0o755, exist_ok=True)
+    current = dt.datetime.now().strftime("%Y%m%dT%H") + f"-{BOOT}.tsv"
+    try:
+        names = os.listdir(RUN_DIR)
+    except OSError:
+        names = []
+    for name in sorted(names):
+        if not name.endswith(".tsv"):
+            continue
+        src = os.path.join(RUN_DIR, name)
+        is_current = name == current
+        try:
+            if not is_current and time.time() - os.path.getmtime(src) < 60:
+                continue
+            with open(src, "rb") as f:
+                data = f.read()
+        except OSError:
+            continue
+        cut = data.rfind(b"\n") + 1
+        if cut <= 0:
+            continue
+        data = data[:cut]
+
+        dst = os.path.join(LOG_DIR, name + ".gz")
+        tmp = f"{dst}.tmp.{os.getpid()}"
+        try:
+            with gzip.open(tmp, "wb", compresslevel=6) as fo:
+                fo.write(data)
+            with open(tmp, "rb") as f:
+                os.fsync(f.fileno())
+            os.replace(tmp, dst)
+            if not is_current:
+                os.unlink(src)
+        except OSError as e:
+            print(f"diskwatch: flush {name}: {e}", file=sys.stderr)
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+
+    cutoff = time.time() - KEEP_DAYS * 86400
+    try:
+        for name in os.listdir(LOG_DIR):
+            p = os.path.join(LOG_DIR, name)
+            try:
+                if name.endswith(".gz") and os.path.getmtime(p) < cutoff:
+                    os.unlink(p)
+            except OSError:
+                pass
+    except OSError:
+        pass
+
+
+def selftest():
+    global RUN_DIR, LOG_DIR
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as d:
+        RUN_DIR, LOG_DIR = os.path.join(d, "run"), os.path.join(d, "log")
+        os.makedirs(RUN_DIR)
+
+        prev = {os.getpid(): read_proc(os.getpid())}
+        with open(os.path.join(d, "blob"), "wb") as f:
+            f.write(b"x" * (2 << 20))
+        rows, _ = sample_rows(prev)
+        assert any(p == os.getpid() and w > 0 for p, _, _, w, *_ in rows), rows
+
+        when = dt.datetime.now() - dt.timedelta(hours=2)
+        name = when.strftime("%Y%m%dT%H") + ".tsv"
+        with open(os.path.join(RUN_DIR, name), "w") as f:
+            f.write(f"G\t{when.timestamp():.3f}\t-\t5\t1.5\t1.0\t1000\t500\n")
+            f.write("P\t42\thog\tR\t999999\t111\t222\t0\tsome cmd\n")
+            f.write("D\tnvme0n1\t1000\t2000\t4000\n")
+        old = time.time() - 300
+        os.utime(os.path.join(RUN_DIR, name), (old, old))
+        flush()
+        assert os.path.exists(os.path.join(LOG_DIR, name + ".gz"))
+        st = collect(when - dt.timedelta(minutes=1), when + dt.timedelta(minutes=1))
+        assert st["procs"][("42", "hog")][0] == 999999, st["procs"]
+        assert st["devs"]["nvme0n1"] == [1000, 2000, 4000], st["devs"]
+        print("selftest ok")
+
+
+def main():
+    args = sys.argv[1:]
+    cmd = args[0] if args else "run"
+    if cmd == "run":
+        run()
+    elif cmd == "flush":
+        flush()
+    elif cmd == "at":
+        show_at(args[1] if len(args) > 1 else "now",
+                float(args[2]) if len(args) > 2 else 10.0)
+    elif cmd == "selftest":
+        selftest()
+    elif cmd in ("-h", "--help", "help"):
+        print(__doc__)
+    else:
+        sys.exit(f"unknown command {cmd!r}; try --help")
+
+
+if __name__ == "__main__":
+    main()
