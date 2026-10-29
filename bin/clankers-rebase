@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# Rebase the patch stack onto main, refresh dependencies, then rebuild the app.
+# Conflicts stop the rebase for the agent/user to resolve; rerun with --continue.
+set -euo pipefail
+export PATH="$HOME/.config.jmmm.sh/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+FORK="${CLANKERS_FORK:-$HOME/lab/clankers}"
+BRANCH="${CLANKERS_BRANCH:-jm/patches}"
+BACKUP="$BRANCH-pre-rebase"
+MODE="${1:-}"
+
+cd "$FORK"
+git_dir="$(git rev-parse --git-dir)"
+
+if [[ -d "$git_dir/rebase-merge" || -d "$git_dir/rebase-apply" ]]; then
+	if [[ "$MODE" != "--continue" ]]; then
+		echo "clankers-rebase: a rebase is already in progress."
+		echo "resolve conflicts, git add them, then run: clankers-rebase --continue"
+		exit 1
+	fi
+	GIT_EDITOR=true git rebase --continue
+elif [[ "$MODE" == "--continue" ]]; then
+	echo "clankers-rebase: no rebase in progress" >&2
+	exit 1
+fi
+
+if [[ -n "$(git status --porcelain)" ]]; then
+	echo "clankers-rebase: working tree dirty; commit or stash first:" >&2
+	git status --short
+	exit 1
+fi
+
+git fetch origin main
+git branch -f "$BACKUP" "$BRANCH"
+git checkout -q main
+git merge --ff-only origin/main
+git checkout -q "$BRANCH"
+if ! git rebase main; then
+	echo "clankers-rebase: conflicts:"
+	git diff --name-only --diff-filter=U
+	echo "resolve them, git add, then run: clankers-rebase --continue"
+	exit 1
+fi
+
+echo "clankers-rebase: done at $(git rev-parse --short HEAD); rebuilding"
+clankers-rebuild

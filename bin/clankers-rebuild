@@ -91,6 +91,13 @@ echo "rebuild: previous workspace: '${prev_ws:-<none>}' (hyprctl: $(command -v h
 
 cd "$FORK" || fail "cannot cd to $FORK"
 FORK="$PWD"
+# A rebase can add or bump dependencies; a stale install leaves imports unbundled at runtime.
+stamp="$PWD/node_modules/.modules.yaml"
+newest="$(ls -t "$PWD/package.json" "$PWD/pnpm-lock.yaml" "$PWD/pnpm-workspace.yaml" "$PWD"/apps/*/package.json "$PWD"/packages/*/package.json 2>/dev/null | head -n 1)"
+if [[ ! -f "$stamp" || "$newest" -nt "$stamp" ]]; then
+	stage "Clankers rebuild: installing dependencies" 1
+	PATH="$PWD/node_modules/.bin:$PATH" vp i >>"$LOG" 2>&1 || fail "dependency install failed"
+fi
 
 # Reuse native helpers only when native/ is clean and the binaries are newer
 # than its last commit; otherwise cargo rebuilds them in the build below.
@@ -136,6 +143,8 @@ fi
 # keeps the AppRun/usr wrapper the fast path's dir output does not carry.
 new="$APP.new"
 old="$APP.old"
+# The server bundle must load cleanly; a missing runtime dependency only shows after install.
+node apps/server/dist/bin.mjs --version >>"$LOG" 2>&1 || fail "server bundle failed to load (missing runtime dependency?)"
 rm -rf "$new" "$old"
 stage "Clankers rebuild: installing" 1
 cp -a --reflink=auto "$APP" "$new" || fail "install failed: cannot stage $new"
