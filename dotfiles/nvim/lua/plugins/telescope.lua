@@ -7,7 +7,13 @@ return {
         },
 
         config = function()
-            require('telescope').setup {
+            local plugin = require 'telescope'
+            local builtin = require 'telescope.builtin'
+            local key = require('utils.misc').key
+
+            key({ 'n', 'v' }, '<leader>sc', builtin.command_history)
+
+            plugin.setup {
                 defaults = {
                     color_devicons = true,
                     sorting_strategy = 'ascending',
@@ -28,7 +34,7 @@ return {
                 },
             }
 
-            require('telescope').load_extension 'ui-select'
+            plugin.load_extension 'ui-select'
         end,
     },
 }
