@@ -5,7 +5,6 @@ return {
 
     config = function()
         local IGNORE_LIST = {
-            'codecompanion',
             'NvimTree',
             'help',
             'nofile',

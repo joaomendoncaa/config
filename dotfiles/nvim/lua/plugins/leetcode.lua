@@ -24,7 +24,6 @@ return {
             key('n', '<leader>Lr', '<CMD>Leet run<CR>')
             key('n', '<leader>Ls', '<CMD>Leet submit<CR>')
             key('n', '<leader>Lb', '<CMD>Leet open<CR>')
-            key('n', '<leader>Lh', '<CMD>CodeCompanion /dsa<CR>')
 
             plugin.setup {
                 arg = SUFIX,

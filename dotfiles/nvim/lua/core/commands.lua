@@ -76,7 +76,6 @@ local auto_keep_unique_sidebar = function()
     local conflicting_wins = {
         sidebar = {
             'nvimtree',
-            'codecompanion',
             'undotree',
         },
     }

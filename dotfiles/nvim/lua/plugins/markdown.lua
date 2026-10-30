@@ -4,7 +4,7 @@ return {
 
         event = 'VeryLazy',
         lazy = true,
-        ft = { 'codecompanion', 'sourcermarkdown' },
+        ft = { 'sourcermarkdown' },
         dependencies = { 'nvim-treesitter/nvim-treesitter', 'echasnovski/mini.nvim' },
 
         config = function()
@@ -25,7 +25,7 @@ return {
         ft = { 'markdown' },
 
         -- In the case npm is not installed the plugin has an utility to do so.
-        build = 'cd app && npm install --no-package-lock && npm install msgpack-lite --no-save --no-package-lock',
+        build = 'cd app && npm install --no-save --no-package-lock && npm install msgpack-lite --no-save --no-package-lock',
 
         -- Upon initializing the plugin, a temporary CSS file will be created in the
         -- /tmp directory. This file will be hashed from its contents so that it

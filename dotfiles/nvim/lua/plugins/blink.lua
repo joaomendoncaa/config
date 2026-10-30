@@ -128,10 +128,6 @@ return {
 
             sources = {
                 default = function()
-                    if vim.bo.filetype == 'codecompanion' then
-                        return { 'codecompanion' }
-                    end
-
                     if vim.bo.filetype == 'markdown' then
                         return { 'markdown', 'path' }
                     end
@@ -146,11 +142,6 @@ return {
                         end,
                     },
                     markdown = { name = 'RenderMarkdown', module = 'render-markdown.integ.blink' },
-                    codecompanion = {
-                        name = 'CodeCompanion',
-                        module = 'codecompanion.providers.completion.blink',
-                        enabled = true,
-                    },
                 },
             },
         }

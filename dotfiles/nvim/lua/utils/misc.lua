@@ -91,7 +91,7 @@ function M.resize_pane(direction, amount)
 end
 
 function M.handle_save_quit()
-    local wl_nowrite = { 'codecompanion', 'nvimtree', 'qf' }
+    local wl_nowrite = { 'nvimtree', 'qf' }
     local buf = vim.api.nvim_get_current_buf()
     local ft = string.lower(vim.bo[buf].filetype or '')
     local is_nowrite = vim.tbl_contains(wl_nowrite, ft)
