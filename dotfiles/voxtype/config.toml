@@ -228,6 +228,10 @@ pre_type_delay_ms = 0
 # See troubleshooting docs for the required Hyprland submap configuration.
 # Note: usually unnecessary now that wait_for_modifier_release is enabled by
 # default; the submap workaround is only needed if /dev/input is unreadable.
+#
+# Save the pasted transcript so Quickshell's clipboard history can tag the
+# entry as a dictation (see Scripts/clipboard-intercept).
+post_output_command = 'f="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/voxtype/last-dictation"; wl-paste --type text --no-newline > "$f" 2>/dev/null || rm -f "$f"'
 
 # Post-processing command (optional)
 # Pipe transcribed text through an external command for cleanup before output.

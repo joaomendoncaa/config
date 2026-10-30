@@ -9,10 +9,12 @@ Rectangle {
 
     property string app: ""
     property string appIcon: ""
+    property string desktopEntry: ""
     property string summary: ""
     property string body: ""
     property string image: ""
     property string glyph: ""
+    property real value: -1
     property int urgency: 1
     property double timestamp: 0
     property double expireTimeout: 0
@@ -20,9 +22,10 @@ Rectangle {
     property int duplicateCount: 1
     property bool busy: false
     property bool showCloseButton: false
+    property bool showExpiryBar: false
     property bool dismissing: false
     property real popupProgress: -1
-    property int iconSize: 40
+    property int iconSize: 22
     property real titleFontSize: Config.fontSize
     property real bodyFontSize: Config.fontSize
     property int bodyMaxLines: 3
@@ -32,16 +35,25 @@ Rectangle {
     property var notificationActions: []
     property bool hideActionButtons: false
     readonly property bool hovered: hoverTracker.hovered
-    readonly property string smallIconSource: image.length > 0 ? image : iconSource(appIcon)
-    readonly property bool hasGlyph: glyph.length > 0
-    readonly property bool compactGlyph: N.shouldRenderCompactGlyph(glyph, smallIconSource)
-    readonly property bool hasSmallIcon: smallIconSource.length > 0
-    readonly property bool summaryStartsWithGlyph: N.summaryStartsWithGlyph(summary)
-    readonly property bool singleLineToast: sanitizedBody.length === 0
-    readonly property bool collapseRedundantIcon: singleLineToast && !hasGlyph && summaryStartsWithGlyph
+    readonly property bool critical: urgency >= 2
+    readonly property color dangerColor: "#e5534b"
+    readonly property color appTint: Qt.hsla(N.appHue(app) / 360, 0.42, 0.52, 1)
+    readonly property color badgeColor: critical ? dangerColor : appTint
+    readonly property string badgeText: critical ? "⚠" : (glyph.length > 0 ? glyph : N.appInitial(app))
+    readonly property string resolvedIcon: {
+        var candidates = [appIcon, desktopEntry, app];
+        for (var i = 0; i < candidates.length; i++) {
+            var src = root.iconSource(candidates[i]);
+            if (src.length > 0)
+                return src;
+        }
+        return "";
+    }
+    readonly property bool iconReady: !critical && resolvedIcon.length > 0 && badgeImage.status === Image.Ready
     readonly property string sanitizedBody: N.sanitizeBody(body, app, appIcon)
     readonly property string styledBody: sanitizedBody.replace(/\r\n|\r|\n/g, "<br/>")
-    readonly property string displaySummary: root.duplicateCount > 1 ? root.summary + " [" + root.duplicateCount + "]" : root.summary
+    readonly property string displaySummary: duplicateCount > 1 ? summary + " [" + duplicateCount + "]" : summary
+    readonly property string timeLabel: timestamp > 0 ? Qt.formatTime(new Date(timestamp), "HH:mm") : ""
     property real _expiryProgress: 1
     readonly property color dimColor: Qt.darker(Config.foreground, 1.4)
     readonly property color bodyColor: Qt.darker(Config.foreground, 1.15)
@@ -80,9 +92,11 @@ Rectangle {
 
     }
     implicitWidth: 380
-    implicitHeight: mainColumn.implicitHeight
+    implicitHeight: mainColumn.implicitHeight + 24
     radius: cornerRadius
     color: root.cardBackground
+    border.width: root.cardBorderWidth
+    border.color: root.cardBorderColor
     clip: true
 
     Timer {
@@ -102,9 +116,9 @@ Rectangle {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onClicked: {
             if (mouse.button === Qt.RightButton)
-                root.closeRequested()
+                root.closeRequested();
             else
-                root.cardClicked()
+                root.cardClicked();
         }
     }
 
@@ -114,127 +128,83 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: 0
-        anchors.leftMargin: 0
-        anchors.rightMargin: 0
-        spacing: 0
+        anchors.margins: 12
+        spacing: 6
 
+        // Header: app badge, sender name, time, dismiss
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 12
-            Layout.rightMargin: 12
-            Layout.topMargin: root.singleLineToast ? 7 : 10
-            Layout.bottomMargin: root.singleLineToast ? 7 : 10
-            spacing: root.collapseRedundantIcon ? 0 : (root.compactGlyph ? 8 : 12)
+            spacing: 8
 
-            Item {
-                id: smallIconSlot
+            Rectangle {
+                id: badge
 
-                Layout.preferredWidth: visible ? root.iconSize : 0
-                Layout.preferredHeight: visible ? root.iconSize : 0
+                Layout.preferredWidth: root.iconSize
+                Layout.preferredHeight: root.iconSize
                 Layout.alignment: Qt.AlignVCenter
-                visible: !root.collapseRedundantIcon && !root.compactGlyph && root.hasSmallIcon && (root.hasGlyph || smallIconImage.status !== Image.Error || appIconFallback.visible)
+                radius: Math.max(4, Math.min(10, root.iconSize * 0.35))
+                color: root.iconReady ? "transparent" : root.badgeColor
 
                 Image {
-                    id: smallIconImage
+                    id: badgeImage
 
                     anchors.fill: parent
-                    source: root.smallIconSource
-                    sourceSize.width: smallIconSlot.width * Screen.devicePixelRatio
-                    sourceSize.height: smallIconSlot.height * Screen.devicePixelRatio
+                    source: root.resolvedIcon
+                    sourceSize.width: root.iconSize * Screen.devicePixelRatio
+                    sourceSize.height: root.iconSize * Screen.devicePixelRatio
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
                     smooth: true
-                    visible: !root.hasGlyph || smallIconImage.status === Image.Ready
-                }
-
-                Image {
-                    id: appIconFallback
-                    anchors.fill: parent
-                    source: root.appIcon.length > 0 ? iconSource(root.appIcon) : ""
-                    sourceSize.width: smallIconSlot.width * Screen.devicePixelRatio
-                    sourceSize.height: smallIconSlot.height * Screen.devicePixelRatio
-                    fillMode: Image.PreserveAspectFit
-                    asynchronous: true
-                    smooth: true
-                    visible: !root.hasGlyph && smallIconImage.status === Image.Error && source.length > 0
+                    visible: root.iconReady
                 }
 
                 Text {
                     anchors.centerIn: parent
-                    visible: root.hasGlyph && smallIconImage.status !== Image.Ready && !appIconFallback.visible
-                    text: root.glyph
-                    color: Config.foreground
+                    visible: !root.iconReady
+                    text: root.badgeText
+                    color: "#FFFFFF"
                     font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize + 8
+                    font.pixelSize: Math.round(root.iconSize * 0.5)
+                    font.bold: true
                 }
 
             }
 
             Text {
-                Layout.alignment: Qt.AlignVCenter
-                visible: root.compactGlyph
-                text: root.glyph
-                color: Config.foreground
-                font.family: Config.fontFamily
-                font.pixelSize: Config.fontSize
-            }
-
-            ColumnLayout {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
-                spacing: 2
+                text: root.app
+                color: Config.foregroundSecondary
+                font.family: Config.fontFamily
+                font.pixelSize: Math.max(10, root.titleFontSize - 4)
+                elide: Text.ElideRight
+                maximumLineCount: 1
+                visible: text.length > 0
+            }
 
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
-                    visible: root.summary.length > 0
-
-                    Text {
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        text: root.displaySummary
-                        color: Config.foreground
-                        font.family: Config.fontFamily
-                        font.pixelSize: root.titleFontSize
-                        font.bold: true
-                        wrapMode: Text.WordWrap
-                        elide: Text.ElideRight
-                        maximumLineCount: 2
-                    }
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    Layout.topMargin: 2
-                    visible: root.sanitizedBody.length > 0
-                    text: root.styledBody
-                    textFormat: Text.StyledText
-                    color: root.bodyColor
-                    linkColor: Config.accent
-                    font.family: Config.fontFamily
-                    font.pixelSize: root.bodyFontSize
-                    wrapMode: Text.WordWrap
-                    elide: Text.ElideRight
-                    maximumLineCount: root.bodyMaxLines
-                }
-
+            Text {
+                Layout.alignment: Qt.AlignVCenter
+                text: root.timeLabel
+                color: root.dimColor
+                font.family: Config.fontFamily
+                font.pixelSize: Math.max(10, root.titleFontSize - 4)
+                visible: text.length > 0
             }
 
             Rectangle {
-                Layout.preferredWidth: 18
-                Layout.preferredHeight: 18
+                Layout.preferredWidth: 20
+                Layout.preferredHeight: 20
                 Layout.alignment: Qt.AlignVCenter
                 visible: root.showCloseButton
                 radius: Math.min(4, Config.borderRadius)
-                color: closeArea.containsMouse ? Config.foregroundSecondary : "transparent"
+                color: closeArea.containsMouse ? Config.backgroundHovered : "transparent"
 
                 Text {
                     anchors.centerIn: parent
                     text: "✕"
                     color: root.dimColor
                     font.family: Config.fontFamily
-                    font.pixelSize: root.bodyFontSize
+                    font.pixelSize: Math.max(10, root.bodyFontSize - 3)
                 }
 
                 MouseArea {
@@ -250,36 +220,115 @@ Rectangle {
 
         }
 
-        // Action buttons — shown when hovered and actions exist
+        // Summary and body, with the notification's picture beside them
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 12
-            Layout.rightMargin: 12
-            Layout.bottomMargin: 8
-            spacing: 6
-            visible: !root.hideActionButtons && root.hovered && root.notificationActions.length > 0
+            spacing: 10
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignTop
+                spacing: 3
+
+                Text {
+                    Layout.fillWidth: true
+                    visible: root.displaySummary.length > 0
+                    text: root.displaySummary
+                    color: Config.foreground
+                    font.family: Config.fontFamily
+                    font.pixelSize: root.titleFontSize
+                    font.bold: true
+                    wrapMode: Text.WordWrap
+                    elide: Text.ElideRight
+                    maximumLineCount: 2
+                }
+
+                Text {
+                    Layout.fillWidth: true
+                    visible: root.sanitizedBody.length > 0
+                    text: root.styledBody
+                    textFormat: Text.StyledText
+                    color: root.bodyColor
+                    linkColor: Config.accent
+                    font.family: Config.fontFamily
+                    font.pixelSize: root.bodyFontSize
+                    wrapMode: Text.WordWrap
+                    elide: Text.ElideRight
+                    maximumLineCount: root.bodyMaxLines
+                }
+
+                // Freedesktop `value`: volume, brightness, downloads
+                Rectangle {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 2
+                    Layout.preferredHeight: 5
+                    visible: root.value >= 0
+                    radius: 2.5
+                    color: Config.hexWithAlpha(Config.foreground, "28")
+                    clip: true
+
+                    Rectangle {
+                        width: parent.width * Math.max(0, Math.min(1, root.value))
+                        height: parent.height
+                        radius: 2.5
+                        color: Config.foregroundSecondary
+                    }
+
+                }
+
+            }
+
+            Rectangle {
+                Layout.preferredWidth: 44
+                Layout.preferredHeight: 44
+                Layout.alignment: Qt.AlignVCenter
+                visible: root.image.length > 0 && bodyImage.status !== Image.Error
+                radius: 8
+                clip: true
+                color: "transparent"
+
+                Image {
+                    id: bodyImage
+
+                    anchors.fill: parent
+                    source: root.image
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    smooth: true
+                }
+
+            }
+
+        }
+
+        // Action buttons — visible for as long as the card is
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.topMargin: 2
+            spacing: 4
+            visible: !root.hideActionButtons && root.notificationActions.length > 0
 
             Repeater {
                 model: root.notificationActions
 
                 Rectangle {
+                    required property var modelData
+                    required property int index
                     property bool isHovered: false
 
-                    Layout.preferredHeight: 24
-                    Layout.preferredWidth: Math.max(actionText.implicitWidth + 16, 48)
-                    radius: 4
-                    color: isHovered ? Config.backgroundHovered : Config.backgroundColoredSecondary
-                    border.color: Config.foregroundSecondary
-                    border.width: 1
+                    Layout.preferredHeight: 26
+                    Layout.preferredWidth: Math.max(actionText.implicitWidth + 20, 48)
+                    radius: Math.max(2, Math.min(8, root.cornerRadius * 0.6))
+                    color: index === 0 ? Config.hexWithAlpha(Config.foreground, "14") : (isHovered ? Config.backgroundHovered : "transparent")
 
                     Text {
                         id: actionText
 
                         anchors.centerIn: parent
                         text: modelData.text || modelData.identifier || "Open"
-                        color: isHovered ? Config.foreground : root.bodyColor
+                        color: index === 0 ? Config.foreground : root.bodyColor
                         font.family: Config.fontFamily
-                        font.pixelSize: root.bodyFontSize - 2
+                        font.pixelSize: Math.max(10, root.bodyFontSize - 3)
                         elide: Text.ElideRight
                     }
 
@@ -292,9 +341,10 @@ Rectangle {
                         onExited: parent.isHovered = false
                         onClicked: {
                             if (modelData && modelData.invoke)
-                                modelData.invoke()
-                            root.actionInvoked(modelData)
-                            root.closeRequested()
+                                modelData.invoke();
+
+                            root.actionInvoked(modelData);
+                            root.closeRequested();
                         }
                     }
                 }
@@ -303,13 +353,14 @@ Rectangle {
 
     }
 
+    // Expiry countdown; a value bar already occupies the bottom edge when present
     Rectangle {
         anchors.left: parent.left
         anchors.bottom: parent.bottom
-        height: 3
-        visible: !root.dismissing && !root.busy && (root.popupProgress >= 0 || root.expireTimeout > 0)
+        height: 2
+        visible: root.showExpiryBar && !root.dismissing && !root.busy && root.value < 0 && (root.popupProgress >= 0 || root.expireTimeout > 0)
         z: 1
-        color: Config.foreground
+        color: Config.hexWithAlpha(Config.foreground, "33")
         width: root.width * (root.popupProgress >= 0 ? root.popupProgress : root._expiryProgress)
         bottomLeftRadius: root.cornerRadius
         bottomRightRadius: root.cornerRadius
@@ -342,6 +393,7 @@ Rectangle {
             SequentialAnimation on x {
                 loops: Animation.Infinite
                 running: busyBar.visible
+
                 NumberAnimation {
                     from: -busyIndicator.width
                     to: busyBar.width

@@ -67,13 +67,6 @@ PanelWindow {
         id: clickThrough
     }
 
-    Updates {
-        id: barUpdates
-
-        notificationService: bar.notificationService
-        visible: false
-    }
-
     Item {
         anchors.top: parent.top
         anchors.left: parent.left
@@ -178,7 +171,6 @@ PanelWindow {
                 visible: !Config.zenMode
                 barWindow: bar
                 notificationService: bar.notificationService
-                updatesItem: barUpdates
                 onOpening: bar.notificationPanelOpening()
             }
 

@@ -14,10 +14,24 @@ Item {
     if (!entry || typeof entry !== "object") return
     if (!entry.type) return
     var key = entryKey(entry)
-    if (history.length > 0 && entryKey(history[0]) === key) return
+    if (history.length > 0 && entryKey(history[0]) === key) {
+      // The poll can see the text before voxtype's hook drops its marker:
+      // upgrade the top entry instead of dropping the late dictation flag.
+      if (entry.dictation && !history[0].dictation) {
+        history[0].dictation = true
+        history = history.slice()
+        persist()
+      }
+      return
+    }
     var next = [entry]
     for (var i = 0; i < history.length && next.length < 300; i++) {
-      if (entryKey(history[i]) !== key) next.push(history[i])
+      if (entryKey(history[i]) === key) {
+        // Keep the tag when the same text is re-copied from history.
+        if (history[i].dictation) entry.dictation = true
+        continue
+      }
+      next.push(history[i])
     }
     history = next
     persist()

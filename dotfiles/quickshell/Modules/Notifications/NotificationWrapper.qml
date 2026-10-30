@@ -12,6 +12,9 @@ QtObject {
     property string body: ""
     property string image: ""
     property string glyph: ""
+    property real value: -1
+    property string tag: ""
+    property bool sticky: false
     property int urgency: NotificationUrgency.Normal
     property double expireTimeout: 0
     property double timestamp: 0
@@ -37,7 +40,7 @@ QtObject {
     }
 
     function startPopupTimer() {
-        if (!popupTimer || wrapper.busy) return
+        if (!popupTimer || wrapper.busy || wrapper.sticky) return
         var duration = service ? service.durationFor(wrapper.urgency, wrapper.expireTimeout) : 8000
         if (duration <= 0) return
         popupTimer.interval = duration

@@ -14,23 +14,6 @@ function sanitizeBody(body, app, appIcon) {
         .replace(/^\s*(?:https?:\/\/|www\.)?(?:[a-z0-9-]+\.)+[a-z]{2,}(?::\d+)?(?:\/\S*)?\s+/i, "")
 }
 
-function summaryStartsWithGlyph(summary) {
-    var text = String(summary || "").replace(/^\s+/, "")
-    if (!text) return false
-
-    var offset = 1
-    var first = text.charCodeAt(0)
-    if (first >= 0xd800 && first <= 0xdbff && text.length > 1) offset = 2
-
-    var spaces = 0
-    while (offset < text.length && text.charAt(offset) === " ") {
-        spaces++
-        offset++
-    }
-
-    return spaces >= 2
-}
-
 function shouldBypassDnd(notification, criticalUrgency) {
     var appName = String((notification && notification.appName) || "")
     if (appName === "notify-send-custom") return true
@@ -52,19 +35,63 @@ function glyphFromHints(hints) {
     return ""
 }
 
-function shouldRenderCompactGlyph(glyph, iconSource) {
-    return String(glyph || "").length > 0 && String(iconSource || "").length === 0
+// freedesktop `value` hint: 0-100 int (dunst), occasionally a 0-1 float.
+function valueFromHints(hints) {
+    try {
+        if (!hints) return -1
+        var raw = hints["value"]
+        if (raw === undefined || raw === null || raw === "") return -1
+        var value = Number(raw)
+        if (!isFinite(value) || value < 0) return -1
+        if (value > 1) value = value / 100
+        return Math.max(0, Math.min(1, value))
+    } catch (e) {
+        return -1
+    }
+}
+
+// In-place replacement for sliders (volume, brightness, media position).
+function tagFromHints(hints) {
+    try {
+        if (!hints) return ""
+        return String(hints["x-dunst-stack-tag"] || hints["x-canonical-private-synchronous"] || "")
+    } catch (e) {
+        return ""
+    }
+}
+
+// Stable per-app hue, so the same sender always gets the same badge colour.
+function appHue(app) {
+    var text = String(app || "")
+    var hash = 2166136261
+    for (var i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i)
+        hash = (hash * 16777619) >>> 0
+    }
+    return hash % 360
+}
+
+function appInitial(app) {
+    var text = String(app || "")
+    for (var i = 0; i < text.length; i++) {
+        if (/[a-z0-9]/i.test(text.charAt(i))) return text.charAt(i).toUpperCase()
+    }
+    return "•"
 }
 
 function contentHash(obj) {
     var u = obj ? obj.urgency : undefined
     var uStr = (u === null || u === undefined) ? "" : String(u)
+    var v = obj ? obj.value : undefined
+    var vStr = (v === null || v === undefined) ? "" : String(v)
     var parts = [
         String((obj && obj.app) || ""),
         String((obj && obj.appIcon) || ""),
         String((obj && obj.summary) || ""),
         String((obj && obj.body) || ""),
         String((obj && obj.glyph) || ""),
+        String((obj && obj.tag) || ""),
+        vStr,
         uStr
     ]
     var s = parts.join("\u0001")
@@ -96,6 +123,9 @@ function snapshotOf(notification, timestamp) {
         body: n.body || "",
         image: n.image || "",
         glyph: glyphFromHints(n.hints),
+        value: valueFromHints(n.hints),
+        tag: tagFromHints(n.hints),
+        sticky: false,
         urgency: n.urgency,
         expireTimeout: expireTimeout,
         timestamp: timestamp === undefined ? Date.now() : timestamp,
@@ -114,8 +144,12 @@ function historyEntry(value, normalUrgency) {
         appIcon: e.appIcon || "",
         summary: e.summary || "",
         body: e.body || "",
-        image: e.image || "",
+        // image:// providers only live as long as the notification they came from
+        image: String(e.image || "").indexOf("image://") === 0 ? "" : (e.image || ""),
         glyph: e.glyph || "",
+        value: typeof e.value === "number" ? e.value : -1,
+        tag: e.tag || "",
+        sticky: !!e.sticky,
         urgency: typeof e.urgency === "number" ? e.urgency : normalUrgency,
         expireTimeout: 0,
         timestamp: e.timestamp || 0
@@ -220,8 +254,11 @@ function imageExtension(srcPath) {
 // ---------------------------------------------------------------------------
 // Notification Rules Engine
 // Rules are evaluated in order; first match wins.
-// Each rule: { match: {appName?, desktopEntry?, summary?, body?}, matchType: "contains"|"exact"|"regex",
-//              action: "ignore"|"mute"|"popup_only"|"no_history"|"default", urgencyOverride?: int,
+// Each rule: { match: {appName?, desktopEntry?, summary?, body?, urgency?},
+//              matchType: "contains"|"exact"|"regex",
+//              action: "ignore"|"mute"|"popup_only"|"no_history"|"default",
+//              urgencyOverride?: int, timeout?: seconds | "never",
+//              interrupt?: bool (show during Do not disturb),
 //              sound?: bool (default true — set false to skip the notification ding) }
 // ---------------------------------------------------------------------------
 
@@ -250,6 +287,15 @@ function _matchesRule(rule, snapshot) {
     }
     if (match.body !== undefined && match.body !== null) {
         if (!_matchField(snapshot.body, match.body, matchType)) return false
+    }
+    if (match.urgency !== undefined && match.urgency !== null) {
+        var urgency = snapshot.urgency
+        var wanted = match.urgency
+        if (typeof wanted === "string") {
+            var names = { low: 0, normal: 1, critical: 2 }
+            wanted = names[wanted.toLowerCase()]
+        }
+        if (wanted === undefined || Number(wanted) !== Number(urgency)) return false
     }
     return true
 }

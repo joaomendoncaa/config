@@ -4,14 +4,12 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import qs.Core
-import "../UpdatePanel"
 
 Rectangle {
     id: root
 
     property QtObject barWindow: null
     property var notificationService: null
-    property QtObject updatesItem: null
     property bool popupOpen: false
 
     signal toggle()
@@ -119,56 +117,30 @@ Rectangle {
                     var globalPos = root.mapToItem(null, 0, 0)
                     var popupTop = globalPos.y + root.height + Config.gapsOut + Config.borderSize
                     var screenH = root.barWindow.screen ? root.barWindow.screen.height : 1080
-                    popup.implicitHeight = screenH - popupTop - Config.gapsOut - 12
+                    // ponytail: overshoot the edge; xdg popup constraint margins leave a hairline per compositor
+                    popup.implicitHeight = screenH - popupTop + 12
                 }
             }
 
             Keys.onEscapePressed: root.popupOpen = false
 
             Item {
+                id: notifWrapper
+
                 anchors.fill: parent
 
-                Item {
-                    id: notifWrapper
-
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: parent.height > 12 ? (parent.height - 12) * 3 / 4 : 0
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: notifCenter.forceActiveFocus()
-                    }
-
-                    NotificationCenter {
-                        id: notifCenter
-                        anchors.fill: parent
-                        notificationService: root.notificationService
-                        popupOpen: true
-
-                        onDismissed: root.popupOpen = false
-                    }
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: notifCenter.forceActiveFocus()
                 }
 
-                Item {
-                    id: updateWrapper
+                NotificationCenter {
+                    id: notifCenter
+                    anchors.fill: parent
+                    notificationService: root.notificationService
+                    popupOpen: true
 
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: parent.height > 12 ? (parent.height - 12) * 1 / 4 : 0
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: updateCard.forceActiveFocus()
-                    }
-
-                    UpdatePanel {
-                        id: updateCard
-                        anchors.fill: parent
-                        updatesItem: root.updatesItem
-                    }
+                    onDismissed: root.popupOpen = false
                 }
             }
         }

@@ -79,6 +79,8 @@ Rectangle {
 
     implicitWidth: 400
     radius: Config.borderRadius
+    bottomLeftRadius: 0
+    bottomRightRadius: 0
     color: Config.backgroundColored
     clip: true
 
@@ -152,7 +154,10 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
+        anchors.topMargin: 16
+        anchors.leftMargin: 16
+        anchors.rightMargin: 16
+        anchors.bottomMargin: 0
         spacing: 10
 
             // Header row — title + icon buttons
@@ -323,11 +328,15 @@ Rectangle {
                         }
 
                         Layout.fillWidth: true
+                        Layout.preferredWidth: 1
                         app: modelData.entry.app
                         appIcon: modelData.entry.appIcon
+                        desktopEntry: modelData.entry._desktopEntry || ""
                         summary: modelData.entry.summary
                         body: modelData.entry.body
                         image: modelData.entry.image
+                        glyph: modelData.entry.glyph || ""
+                        value: typeof modelData.entry.value === "number" ? modelData.entry.value : -1
                         urgency: modelData.entry.urgency
                         timestamp: modelData.entry.timestamp
                         expireTimeout: modelData.entry.expireTimeout
@@ -335,7 +344,8 @@ Rectangle {
                         busy: !!modelData.entry._busy
                         cornerRadius: Config.borderRadius
                         showCloseButton: true
-                        iconSize: 32
+                        showExpiryBar: true
+                        iconSize: 22
                         titleFontSize: Config.fontSize - 2
                         bodyFontSize: Config.fontSize - 4
                         bodyMaxLines: 2
@@ -392,8 +402,11 @@ Rectangle {
                 width: historyListView.width
                 app: modelData.entry.app
                 appIcon: modelData.entry.appIcon
+                desktopEntry: modelData.entry._desktopEntry || ""
                 summary: modelData.entry.summary
                 body: modelData.entry.body
+                glyph: modelData.entry.glyph || ""
+                value: typeof modelData.entry.value === "number" ? modelData.entry.value : -1
                 urgency: modelData.entry.urgency
                 timestamp: modelData.entry.timestamp
                 expireTimeout: 0
@@ -401,7 +414,7 @@ Rectangle {
                 image: ""
                 cornerRadius: Config.borderRadius
                 showCloseButton: false
-                iconSize: 32
+                iconSize: 22
                 titleFontSize: Config.fontSize - 2
                 bodyFontSize: Config.fontSize - 4
                 bodyMaxLines: 2

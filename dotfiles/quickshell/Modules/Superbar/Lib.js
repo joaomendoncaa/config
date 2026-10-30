@@ -241,7 +241,7 @@ function parseClipboardHistory(raw) {
  * @param {number} limit - Maximum number of results
  * @returns {Array<{entry: *, index: number}>} Filtered clipboard entries with their original indices
  */
-function filterClipboardHistory(history, query, limit) {
+function filterClipboardHistory(history, query, limit, onlyDictation) {
     var needle = String(query || '').trim().toLowerCase()
     var max = Math.max(0, Number(limit) || 50)
     if (max === 0) return []
@@ -250,6 +250,7 @@ function filterClipboardHistory(history, query, limit) {
     for (var i = 0; i < history.length; i++) {
         var entry = history[i]
         if (!entry) continue
+        if (onlyDictation && !entry.dictation) continue
         var searchText = ''
         if (typeof entry === 'string') {
             searchText = entry

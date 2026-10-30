@@ -11,7 +11,7 @@ import qs.Core
 PanelWindow {
     id: root
 
-    property var modes: ["apps", "emojis", "files", "clipboard", "calc", "theme"]
+    property var modes: ["apps", "emojis", "files", "clipboard", "dictation", "calc", "theme"]
     property string mode: "apps"
     property string filterText: ""
     property int selectedIndex: 0
@@ -69,7 +69,8 @@ PanelWindow {
                 "fullText": it.fullText || "",
                 "imagePath": it.imagePath || "",
                 "filePath": it.filePath || "",
-                "mime": it.mime || ""
+                "mime": it.mime || "",
+                "dictation": !!it.dictation
             });
         }
         if (displayModel.count === 0)
@@ -94,7 +95,9 @@ PanelWindow {
         case "files":
             return searchFiles();
         case "clipboard":
-            return searchClipboard();
+            return searchClipboard(false);
+        case "dictation":
+            return searchClipboard(true);
         case "calc":
             return searchCalc();
         case "theme":
@@ -144,11 +147,11 @@ PanelWindow {
         });
     }
 
-    function searchClipboard() {
+    function searchClipboard(onlyDictation) {
         if (clipboardData.length === 0 && filterText.length === 0)
             return [];
 
-        var results = Lib.filterClipboardHistory(clipboardData, filterText, 50);
+        var results = Lib.filterClipboardHistory(clipboardData, filterText, 50, !!onlyDictation);
         return results.map(function(r) {
             var entry = r.entry;
             if (typeof entry === "string")
@@ -186,10 +189,11 @@ PanelWindow {
             return {
                 "type": "clipboard",
                 "label": entry.text.replace(/\n/g, " ").substring(0, 120),
-                "detail": String(entry.text.length) + " chars",
+                "detail": (entry.dictation ? "Dictation \u00b7 " : "") + String(entry.text.length) + " chars",
                 "fullText": entry.text,
                 "imagePath": "",
-                "mime": ""
+                "mime": "",
+                "dictation": !!entry.dictation
             };
         });
     }

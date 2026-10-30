@@ -10,6 +10,7 @@ QtObject {
     property int topMargin: 0
     // Single manager — popups live on the main monitor only, never workspace-aware.
     property var popupWindows: []
+    property var overflowWindow: null
     property var destroyingIds: ({})
 
     readonly property int maxVisible: 4
@@ -56,7 +57,8 @@ QtObject {
             }
         }
 
-        if (needsReposition) _queueReposition()
+        // Recompute the "N more" pill even when no window was added or removed
+        _queueReposition()
     }
 
     function _hasWindowFor(wrapper) {
@@ -126,6 +128,49 @@ QtObject {
                 if (idx !== -1) popupWindows.splice(idx, 1)
             }
         }
+        _updateOverflow(currentY)
+    }
+
+    function _updateOverflow(bottom) {
+        if (!overflowWindow) return
+        var svc = manager.popupService
+        var hidden = 0
+        var visible = 0
+        if (svc) {
+            visible = svc.visiblePopups.length
+            var ids = svc._overflowIds || []
+            for (var i = 0; i < ids.length; i++) {
+                if (svc.hasPendingByOriginalId(ids[i])) hidden++
+            }
+        }
+        overflowWindow.hiddenCount = hidden
+        overflowWindow.stackY = bottom
+        overflowWindow.shown = hidden > 0 && visible > 0
+    }
+
+    function _ensureOverflow() {
+        if (manager.overflowWindow || !manager.modelData || !manager.popupService) return
+        var comp = Qt.createComponent("NotificationOverflow.qml")
+        if (comp.status !== Component.Ready) {
+            console.warn("NotificationOverflow not ready:", comp.errorString())
+            return
+        }
+        manager.overflowWindow = comp.createObject(null, {
+            service: manager.popupService,
+            screen: manager.modelData
+        })
+        manager._queueReposition()
+    }
+
+    onModelDataChanged: _ensureOverflow()
+
+    property var pendingConnections: Connections {
+        target: manager.popupService ? manager.popupService.pendingModel : null
+        ignoreUnknownSignals: true
+
+        function onCountChanged() {
+            manager._queueReposition()
+        }
     }
 
     property bool _repositionPending: false
@@ -178,6 +223,7 @@ QtObject {
     }
 
     Component.onCompleted: {
+        _ensureOverflow()
         if (manager.popupService && manager.popupService.visiblePopups) {
             _sync(manager.popupService.visiblePopups)
         }

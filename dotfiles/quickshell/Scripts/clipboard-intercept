@@ -110,6 +110,21 @@ if echo "$types" | grep -qx 'text/uri-list'; then
 fi
 
 if echo "$types" | grep -q '^text/' || echo "$types" | grep -qx 'UTF8_STRING\|STRING'; then
-  wl-paste --type text --no-newline 2>/dev/null | jq -cRs 'select(length > 0) | {type:"text", text:.}'
+  tmp="$STATE_DIR/.clipboard-text.$$"
+  wl-paste --type text --no-newline > "$tmp" 2>/dev/null || true
+  if [ ! -s "$tmp" ]; then
+    rm -f "$tmp"
+    exit 0
+  fi
+  # voxtype's post_output hook writes the pasted transcript here; tag that entry.
+  dictation=false
+  marker="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/voxtype/last-dictation"
+  if [ -f "$marker" ] && cmp -s "$tmp" "$marker"; then
+    dictation=true
+    rm -f "$marker"
+  fi
+  jq -cRs --argjson dictation "$dictation" \
+    '{type:"text", text:.} + (if $dictation then {dictation:true} else {} end)' < "$tmp"
+  rm -f "$tmp"
   exit 0
 fi

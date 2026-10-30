@@ -15,6 +15,7 @@ Rectangle {
     required property string fullText
     required property string imagePath
     required property string mime
+    property bool dictation: false
     property int selectedIndex: 0
     property var iconResolver: function(name) {
         return '';
@@ -86,7 +87,7 @@ Rectangle {
 
                 Text {
                     visible: imagePath.length === 0
-                    text: '\uD83D\uDDB9'
+                    text: dictation ? '\uD83C\uDF99' : '\uD83D\uDDB9'
                     color: isSelected ? Config.foregroundSelected : Config.foregroundSecondary
                     font.pixelSize: 18
                     anchors.centerIn: parent

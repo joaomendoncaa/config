@@ -273,6 +273,7 @@ hl.bind(
 	hl.dsp.exec_cmd([[bash -c 'if pgrep -x quickshell >/dev/null; then pkill -x quickshell; else quickshell & fi']]),
 	{ description = "Toggle Quickshell" }
 )
+bind("SUPER + CTRL + SPACE", "Background switcher", "omarchy-menu background")
 
 hl.bind("SUPER + H", hl.dsp.focus({ direction = "l" }), { description = "Focus Left" })
 hl.bind("SUPER + L", hl.dsp.focus({ direction = "r" }), { description = "Focus Right" })

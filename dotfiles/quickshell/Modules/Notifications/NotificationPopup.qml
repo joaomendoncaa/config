@@ -24,7 +24,7 @@ PanelWindow {
 
     // Smooth refit: surviving popups slide into freed slots instead of jumping
     Behavior on stackY {
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        SpringAnimation { spring: 4.5; damping: 0.8 }
     }
 
     onImplicitHeightChanged: popupHeightChanged()
@@ -109,10 +109,19 @@ PanelWindow {
         anchors.fill: parent
         opacity: 0
 
-        transform: Translate {
-            id: entryTx
-            x: entryTravel
-        }
+        transform: [
+            Translate {
+                id: entryTx
+                x: 0
+            },
+            Scale {
+                id: entryScale
+                origin.x: contentWrapper.width / 2
+                origin.y: contentWrapper.height / 2
+                xScale: 0.97
+                yScale: 0.97
+            }
+        ]
 
         NotificationCard {
             id: card
@@ -123,10 +132,12 @@ PanelWindow {
 
             app: win.wrapper ? win.wrapper.app : ""
             appIcon: win.wrapper ? win.wrapper.appIcon : ""
+            desktopEntry: win.wrapper ? win.wrapper._desktopEntry : ""
             summary: win.wrapper ? win.wrapper.summary : ""
             body: win.wrapper ? win.wrapper.body : ""
             image: win.wrapper ? win.wrapper.image : ""
             glyph: win.wrapper ? win.wrapper.glyph : ""
+            value: win.wrapper ? win.wrapper.value : -1
             urgency: win.wrapper ? win.wrapper.urgency : 1
             timestamp: win.wrapper ? win.wrapper.timestamp : 0
             expireTimeout: win.wrapper ? win.wrapper.expireTimeout : 0
@@ -134,8 +145,10 @@ PanelWindow {
             busy: win.wrapper ? win.wrapper.busy : false
             cornerRadius: Config.borderRadius
             popupProgress: -1
+            cardBackground: Config.backgroundColoredSecondary
+            cardBorderWidth: 0
             notificationActions: win.wrapper ? win.wrapper.actions : []
-            hideActionButtons: true
+            showCloseButton: true
 
             onCloseRequested: {
                 if (win.wrapper) {
@@ -155,22 +168,35 @@ PanelWindow {
         }
     }
 
-    // Entry — slide in from right + fade in
+    // Entry — slide in from right on a spring, with a small scale-up
     ParallelAnimation {
         id: enterAnim
-        onFinished: { contentWrapper.opacity = 1; entryTx.x = 0; win.entered() }
+        onFinished: { contentWrapper.opacity = 1; win.entered() }
 
         NumberAnimation {
-            target: entryTx; property: "x"
-            from: entryTravel; to: 0
-            duration: 250
-            easing.type: Easing.BezierSpline
-            easing.bezierCurve: [0.25, 0.8, 0.25, 1.0]
+            target: contentWrapper; property: "opacity"
+            from: 0; to: 1; duration: 180
         }
         NumberAnimation {
-            target: contentWrapper; property: "opacity"
-            from: 0; to: 1; duration: 200
+            target: entryScale; property: "xScale"
+            from: 0.97; to: 1
+            duration: 260
+            easing.type: Easing.OutCubic
         }
+        NumberAnimation {
+            target: entryScale; property: "yScale"
+            from: 0.97; to: 1
+            duration: 260
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    SpringAnimation {
+        id: enterSlide
+        target: entryTx; property: "x"
+        to: 0
+        spring: 4.2
+        damping: 0.82
     }
 
     // Exit — slide right + fade out
@@ -239,9 +265,11 @@ PanelWindow {
 
     Component.onCompleted: {
         if (win.wrapper) {
-            enterAnim.restart()
+            entryTx.x = win.entryTravel;
+            enterAnim.restart();
+            enterSlide.restart();
         } else {
-            forceExit()
+            forceExit();
         }
     }
 

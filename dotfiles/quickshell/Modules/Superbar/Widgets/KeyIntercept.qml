@@ -79,6 +79,9 @@ Item {
         case '$':
             root.setSearchMode("clipboard");
             return true;
+        case '@':
+            root.setSearchMode("dictation");
+            return true;
         case '=':
             root.setSearchMode("calc");
             return true;

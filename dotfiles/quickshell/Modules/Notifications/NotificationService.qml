@@ -35,6 +35,8 @@ Item {
     property var _refs: ({
     })
     readonly property int historyCap: 100
+    // Original ids pushed out of the popup stack by maxVisiblePopups; the "N more" pill counts them.
+    property var _overflowIds: []
     property var imageCacheQueue: []
     readonly property int lowPopupDuration: 5000
     readonly property int normalPopupDuration: 8000
@@ -72,6 +74,9 @@ Item {
             "body": String(body || ""),
             "image": "",
             "glyph": "",
+            "value": -1,
+            "tag": "",
+            "sticky": false,
             "urgency": typeof urgency === "number" ? urgency : NotificationUrgency.Normal,
             "expireTimeout": typeof expireTimeout === "number" ? expireTimeout : 0,
             "timestamp": Date.now(),
@@ -192,6 +197,9 @@ Item {
                 merged._clickCommand = snapshot._clickCommand || row._clickCommand || "";
                 merged._desktopEntry = snapshot._desktopEntry || row._desktopEntry || "";
                 merged.expireTimeout = snapshot.expireTimeout || 0;
+                merged.value = snapshot.value === undefined ? -1 : snapshot.value;
+                merged.tag = snapshot.tag || "";
+                merged.sticky = !!snapshot.sticky;
                 removeRef(oldId);
                 setRef(merged.id, newRef);
                 pendingModel.set(i, merged);
@@ -207,6 +215,9 @@ Item {
             "body": snapshot.body,
             "image": snapshot.image,
             "glyph": snapshot.glyph || "",
+            "value": snapshot.value === undefined ? -1 : snapshot.value,
+            "tag": snapshot.tag || "",
+            "sticky": !!snapshot.sticky,
             "urgency": snapshot.urgency,
             "expireTimeout": snapshot.expireTimeout || 0,
             "timestamp": snapshot.timestamp,
@@ -229,10 +240,13 @@ Item {
             existing.id = snapshot.id;
             existing.originalId = snapshot.originalId;
             existing.timestamp = snapshot.timestamp;
-            existing.duplicateCount = (existing.duplicateCount || 1) + 1;
+            existing.duplicateCount = snapshot._tagUpdate ? 1 : (existing.duplicateCount || 1) + 1;
             existing._clickCommand = snapshot._clickCommand || existing._clickCommand || "";
             existing._desktopEntry = snapshot._desktopEntry || existing._desktopEntry || "";
             existing.expireTimeout = snapshot.expireTimeout || existing.expireTimeout;
+            existing.value = snapshot.value === undefined ? -1 : snapshot.value;
+            existing.tag = snapshot.tag || "";
+            existing.sticky = !!snapshot.sticky;
             existing.busy = !!snapshot._busy;
             existing.ref = getRef(snapshot.id);
             if (oldRef && oldRef !== getRef(snapshot.id)) {
@@ -274,6 +288,9 @@ Item {
             "body": snapshot.body,
             "image": snapshot.image,
             "glyph": snapshot.glyph || "",
+            "value": snapshot.value === undefined ? -1 : snapshot.value,
+            "tag": snapshot.tag || "",
+            "sticky": !!snapshot.sticky,
             "urgency": snapshot.urgency,
             "expireTimeout": snapshot.expireTimeout || 0,
             "timestamp": snapshot.timestamp,
@@ -296,8 +313,12 @@ Item {
         // Evict oldest if at max
         if (visiblePopups.length >= maxVisiblePopups) {
             var oldest = visiblePopups[visiblePopups.length - 1];
-            if (oldest)
+            if (oldest) {
                 oldest.popup = false;
+                visiblePopups.pop();
+                if (oldest.originalId !== undefined)
+                    service._overflowIds = service._overflowIds.concat([oldest.originalId]);
+            }
 
         }
         visiblePopups.unshift(wrapper);
@@ -393,6 +414,64 @@ Item {
         });
     }
 
+    // Applies a matched rule's behaviour to the snapshot; returns whether it breaks DND.
+    function applyRule(rule, snapshot) {
+        if (!rule)
+            return false;
+
+        if (rule.urgencyOverride !== undefined)
+            snapshot.urgency = rule.urgencyOverride;
+
+        var timeout = rule.timeout;
+        if (timeout === "never" || timeout === 0) {
+            snapshot.sticky = true;
+            snapshot.expireTimeout = 0;
+        } else if (typeof timeout === "number" && timeout > 0) {
+            snapshot.expireTimeout = timeout;
+        }
+        return !!rule.interrupt;
+    }
+
+    // Replaces the pending row for the same stack tag in place (volume, brightness).
+    function adoptTagged(snapshot) {
+        var tag = String(snapshot.tag || "");
+        if (!tag)
+            return false;
+
+        for (var i = 0; i < pendingModel.count; i++) {
+            var row = pendingModel.get(i);
+            if (!row || row.tag !== tag || row.app !== snapshot.app)
+                continue;
+
+            var ref = getRef(snapshot.id);
+            var oldId = row.id;
+            var newId = snapshot.id;
+            snapshot.id = row.originalId;
+            snapshot.originalId = row.originalId;
+            snapshot.duplicateCount = 1;
+            snapshot._tagUpdate = true;
+            if (oldId !== snapshot.id)
+                removeRef(oldId);
+            if (newId !== snapshot.id)
+                removeRef(newId);
+
+            setRef(snapshot.id, ref);
+            pendingModel.set(i, snapshot);
+            return true;
+        }
+        return false;
+    }
+
+    function storeSnapshot(snapshot) {
+        if (service.adoptTagged(snapshot)) {
+            maybeCacheImage(snapshot);
+            scheduleHistorySave();
+            return ;
+        }
+        addToPending(snapshot);
+        maybeCacheImage(snapshot);
+    }
+
     function handleNotification(notification) {
         notification.tracked = true;
         var snapshot = snapshotOf(notification);
@@ -402,6 +481,8 @@ Item {
         // Rules engine — evaluate before any processing
         var rule = N.evaluateRules(service.notificationRules, snapshot);
         var allowSound = !rule || rule.sound !== false;
+        var interrupt = service.applyRule(rule, snapshot);
+        var allowPopup = !service.doNotDisturb || interrupt || shouldBypassDnd(notification);
         if (rule) {
             switch (rule.action) {
             case "ignore":
@@ -409,50 +490,36 @@ Item {
                 return ;
             case "mute":
                 // No popup, but keep in center
-                if (rule.urgencyOverride !== undefined)
-                    snapshot.urgency = rule.urgencyOverride;
-
-                addToPending(snapshot);
-                maybeCacheImage(snapshot);
+                service.storeSnapshot(snapshot);
                 return ;
             case "popup_only":
-                if (rule.urgencyOverride !== undefined)
-                    snapshot.urgency = rule.urgencyOverride;
-
-                if (!service.doNotDisturb || shouldBypassDnd(notification))
+                if (allowPopup)
                     presentWithSound(snapshot, notification, allowSound);
 
                 return ;
             case "no_history":
-                if (rule.urgencyOverride !== undefined)
-                    snapshot.urgency = rule.urgencyOverride;
-
                 snapshot._noHistory = true;
-                if (!service.doNotDisturb || shouldBypassDnd(notification))
+                if (allowPopup)
                     presentWithSound(snapshot, notification, allowSound);
 
                 return ;
             case "default":
-                if (rule.urgencyOverride !== undefined)
-                    snapshot.urgency = rule.urgencyOverride;
-
                 break;
             }
         }
         if (ephemeralApp) {
-            if (service.doNotDisturb && !shouldBypassDnd(notification)) {
+            if (service.doNotDisturb && !interrupt && !shouldBypassDnd(notification)) {
                 notification.tracked = false;
                 return ;
             }
             presentWithSound(snapshot, notification, allowSound);
             return ;
         }
-        if (snapshot.expireTimeout <= 0)
+        if (!snapshot.sticky && snapshot.expireTimeout <= 0)
             snapshot.expireTimeout = service.defaultExpirySeconds(snapshot.urgency);
 
-        addToPending(snapshot);
-        maybeCacheImage(snapshot);
-        if (service.doNotDisturb && !shouldBypassDnd(notification)) {
+        service.storeSnapshot(snapshot);
+        if (!allowPopup) {
             notification.tracked = false;
             return ;
         }
@@ -483,6 +550,9 @@ Item {
             "body": row.body,
             "image": row.image,
             "glyph": row.glyph || "",
+            "value": typeof row.value === "number" ? row.value : -1,
+            "tag": row.tag || "",
+            "sticky": !!row.sticky,
             "urgency": row.urgency,
             "expireTimeout": row.expireTimeout || 0,
             "timestamp": row.timestamp,
@@ -550,6 +620,17 @@ Item {
 
     }
 
+    // Dismiss every popup but keep the pending list (opening the center).
+    function clearPopupsSoft() {
+        service._overflowIds = [];
+        for (var i = visiblePopups.length - 1; i >= 0; i--) {
+            var wrapper = visiblePopups[i];
+            if (wrapper)
+                wrapper.popup = false;
+
+        }
+    }
+
     function expirePopup(index) {
         dismissPopup(index);
     }
@@ -560,6 +641,9 @@ Item {
 
         var entry = pendingModel.get(index);
         if (entry) {
+            service._overflowIds = service._overflowIds.filter(function(id) {
+                return id !== entry.originalId;
+            });
             maybeDeleteCachedImage(entry.image);
             removeRef(entry.id);
         }
@@ -986,6 +1070,9 @@ Item {
                     "body": r.body,
                     "image": r.image,
                     "glyph": r.glyph || "",
+                    "value": typeof r.value === "number" ? r.value : -1,
+                    "tag": r.tag || "",
+                    "sticky": !!r.sticky,
                     "urgency": r.urgency,
                     "expireTimeout": r.expireTimeout || 0,
                     "timestamp": r.timestamp,
