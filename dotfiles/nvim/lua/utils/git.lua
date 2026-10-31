@@ -7,7 +7,7 @@ function M.sync_with_remote(opts)
 
     local paths = opts.paths or vim.fn.getcwd()
     local delay = opts.delay or 500
-    local commit_prefix = opts.commit_prefix or 'sync: '
+    local type = opts.type or 'sync'
     local cwd = vim.fn.getcwd()
 
     if type(paths) == 'string' then
@@ -34,21 +34,27 @@ function M.sync_with_remote(opts)
     end
 
     local handle_on_start = vim.schedule_wrap(function()
-        local has_changes = #vim.fn.systemlist('git status --porcelain', cwd) > 0
+        local status = vim.fn.systemlist({ 'git', '-c', 'core.quotePath=false', 'status', '--porcelain' }, cwd)
 
-        if not has_changes then
+        if #status == 0 then
             return
         end
 
-        local commit_msg = string.format('%s: %s', commit_prefix, os.date '%Y-%m-%d %H:%M:%S')
+        local changed = {}
+        for _, line in ipairs(status) do
+            local path = line:sub(4):match '^.* %-> (.*)$' or line:sub(4)
+            table.insert(changed, path)
+        end
+
+        local commit_msg = string.format('%s (%s): %s', type, table.concat(changed, ', '), os.date '%Y-%m-%d %H:%M:%S')
         local cmd = {
             'sh',
             '-c',
-            "git add . && git commit -m '" .. commit_msg .. "' && git push",
+            'git add . && git commit -m ' .. vim.fn.shellescape(commit_msg) .. ' && git push',
         }
 
         vim.fn.jobstart(cmd, {
-            cwd = current_dir,
+            cwd = cwd,
             on_exit = handle_on_exit,
         })
 

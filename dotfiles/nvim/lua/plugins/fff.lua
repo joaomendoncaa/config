@@ -1,6 +1,9 @@
 return {
     {
         'dmtrKovalenko/fff.nvim',
+        build = function()
+            require('fff.download').download_or_build_binary()
+        end,
         opts = {
             prompt = '> ',
             layout = { prompt_position = 'top', max_threads = 11, height = 0.7, width = 0.7 },
