@@ -135,17 +135,17 @@ return {
         end
 
         local function lsp_restart()
-            vim.cmd 'LspRestart'
+            vim.cmd 'silent! lsp restart'
             vim.notify('LSP Restarting...', vim.log.levels.WARN)
         end
 
         local function lsp_start()
-            vim.cmd 'LspStart'
+            vim.cmd 'silent! lsp enable'
             vim.notify('LSP Started.', vim.log.levels.INFO)
         end
 
         local function lsp_stop()
-            vim.cmd 'LspStop'
+            vim.cmd 'silent! lsp stop'
             vim.notify('LSP Stopping...', vim.log.levels.OFF)
         end
 
