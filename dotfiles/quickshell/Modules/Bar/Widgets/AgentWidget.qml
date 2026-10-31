@@ -57,7 +57,7 @@ Item {
         agentList.contentX = Math.max(0, Math.min(maxX, target))
     }
 
-    implicitWidth: Math.max(Math.round(Config.buttonSize * 1.55), dashboardButton.width + Config.gapInner * 2)
+    implicitWidth: Math.max(Math.round(Config.buttonSize * 1.55), dashboardButton.implicitWidth + Config.gapInner * 2)
     implicitHeight: Config.buttonSize
     Layout.fillWidth: true
     Layout.minimumWidth: Math.round(Config.buttonSize * 1.55)
@@ -78,8 +78,12 @@ Item {
 
         Rectangle {
             id: dashboardButton
-            width: Math.round(Config.buttonSize * 1.55)
-            height: Config.buttonSize
+            readonly property bool countsAgents: root.service.runningCount > 0
+            readonly property real contentWidth: Config.buttonSize * 0.6
+                + (root.service.usageSupported ? Config.gapInner + 8 : 0)
+                + (countsAgents ? Config.gapInner * 2 + Config.buttonSize * 0.7 + countText.implicitWidth : 0)
+            implicitWidth: Math.max(Math.round(Config.buttonSize * 1.55), contentWidth + Config.gapInner * 2)
+            implicitHeight: Config.buttonSize
             radius: Config.buttonBorderRadius
             color: dashboardMouse.containsMouse || root.popupVisible ? Config.backgroundHovered : 'transparent'
 
@@ -87,32 +91,11 @@ Item {
                 anchors.centerIn: parent
                 spacing: Config.gapInner
 
-                Item {
-                    width: Config.buttonSize * 0.7
+                BotFace {
+                    width: Config.buttonSize * 0.6
                     height: width
                     anchors.verticalCenter: parent.verticalCenter
-
-                    Image {
-                        id: logoMask
-                        anchors.fill: parent
-                        source: root.service.iconSource
-                        sourceSize.width: width
-                        sourceSize.height: height
-                        visible: false
-                    }
-
-                    Rectangle {
-                        id: logoColor
-                        anchors.fill: parent
-                        color: Config.foreground
-                        visible: false
-                    }
-
-                    OpacityMask {
-                        anchors.fill: parent
-                        source: logoColor
-                        maskSource: logoMask
-                    }
+                    fillColor: Config.foreground
                 }
 
                 Rectangle {
@@ -145,6 +128,29 @@ Item {
                         font.weight: Font.Bold
                     }
                 }
+
+                AgentStatus {
+                    width: Config.buttonSize * 0.7
+                    height: Config.buttonSize
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: dashboardButton.countsAgents
+                    state: dashboardButton.countsAgents ? 'running' : 'idle'
+                    fillColor: Config.foreground
+                    fontFamily: Config.fontFamily
+                    fontSize: Config.fontSize
+                    runningFrame: root.service.runningFrame
+                }
+
+                Text {
+                    id: countText
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: dashboardButton.countsAgents
+                    text: root.service.runningCount
+                    color: Config.foreground
+                    font.family: Config.fontFamily
+                    font.pixelSize: Config.fontSize
+                    font.weight: Font.Bold
+                }
             }
 
             MouseArea {
@@ -159,49 +165,6 @@ Item {
                     else
                         root.togglePanel()
                 }
-            }
-        }
-
-        Rectangle {
-            id: workingButton
-            visible: root.service.runningCount > 0
-            width: workingRow.implicitWidth + Config.gapInner * 2
-            height: Config.buttonSize
-            radius: Config.buttonBorderRadius
-            color: workingMouse.containsMouse ? Config.backgroundHovered : 'transparent'
-
-            Row {
-                id: workingRow
-                anchors.centerIn: parent
-                spacing: Config.gapInner
-
-                AgentStatus {
-                    width: Config.buttonSize * 0.7
-                    height: Config.buttonSize
-                    anchors.verticalCenter: parent.verticalCenter
-                    state: root.service.runningCount > 0 ? 'running' : 'idle'
-                    fillColor: Config.foreground
-                    fontFamily: Config.fontFamily
-                    fontSize: Config.fontSize
-                    runningFrame: root.service.runningFrame
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: root.service.runningCount
-                    color: Config.foreground
-                    font.family: Config.fontFamily
-                    font.pixelSize: Config.fontSize
-                    font.weight: Font.Bold
-                }
-            }
-
-            MouseArea {
-                id: workingMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.togglePanel()
             }
         }
 
