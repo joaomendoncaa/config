@@ -518,8 +518,15 @@ bind("SUPER + SHIFT + RIGHT", "Swap window to the right", hl.dsp.window.swap({ d
 bind("SUPER + SHIFT + UP", "Swap window up", hl.dsp.window.swap({ direction = "u" }))
 bind("SUPER + SHIFT + DOWN", "Swap window down", hl.dsp.window.swap({ direction = "d" }))
 
-bind("ALT + TAB", "Cycle next window", hl.dsp.window.cycle_next())
-bind("ALT + SHIFT + TAB", "Cycle previous window", hl.dsp.window.cycle_next({ next = false }))
+local function cycle_window(next)
+	return function()
+		hl.dispatch(hl.dsp.window.cycle_next({ next = next }))
+		hl.dispatch(hl.dsp.window.bring_to_top())
+	end
+end
+
+bind("ALT + TAB", "Cycle next window", cycle_window(true))
+bind("ALT + SHIFT + TAB", "Cycle previous window", cycle_window(false))
 bind("CTRL + ALT + TAB", "Focus on next monitor", hl.dsp.focus({ monitor = "+1" }))
 bind("CTRL + ALT + SHIFT + TAB", "Focus on previous monitor", hl.dsp.focus({ monitor = "-1" }))
 
