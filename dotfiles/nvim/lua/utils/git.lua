@@ -7,7 +7,7 @@ function M.sync_with_remote(opts)
 
     local paths = opts.paths or vim.fn.getcwd()
     local delay = opts.delay or 500
-    local type = opts.type or 'sync'
+    local sync_type = opts.type or 'sync'
     local cwd = vim.fn.getcwd()
 
     if type(paths) == 'string' then
@@ -46,7 +46,7 @@ function M.sync_with_remote(opts)
             table.insert(changed, path)
         end
 
-        local commit_msg = string.format('%s (%s): %s', type, table.concat(changed, ', '), os.date '%Y-%m-%d %H:%M:%S')
+        local commit_msg = string.format('%s (%s): %s', sync_type, table.concat(changed, ', '), os.date '%Y-%m-%d %H:%M:%S')
         local cmd = {
             'sh',
             '-c',
