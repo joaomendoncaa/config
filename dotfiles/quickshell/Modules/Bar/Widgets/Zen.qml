@@ -22,7 +22,7 @@ Rectangle {
             id: maskImage
 
             anchors.fill: parent
-            source: "../../../Assets/lamp-desk.svg"
+            source: "../../../Assets/feather.svg"
             sourceSize.width: width
             sourceSize.height: height
             smooth: true

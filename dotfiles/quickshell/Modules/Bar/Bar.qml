@@ -162,7 +162,6 @@ PanelWindow {
             }
 
             Sink {
-                visible: !Config.zenMode
             }
 
             NotificationButton {
