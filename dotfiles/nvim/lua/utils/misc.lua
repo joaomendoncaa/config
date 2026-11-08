@@ -160,4 +160,11 @@ function M.escape_cursors()
     vim.api.nvim_buf_clear_namespace(0, vim.api.nvim_create_namespace 'nvim.multicursor', 0, -1)
 end
 
+function M.yank_paste_and_keep_cursor_in_place()
+    local row, col = unpack(vim.api.nvim_win_get_cursor(0))
+    local line = vim.api.nvim_get_current_line()
+    vim.api.nvim_buf_set_lines(0, row, row, false, vim.fn['repeat']({ line }, vim.v.count1))
+    vim.api.nvim_win_set_cursor(0, { row + vim.v.count1, col })
+end
+
 return M

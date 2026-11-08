@@ -26,3 +26,4 @@ key({ 'n', 't' }, '<C-M-k>', f(misc.resize_pane, 'up', 15), { expr = true, silen
 key({ 'n', 't' }, '<C-M-j>', f(misc.resize_pane, 'down', 15), { expr = true, silent = true, desc = 'Smart resize down' })
 key('n', 'so', misc.resort_md_list, 'Re-[S]ort markd[O]wn list')
 key('n', '<leader>is', snippets.pick, '[S]nippet pick')
+key({ 'n', 'i' }, '<C-.>', misc.yank_paste_and_keep_cursor_in_place, 'Duplicate line keeping [C]ursor in place')
