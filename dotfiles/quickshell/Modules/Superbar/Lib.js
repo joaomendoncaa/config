@@ -220,6 +220,68 @@ function filterThemes(themes, query, limit) {
 }
 
 /**
+ * Parses the memes index JSON produced by bin/memes-index.
+ * @param {string} raw - Raw JSON string
+ * @returns {Array} Parsed meme array, or empty array on failure
+ */
+function parseMemesJson(raw) {
+    try {
+        var data = JSON.parse(String(raw || '[]'))
+        return Array.isArray(data) ? data : []
+    } catch (e) {
+        return []
+    }
+}
+
+/**
+ * Filters memes by a multi-word query and ranks matches by relevance.
+ * Matches against the display label and the precomputed search text.
+ * @param {Array<Object>} memes - Meme entries from the index
+ * @param {string} query - Search query
+ * @param {number} limit - Maximum number of results
+ * @returns {Array<Object>} Matching memes, best match first
+ */
+function filterMemes(memes, query, limit) {
+    var values = Array.isArray(memes) ? memes : []
+    var max = Math.max(0, Number(limit) || 100)
+    if (max === 0) return []
+    var needle = String(query || '').trim().toLowerCase()
+    var terms = needle ? needle.split(/\s+/).filter(function(t) { return t.length > 0 }) : []
+    var out = []
+    for (var i = 0; i < values.length; i++) {
+        var item = values[i]
+        if (!item || !item.path) continue
+        var label = String(item.label || item.name || '').toLowerCase()
+        var search = String(item.search || '').toLowerCase() + ' ' + label + ' ' + String(item.type || '')
+        var score = 0
+        var missing = false
+        for (var t = 0; t < terms.length; t++) {
+            var term = terms[t]
+            var labelIndex = label.indexOf(term)
+            var searchIndex = search.indexOf(term)
+            if (searchIndex < 0) {
+                missing = true
+                break
+            }
+            if (labelIndex === 0) score += 1000
+            else if (labelIndex > 0) score += 500 - Math.min(labelIndex, 100)
+            else score += 100 - Math.min(searchIndex, 50)
+        }
+        if (missing) continue
+        out.push({ item: item, score: score })
+    }
+    out.sort(function(a, b) {
+        if (a.score !== b.score) return b.score - a.score
+        var al = String(a.item.label || '').toLowerCase()
+        var bl = String(b.item.label || '').toLowerCase()
+        if (al < bl) return -1
+        if (al > bl) return 1
+        return 0
+    })
+    return out.slice(0, max).map(function(row) { return row.item })
+}
+
+/**
  * Parses a JSON string of clipboard history into an array.
  * @param {string} raw - Raw JSON string
  * @returns {Array} Parsed clipboard history array, or empty array on failure

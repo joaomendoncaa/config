@@ -129,6 +129,14 @@ Scope {
             }
         }
 
+        function openMemes() {
+            if (launcherOpen && launcherLoader.item) {
+                launcherLoader.item.setSearchMode("memes")
+            } else {
+                root.toggleLauncher('memes')
+            }
+        }
+
         function ping() {
             return "pong"
         }

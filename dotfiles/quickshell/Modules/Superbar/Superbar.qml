@@ -11,12 +11,13 @@ import qs.Core
 PanelWindow {
     id: root
 
-    property var modes: ["apps", "emojis", "files", "clipboard", "dictation", "calc", "theme"]
+    property var modes: ["apps", "emojis", "memes", "files", "clipboard", "dictation", "calc", "theme"]
     property string mode: "apps"
     property string filterText: ""
     property int selectedIndex: 0
     property int cursorPosition: 0
     property var emojiData: []
+    property var memeData: []
     property var clipboardData: []
     property var fileResults: []
     property string calcResult: ""
@@ -25,6 +26,10 @@ PanelWindow {
     property string initialMode: "apps"
     property var themeList: []
     property bool initialized: false
+    readonly property string stateHome: {
+        var dir = Quickshell.env("XDG_STATE_HOME");
+        return dir && dir.length > 0 ? dir : Quickshell.env("HOME") + "/.local/state";
+    }
 
     signal dismissed()
 
@@ -68,6 +73,8 @@ PanelWindow {
                 "iconName": it.iconName || "",
                 "fullText": it.fullText || "",
                 "imagePath": it.imagePath || "",
+                "previewPath": it.previewPath || "",
+                "mediaType": it.mediaType || "",
                 "filePath": it.filePath || "",
                 "mime": it.mime || "",
                 "dictation": !!it.dictation
@@ -92,6 +99,8 @@ PanelWindow {
             return searchApps();
         case "emojis":
             return searchEmojis();
+        case "memes":
+            return searchMemes();
         case "files":
             return searchFiles();
         case "clipboard":
@@ -133,6 +142,55 @@ PanelWindow {
             });
         }
         return out;
+    }
+
+    function formatBytes(bytes) {
+        var n = Number(bytes) || 0;
+        if (n <= 0)
+            return "";
+
+        if (n >= 1048576)
+            return (n / 1048576).toFixed(1) + " MB";
+
+        return Math.max(1, Math.round(n / 1024)) + " KB";
+    }
+
+    function formatDuration(seconds) {
+        var s = Math.max(0, Math.round(Number(seconds) || 0));
+        if (s < 60)
+            return s + "s";
+
+        var m = Math.floor(s / 60);
+        var r = s % 60;
+        return m + ":" + (r < 10 ? "0" : "") + r;
+    }
+
+    function searchMemes() {
+        var results = Lib.filterMemes(memeData, filterText, 250);
+        return results.map(function(r) {
+            var isVideo = r.type === "video";
+            var bits = [isVideo ? "video" : "image"];
+            if (r.w > 0 && r.h > 0)
+                bits.push(r.w + "×" + r.h);
+
+            if (isVideo && r.dur > 0)
+                bits.push(formatDuration(r.dur));
+
+            var size = formatBytes(r.size);
+            if (size)
+                bits.push(size);
+
+            return {
+                "type": "meme",
+                "label": r.label || r.name || "meme",
+                "detail": bits.join(" · "),
+                "imagePath": r.thumb || "",
+                "previewPath": r.path || "",
+                "mediaType": r.type || "image",
+                "filePath": r.path || "",
+                "mime": isVideo ? "text/uri-list" : "image/jpeg"
+            };
+        });
     }
 
     function searchFiles() {
@@ -230,6 +288,14 @@ PanelWindow {
         return "wl-copy " + Lib.shellQuote(item.fullText);
     }
 
+    function buildMemeCopyCommand(item) {
+        if (item.mediaType === "video")
+            return "printf 'file://%s\\n' " + Lib.shellQuote(item.filePath) + " | wl-copy --type text/uri-list";
+
+        // wl-copy with PNG is the most widely accepted clipboard image format.
+        return "magick " + Lib.shellQuote(item.filePath) + " -strip png:- | wl-copy --type image/png";
+    }
+
     function activateSelected() {
         if (selectedIndex < 0 || selectedIndex >= displayModel.count)
             return ;
@@ -248,6 +314,11 @@ PanelWindow {
         if (item.type === "emoji") {
             var pasteCmd = "; sleep 0.15; wtype -M ctrl -k v -m ctrl 2>/dev/null || true";
             Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.emojiChar) + pasteCmd]);
+            dismiss();
+        }
+        if (item.type === "meme") {
+            var memePasteCmd = "; sleep 0.15; wtype -M ctrl -k v -m ctrl 2>/dev/null || true";
+            Quickshell.execDetached(["bash", "-c", buildMemeCopyCommand(item) + memePasteCmd]);
             dismiss();
         }
         if (item.type === "file") {
@@ -277,6 +348,9 @@ PanelWindow {
         switch (item.type) {
         case "emoji":
             Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.emojiChar)]);
+            break;
+        case "meme":
+            Quickshell.execDetached(["bash", "-c", buildMemeCopyCommand(item)]);
             break;
         case "file":
             Quickshell.execDetached(["bash", "-c", "wl-copy " + Lib.shellQuote(item.label)]);
@@ -373,6 +447,9 @@ PanelWindow {
             clearFileSearch();
         if (mode === "clipboard")
             rebuildDisplay();
+
+        if (mode === "memes")
+            memesIndexProc.running = true;
 
         if (mode === "theme" && themeList.length === 0)
             themeListProc.running = true;
@@ -507,7 +584,7 @@ PanelWindow {
                             Text {
                                 anchors.centerIn: parent
                                 visible: displayModel.count === 0
-                                text: root.filterText.length > 0 ? "No results" : "Start typing\u2026"
+                                text: root.filterText.length > 0 ? "No results" : (root.mode === "memes" ? "Search memes\u2026" : "Start typing\u2026")
                                 color: Config.foregroundSecondary
                                 font.family: Config.fontFamily
                                 font.pixelSize: Config.fontSize
@@ -520,7 +597,7 @@ PanelWindow {
 
                             displayModel: displayModel
                             selectedIndex: root.selectedIndex
-                            active: root.mode === "clipboard"
+                            active: root.mode === "clipboard" || root.mode === "memes"
                         }
 
                     }
@@ -545,6 +622,21 @@ PanelWindow {
         path: Quickshell.env("HOME") + "/.config.jmmm.sh/dotfiles/quickshell/Data/emojis.json"
         onLoaded: root.emojiData = Lib.parseEmojiJson(text())
         onLoadFailed: root.emojiData = []
+    }
+
+    FileView {
+        id: memesFile
+
+        path: root.stateHome + "/memes.json"
+        watchChanges: true
+        atomicWrites: true
+        printErrors: false
+        onLoaded: {
+            root.memeData = Lib.parseMemesJson(text());
+            if (root.mode === "memes")
+                root.rebuildDisplay();
+        }
+        onFileChanged: reload()
     }
 
     FileView {
@@ -634,6 +726,17 @@ PanelWindow {
             }
         }
 
+    }
+
+    Process {
+        id: memesIndexProc
+
+        command: [Quickshell.env("HOME") + "/.config.jmmm.sh/bin/memes-index"]
+        onExited: {
+            if (root.mode === "memes")
+                memesFile.reload();
+
+        }
     }
 
     Process {

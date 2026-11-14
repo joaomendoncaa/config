@@ -73,6 +73,9 @@ Item {
         case ':':
             root.setSearchMode("emojis");
             return true;
+        case '!':
+            root.setSearchMode("memes");
+            return true;
         case '.':
             root.setSearchMode("files");
             return true;

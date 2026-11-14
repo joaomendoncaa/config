@@ -14,6 +14,8 @@ Rectangle {
     required property string iconName
     required property string fullText
     required property string imagePath
+    required property string previewPath
+    required property string mediaType
     required property string mime
     property bool dictation: false
     property int selectedIndex: 0
@@ -70,7 +72,7 @@ Rectangle {
             }
 
             Item {
-                visible: type === 'clipboard'
+                visible: type === 'clipboard' || type === 'meme'
                 width: parent.height - 4
                 height: parent.height - 4
                 anchors.centerIn: parent
@@ -87,10 +89,27 @@ Rectangle {
 
                 Text {
                     visible: imagePath.length === 0
-                    text: dictation ? '\uD83C\uDF99' : '\uD83D\uDDB9'
+                    text: type === 'meme' ? (mediaType === 'video' ? '\uD83C\uDF9E' : '\uD83D\uDDBC') : (dictation ? '\uD83C\uDF99' : '\uD83D\uDDB9')
                     color: isSelected ? Config.foregroundSelected : Config.foregroundSecondary
                     font.pixelSize: 18
                     anchors.centerIn: parent
+                }
+
+                Rectangle {
+                    visible: type === 'meme' && mediaType === 'video'
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    width: 15
+                    height: 15
+                    radius: 3
+                    color: Qt.rgba(0, 0, 0, 0.7)
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: '\u25B6'
+                        color: 'white'
+                        font.pixelSize: 8
+                    }
                 }
 
             }
