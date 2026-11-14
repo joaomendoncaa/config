@@ -15,7 +15,7 @@
             "type": "local"
         }
     },
-    "model": "opencode-go/muse-spark-1.3-contributor",
+    "model": "opencode-go/deepseek-v4.1-flash",
     "references": {
         "config": {
             "description": "Use for personal configuration files",
