@@ -46,7 +46,7 @@ function M.sync_with_remote(opts)
             table.insert(changed, path)
         end
 
-        local commit_msg = string.format('%s (%s): %s', sync_type, table.concat(changed, ', '), os.date '%Y-%m-%d %H:%M:%S')
+        local commit_msg = string.format('%s(%s): %s', sync_type, table.concat(changed, ', '), os.date '%Y-%m-%d %H:%M:%S')
         local cmd = {
             'sh',
             '-c',

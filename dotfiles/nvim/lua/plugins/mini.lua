@@ -37,18 +37,47 @@ return {
             require('mini.trailspace').trim()
         end)
 
+        commands.user('MiniPairsToggle', function()
+            local function is_disabled()
+                return vim.g.minipairs_disable
+            end
+
+            local string = 'enabled'
+
+            if not is_disabled() then
+                vim.g.minipairs_disable = true
+                string = 'disabled'
+            else
+                vim.g.minipairs_disable = false
+                string = 'enabled'
+            end
+
+            vim.notify('mini.pairs are ' .. string, vim.log.levels.INFO)
+        end)
+
         setup 'surround'
         setup 'trailspace'
         setup 'move'
+        setup 'comment'
+        setup 'align'
+        setup 'cursorword'
+
         setup('diff', {
             view = {
                 style = 'sign',
                 signs = { add = '▎', change = '▎', delete = '▎' },
             },
         })
-        setup 'comment'
-        setup 'align'
-        setup 'cursorword'
+
+        setup('pairs', {
+            options = {
+                modes = {
+                    insert = true,
+                    command = true,
+                    terminal = false,
+                },
+            },
+        })
 
         setup('ai', { n_lines = 1000 })
 
