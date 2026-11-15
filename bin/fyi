@@ -25,4 +25,7 @@ if [[ -z "$SUMMARY" ]]; then
     exit 1
 fi
 
+if pgrep -x shell-gpui >/dev/null; then
+    exec /home/joao/lab/shell-gpui/bin/shell-gpui ipc call notifications fyi "$SUMMARY" "$BODY" "$URGENCY" "$EXPIRY" "$COMMAND" "$GROUP" "$DESKTOP_ENTRY" "$BUSY"
+fi
 exec quickshell ipc -p "$QS_CONFIG" call notifications fyi "$SUMMARY" "$BODY" "$URGENCY" "$EXPIRY" "$COMMAND" "$GROUP" "$DESKTOP_ENTRY" "$BUSY"
