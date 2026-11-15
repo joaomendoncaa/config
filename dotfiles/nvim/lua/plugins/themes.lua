@@ -92,7 +92,6 @@ local function apply_highlights()
     vim.cmd [[
         hi clear MsgArea
         hi BiscuitColorlua guifg=#423F3D
-        hi WinSeparator guifg=#222222
         hi FloatTitle guibg=none
         hi FloatBorder guibg=none guifg=#222222
         hi SignColumn guibg=none
