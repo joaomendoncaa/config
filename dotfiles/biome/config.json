@@ -1,56 +1,57 @@
 {
-    "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
-    "assist": {
-        "enabled": true,
-        "actions": {
-            "source": {
-                "organizeImports": "on"
-            }
-        }
-    },
-    "files": {
-        "includes": ["**", "!**/node_modules/**", "!.next/**", "!.git/**"]
-    },
-    "formatter": {
-        "enabled": true,
-        "formatWithErrors": true,
-        "indentStyle": "space",
-        "indentWidth": 4
-    },
-    "linter": {
-        "enabled": true,
-        "rules": {
-            "recommended": true,
-            "security": {
-                "noDangerouslySetInnerHtml": "off"
-            },
-            "suspicious": {
-                "noExplicitAny": "error",
-                "noArrayIndexKey": "off"
-            },
-            "correctness": {
-                "noUnusedImports": "error"
-            },
-            "nursery": {
-                "useSortedClasses": "error"
-            }
-        }
-    },
-    "javascript": {
-        "formatter": {
-            "bracketSameLine": true
-        }
-    },
-    "html": {
-        "formatter": {
-            "enabled": true,
-            "lineWidth": 120
-        }
-    },
-    "json": {
-        "parser": {
-            "allowComments": true,
-            "allowTrailingCommas": true
-        }
-    }
+	"root": false,
+	"$schema": "https://biomejs.dev/schemas/2.6.7/schema.json",
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	},
+	"files": {
+		"includes": ["**", "!**/node_modules/**", "!.next/**", "!.git/**"]
+	},
+	"formatter": {
+		"enabled": true,
+		"formatWithErrors": true,
+		"indentStyle": "space",
+		"indentWidth": 4
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended",
+			"security": {
+				"noDangerouslySetInnerHtml": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "error",
+				"noArrayIndexKey": "off"
+			},
+			"correctness": {
+				"noUnusedImports": "error"
+			},
+			"nursery": {
+				"useTailwindSortedClasses": "error"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"bracketSameLine": true
+		}
+	},
+	"html": {
+		"formatter": {
+			"enabled": true,
+			"lineWidth": 120
+		}
+	},
+	"json": {
+		"parser": {
+			"allowComments": true,
+			"allowTrailingCommas": true
+		}
+	}
 }
