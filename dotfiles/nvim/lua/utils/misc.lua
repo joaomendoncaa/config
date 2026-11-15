@@ -17,8 +17,6 @@ function M.key(mode, lhs, rhs, opts)
 end
 
 function M.resort_md_list()
-    local ts_utils = require 'nvim-treesitter.ts_utils'
-
     local function renumber_list_items(list_node, depth)
         depth = depth or 1
         local count = 1
@@ -47,7 +45,14 @@ function M.resort_md_list()
         end
     end
 
-    local node = ts_utils.get_node_at_cursor()
+    local parser = vim.treesitter.get_parser(0)
+    if not parser then
+        print 'No Treesitter parser for this buffer.'
+        return
+    end
+    parser:parse()
+
+    local node = vim.treesitter.get_node()
     while node and node:type() ~= 'list' do
         node = node:parent()
     end
